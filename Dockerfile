@@ -27,7 +27,26 @@ ENV RAILS_ENV="production" \
     BUNDLE_WITHOUT="development" \
     LD_PRELOAD="/usr/local/lib/libjemalloc.so"
 
-# Throw-away build stage to reduce size of final image
+# ── Development stage ─────────────────────────────────────────────────────────
+FROM base AS development
+
+ENV RAILS_ENV="development" \
+    BUNDLE_PATH="/usr/local/bundle" \
+    BUNDLE_WITHOUT=""
+
+RUN apt-get update -qq && \
+    apt-get install --no-install-recommends -y build-essential git libpq-dev libyaml-dev pkg-config && \
+    rm -rf /var/lib/apt/lists /var/cache/apt/archives
+
+COPY Gemfile Gemfile.lock ./
+RUN bundle install --jobs 4 --retry 3
+
+COPY . .
+
+EXPOSE 3000
+CMD ["bundle", "exec", "rails", "server", "-b", "0.0.0.0"]
+
+# ── Throw-away build stage to reduce size of final image ──────────────────────
 FROM base AS build
 
 # Install packages needed to build gems
