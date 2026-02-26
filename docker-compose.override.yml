@@ -1,0 +1,17 @@
+# Development-only overrides (auto-loaded by docker-compose)
+services:
+  web:
+    environment:
+      RAILS_ENV: development
+      WEB_CONCURRENCY: "1"
+      RAILS_MAX_THREADS: "5"
+    stdin_open: true
+    tty: true
+    # Uncomment to enable debugging with ruby-debug-ide
+    # ports:
+    #   - "1234:1234"
+
+  db:
+    # Expose DB on host for DB clients (TablePlus, etc.)
+    ports:
+      - "5432:5432"
