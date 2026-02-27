@@ -1,0 +1,25 @@
+# Environment
+.env
+*.env.local
+
+# Logs
+/log/*
+!/log/.keep
+
+# Temp files
+/tmp/*
+!/tmp/.keep
+
+# Storage
+/storage/*
+!/storage/.keep
+
+# Node
+/node_modules
+
+# Credentials (never commit)
+/config/master.key
+/config/credentials/*.key
+
+# OS
+.DS_Store
