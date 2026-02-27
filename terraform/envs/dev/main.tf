@@ -3,25 +3,13 @@ module "vpc" {
   project  = var.project
   env      = var.env
   vpc_cidr = "10.0.0.0/16"
-  az_count = 2
+  az_count = 1  # dev: NAT GWを1つに削減してコスト抑制
 }
 
 module "s3" {
   source  = "../../modules/s3"
   project = var.project
   env     = var.env
-}
-
-module "rds" {
-  source                    = "../../modules/rds"
-  project                   = var.project
-  env                       = var.env
-  vpc_id                    = module.vpc.vpc_id
-  subnet_ids                = module.vpc.private_subnet_ids
-  allowed_security_group_id = module.ecs.app_sg_id
-  instance_class            = "db.t4g.micro"
-  db_username               = var.db_username
-  db_password               = var.db_password
 }
 
 module "ecs" {
@@ -36,24 +24,27 @@ module "ecs" {
   cpu                  = 256
   memory               = 512
   s3_export_bucket_arn = module.s3.bucket_arn
-  db_security_group_id = module.rds.sg_id
   environment_variables = [
-    { name = "RAILS_ENV",            value = "production" },
-    { name = "RAILS_LOG_TO_STDOUT",  value = "true" },
-    { name = "S3_EXPORT_BUCKET",     value = module.s3.bucket_name },
-    { name = "DB_HOST",              value = split(":", module.rds.endpoint)[0] },
-    { name = "DB_NAME",              value = module.rds.db_name },
-    { name = "DB_USERNAME",          value = var.db_username },
+    { name = "RAILS_ENV",           value = "production" },
+    { name = "RAILS_LOG_TO_STDOUT", value = "true" },
+    { name = "S3_EXPORT_BUCKET",    value = module.s3.bucket_name },
+    { name = "AWS_REGION",          value = "ap-northeast-1" },
+  ]
+  secrets = [
+    { name = "AUTH_USERNAME", valueFrom = "arn:aws:ssm:ap-northeast-1:${data.aws_caller_identity.current.account_id}:parameter/health-logger/dev/auth-username" },
+    { name = "AUTH_PASSWORD", valueFrom = "arn:aws:ssm:ap-northeast-1:${data.aws_caller_identity.current.account_id}:parameter/health-logger/dev/auth-password" },
   ]
 }
 
 module "glue" {
-  source          = "../../modules/glue"
-  project         = var.project
-  env             = var.env
-  s3_bucket_name  = module.s3.bucket_name
-  s3_bucket_arn   = module.s3.bucket_arn
+  source         = "../../modules/glue"
+  project        = var.project
+  env            = var.env
+  s3_bucket_name = module.s3.bucket_name
+  s3_bucket_arn  = module.s3.bucket_arn
 }
+
+data "aws_caller_identity" "current" {}
 
 output "alb_dns"      { value = module.ecs.alb_dns_name }
 output "ecr_repo_url" { value = module.ecs.ecr_repo_url }

@@ -30,12 +30,7 @@
         <span class="navbar-brand fw-bold">
           <i class="bi bi-heart-pulse-fill"></i> Health Logger
         </span>
-        <% if user_signed_in? %>
-          <div class="d-flex align-items-center gap-2">
-            <span class="text-white-50 small"><%= current_user.email %></span>
-            <%= link_to "ログアウト", destroy_user_session_path, data: { turbo_method: :delete }, class: "btn btn-outline-light btn-sm" %>
-          </div>
-        <% end %>
+        <span class="text-white-50 small"><%= ENV.fetch("AUTH_USERNAME", "admin") %></span>
       </div>
     </nav>
 

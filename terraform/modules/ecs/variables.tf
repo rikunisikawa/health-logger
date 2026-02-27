@@ -11,4 +11,3 @@ variable "memory" { type = number; default = 512 }
 variable "environment_variables" { type = list(object({ name = string; value = string })); default = [] }
 variable "secrets" { type = list(object({ name = string; valueFrom = string })); default = [] }
 variable "s3_export_bucket_arn" { type = string }
-variable "db_security_group_id" { type = string }
