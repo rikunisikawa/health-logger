@@ -18,6 +18,7 @@
 
 # Node
 node_modules/
+frontend/dist/
 
 # Python
 __pycache__/
