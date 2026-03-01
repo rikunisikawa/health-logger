@@ -19,7 +19,12 @@
 .claude/settings.local.json
 
 # Node
-/node_modules
+node_modules/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
 
 # Credentials (never commit)
 /config/master.key

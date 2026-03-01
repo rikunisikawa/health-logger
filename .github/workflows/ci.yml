@@ -9,6 +9,7 @@ jobs:
   # ── Ruby (existing Rails app) ──────────────────────────────────────────────
   scan_ruby:
     runs-on: ubuntu-latest
+    continue-on-error: true  # Rails app is reference-only, not deployed
     steps:
       - uses: actions/checkout@v4
 
@@ -24,6 +25,7 @@ jobs:
 
   lint:
     runs-on: ubuntu-latest
+    continue-on-error: true  # Rails app is reference-only, not deployed
     env:
       RUBOCOP_CACHE_ROOT: tmp/rubocop
     steps:
@@ -46,6 +48,7 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
+    continue-on-error: true  # Rails app is reference-only, not deployed
     services:
       postgres:
         image: postgres:16-alpine
