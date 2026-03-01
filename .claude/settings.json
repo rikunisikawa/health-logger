@@ -1,0 +1,42 @@
+{
+  "defaultMode": "acceptEdits",
+  "permissions": {
+    "allow": [
+      "Bash(git *)",
+      "Bash(gh *)",
+      "Bash(npm *)",
+      "Bash(npx *)",
+      "Bash(pip *)",
+      "Bash(pytest *)",
+      "Bash(python *)",
+      "Bash(terraform init *)",
+      "Bash(terraform validate *)",
+      "Bash(terraform fmt *)",
+      "Bash(terraform plan *)",
+      "Bash(terraform output *)",
+      "Bash(aws *)",
+      "Bash(cd * && *)",
+      "Bash(ls *)",
+      "Bash(find *)",
+      "Read",
+      "Edit",
+      "Write"
+    ],
+    "deny": [
+      "Bash(terraform apply *)",
+      "Bash(terraform destroy *)",
+      "Bash(rm -rf /*)",
+      "Bash(git push --force *)"
+    ]
+  },
+  "enabledMcpjsonServers": [
+    "filesystem",
+    "github",
+    "aws",
+    "terraform",
+    "git",
+    "fetch",
+    "mermaid",
+    "drawio"
+  ]
+}
