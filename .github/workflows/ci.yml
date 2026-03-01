@@ -89,6 +89,8 @@ jobs:
   # ── Lambda (Python) ────────────────────────────────────────────────────────
   lambda-test:
     runs-on: ubuntu-latest
+    env:
+      AWS_DEFAULT_REGION: ap-northeast-1
     steps:
       - uses: actions/checkout@v4
 
