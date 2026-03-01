@@ -3,89 +3,9 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [main, develop]
+    branches: [main]
 
 jobs:
-  # ── Ruby (existing Rails app) ──────────────────────────────────────────────
-  scan_ruby:
-    runs-on: ubuntu-latest
-    continue-on-error: true  # Rails app is reference-only, not deployed
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: ruby/setup-ruby@v1
-        with:
-          bundler-cache: true
-
-      - name: Brakeman security scan
-        run: bin/brakeman --no-pager
-
-      - name: Bundler audit
-        run: bin/bundler-audit
-
-  lint:
-    runs-on: ubuntu-latest
-    continue-on-error: true  # Rails app is reference-only, not deployed
-    env:
-      RUBOCOP_CACHE_ROOT: tmp/rubocop
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: ruby/setup-ruby@v1
-        with:
-          bundler-cache: true
-
-      - uses: actions/cache@v4
-        env:
-          DEPS_HASH: ${{ hashFiles('.ruby-version', '**/.rubocop.yml', 'Gemfile.lock') }}
-        with:
-          path: ${{ env.RUBOCOP_CACHE_ROOT }}
-          key: rubocop-${{ runner.os }}-${{ env.DEPS_HASH }}-${{ github.run_id }}
-          restore-keys: rubocop-${{ runner.os }}-${{ env.DEPS_HASH }}-
-
-      - name: RuboCop
-        run: bin/rubocop -f github
-
-  test:
-    runs-on: ubuntu-latest
-    continue-on-error: true  # Rails app is reference-only, not deployed
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: password
-          POSTGRES_DB: health_logger_test
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-    env:
-      DATABASE_URL: postgresql://postgres:password@localhost:5432/health_logger_test
-      RAILS_ENV: test
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: ruby/setup-ruby@v1
-        with:
-          bundler-cache: true
-
-      - name: Set up database
-        run: bundle exec rails db:schema:load
-
-      - name: Run RSpec
-        run: bundle exec rspec --format progress --format RspecJunitFormatter --out tmp/rspec.xml
-
-      - name: Upload test results
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: rspec-results
-          path: tmp/rspec.xml
-
   # ── Lambda (Python) ────────────────────────────────────────────────────────
   lambda-test:
     runs-on: ubuntu-latest

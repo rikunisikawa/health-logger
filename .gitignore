@@ -8,11 +8,9 @@
 
 # Temp files
 /tmp/
-!/tmp/.keep
 
 # Storage
 /storage/
-!/storage/.keep
 
 # Local tool config
 .mcp.json
@@ -26,9 +24,11 @@ __pycache__/
 *.pyc
 *.pyo
 
-# Credentials (never commit)
-/config/master.key
-/config/credentials/*.key
+# Terraform
+*.tfstate
+*.tfstate.backup
+.terraform/
+.terraform.lock.hcl
 
 # OS
 .DS_Store
