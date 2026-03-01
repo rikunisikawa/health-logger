@@ -3,16 +3,19 @@
 *.env.local
 
 # Logs
-/log/*
-!/log/.keep
+/log/
+/logs/
 
 # Temp files
-/tmp/*
+/tmp/
 !/tmp/.keep
 
 # Storage
-/storage/*
+/storage/
 !/storage/.keep
+
+# Local tool config
+.mcp.json
 
 # Node
 /node_modules
