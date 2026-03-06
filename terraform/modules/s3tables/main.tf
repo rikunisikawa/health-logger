@@ -6,12 +6,12 @@ resource "aws_s3tables_table_bucket" "main" {
 
 resource "aws_s3tables_namespace" "health" {
   table_bucket_arn = aws_s3tables_table_bucket.main.arn
-  namespace        = ["health"]
+  namespace        = "health"
 }
 
 resource "aws_s3tables_table" "health_records" {
   table_bucket_arn = aws_s3tables_table_bucket.main.arn
-  namespace        = aws_s3tables_namespace.health.namespace[0]
+  namespace        = aws_s3tables_namespace.health.namespace
   name             = "health_records"
   format           = "ICEBERG"
 }

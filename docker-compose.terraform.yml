@@ -1,0 +1,14 @@
+services:
+  terraform:
+    image: hashicorp/terraform:1.7.5
+    working_dir: /workspace/terraform/envs/prod
+    volumes:
+      - .:/workspace
+      - ~/.aws:/root/.aws:ro
+    environment:
+      - TF_VAR_github_access_token=${TF_VAR_github_access_token}
+    # Usage:
+    #   docker compose -f docker-compose.terraform.yml run --rm terraform init -reconfigure
+    #   docker compose -f docker-compose.terraform.yml run --rm terraform plan -var='lambda_s3_keys={"create_record":"placeholder","get_latest":"placeholder"}'
+    #   docker compose -f docker-compose.terraform.yml run --rm terraform fmt -recursive
+    #   docker compose -f docker-compose.terraform.yml run --rm terraform validate

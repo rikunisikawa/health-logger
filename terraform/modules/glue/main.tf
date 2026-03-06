@@ -60,18 +60,54 @@ resource "aws_glue_catalog_table" "health_records" {
   storage_descriptor {
     location = "${var.table_bucket_s3_uri}/health/health_records"
 
-    columns { name = "id";               type = "string" }
-    columns { name = "user_id";          type = "string" }
-    columns { name = "fatigue_score";    type = "int" }
-    columns { name = "mood_score";       type = "int" }
-    columns { name = "motivation_score"; type = "int" }
-    columns { name = "flags";            type = "int" }
-    columns { name = "note";             type = "string" }
-    columns { name = "recorded_at";      type = "timestamp" }
-    columns { name = "timezone";         type = "string" }
-    columns { name = "device_id";        type = "string" }
-    columns { name = "app_version";      type = "string" }
-    columns { name = "written_at";       type = "timestamp" }
+    columns {
+      name = "id"
+      type = "string"
+    }
+    columns {
+      name = "user_id"
+      type = "string"
+    }
+    columns {
+      name = "fatigue_score"
+      type = "int"
+    }
+    columns {
+      name = "mood_score"
+      type = "int"
+    }
+    columns {
+      name = "motivation_score"
+      type = "int"
+    }
+    columns {
+      name = "flags"
+      type = "int"
+    }
+    columns {
+      name = "note"
+      type = "string"
+    }
+    columns {
+      name = "recorded_at"
+      type = "timestamp"
+    }
+    columns {
+      name = "timezone"
+      type = "string"
+    }
+    columns {
+      name = "device_id"
+      type = "string"
+    }
+    columns {
+      name = "app_version"
+      type = "string"
+    }
+    columns {
+      name = "written_at"
+      type = "timestamp"
+    }
   }
 
   partition_keys {
