@@ -1,0 +1,48 @@
+name: 設定・インフラ・リファクタ
+description: Terraform 変更、依存更新、リファクタリングなど
+labels: ["chore"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        コード品質・インフラ・設定に関する変更です。
+
+  - type: textarea
+    id: background
+    attributes:
+      label: 背景・目的
+      placeholder: |
+        - 現状: ...
+        - 変更理由: ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: tasks
+    attributes:
+      label: やること
+      value: |
+        - [ ]
+        - [ ]
+    validations:
+      required: true
+
+  - type: textarea
+    id: done
+    attributes:
+      label: 完了条件
+      placeholder: |
+        - terraform validate が通ること
+        - CI が全件 PASSED
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: risk
+    attributes:
+      label: 注意事項
+      options:
+        - label: terraform apply が必要
+        - label: ダウンタイムが発生する可能性あり
+        - label: GitHub Secrets の更新が必要
+        - label: 初回デプロイ後に追加作業あり

@@ -1,0 +1,48 @@
+name: バグ報告
+description: 不具合・予期しない動作の報告
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        バグの報告です。再現手順を具体的に記載してください。
+
+  - type: textarea
+    id: what
+    attributes:
+      label: 何が起きているか
+      description: 実際の動作と期待する動作
+      placeholder: |
+        **実際**: ...
+        **期待**: ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: 再現手順
+      value: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: 環境・ログ
+      description: エラーメッセージ、ブラウザ、CloudWatch ログなど
+      render: shell
+
+  - type: textarea
+    id: tasks
+    attributes:
+      label: 対応内容
+      value: |
+        - [ ] 原因調査
+        - [ ] 修正実装
+        - [ ] テスト追加
+    validations:
+      required: true
