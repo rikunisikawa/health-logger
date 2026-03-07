@@ -3,7 +3,7 @@ module "vpc" {
   project  = var.project
   env      = var.env
   vpc_cidr = "10.0.0.0/16"
-  az_count = 1  # dev: NAT GWを1つに削減してコスト抑制
+  az_count = 1 # dev: NAT GWを1つに削減してコスト抑制
 }
 
 module "s3" {
@@ -25,10 +25,10 @@ module "ecs" {
   memory               = 512
   s3_export_bucket_arn = module.s3.bucket_arn
   environment_variables = [
-    { name = "RAILS_ENV",           value = "production" },
+    { name = "RAILS_ENV", value = "production" },
     { name = "RAILS_LOG_TO_STDOUT", value = "true" },
-    { name = "S3_EXPORT_BUCKET",    value = module.s3.bucket_name },
-    { name = "AWS_REGION",          value = "ap-northeast-1" },
+    { name = "S3_EXPORT_BUCKET", value = module.s3.bucket_name },
+    { name = "AWS_REGION", value = "ap-northeast-1" },
   ]
   secrets = [
     { name = "AUTH_USERNAME", valueFrom = "arn:aws:ssm:ap-northeast-1:${data.aws_caller_identity.current.account_id}:parameter/health-logger/dev/auth-username" },
@@ -46,5 +46,5 @@ module "glue" {
 
 data "aws_caller_identity" "current" {}
 
-output "alb_dns"      { value = module.ecs.alb_dns_name }
+output "alb_dns" { value = module.ecs.alb_dns_name }
 output "ecr_repo_url" { value = module.ecs.ecr_repo_url }
