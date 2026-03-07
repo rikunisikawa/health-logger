@@ -148,7 +148,7 @@ resource "aws_iam_role_policy" "github_actions" {
       },
       {
         Effect   = "Allow"
-        Action   = ["lambda:UpdateFunctionCode", "lambda:GetFunction", "lambda:PublishVersion", "lambda:ListVersionsByFunction"]
+        Action   = ["lambda:UpdateFunctionCode", "lambda:GetFunction", "lambda:PublishVersion", "lambda:ListVersionsByFunction", "lambda:GetFunctionCodeSigningConfig", "lambda:GetPolicy", "lambda:ListAliases", "lambda:GetFunctionConfiguration"]
         Resource = ["*"]
       },
       {
@@ -188,7 +188,7 @@ resource "aws_iam_role_policy" "github_actions" {
       },
       {
         Effect   = "Allow"
-        Action   = ["s3tables:GetTableBucket", "s3tables:ListTableBuckets", "s3tables:GetNamespace", "s3tables:ListNamespaces", "s3tables:GetTable", "s3tables:ListTables", "s3tables:GetTableBucketMaintenanceConfiguration", "s3tables:GetTableBucketEncryption"]
+        Action   = ["s3tables:GetTableBucket", "s3tables:ListTableBuckets", "s3tables:GetNamespace", "s3tables:ListNamespaces", "s3tables:GetTable", "s3tables:ListTables", "s3tables:GetTableBucketMaintenanceConfiguration", "s3tables:GetTableBucketEncryption", "s3tables:ListTagsForResource", "s3tables:GetTablePolicy", "s3tables:GetTableEncryption", "s3tables:GetTableMaintenanceConfiguration", "s3tables:GetTableMaintenanceJobStatus"]
         Resource = ["*"]
       },
       {
