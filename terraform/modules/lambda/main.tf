@@ -34,6 +34,19 @@ resource "aws_iam_role_policy_attachment" "lambda_basic" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
+# ── DynamoDB: push subscriptions ───────────────────────────────────────────────
+
+resource "aws_dynamodb_table" "push_subscriptions" {
+  name         = "${local.name}-push-subscriptions"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "user_id"
+
+  attribute {
+    name = "user_id"
+    type = "S"
+  }
+}
+
 resource "aws_iam_role_policy" "lambda" {
   role = aws_iam_role.lambda.id
   policy = jsonencode({
@@ -43,6 +56,11 @@ resource "aws_iam_role_policy" "lambda" {
         Effect   = "Allow"
         Action   = ["firehose:PutRecord", "firehose:PutRecordBatch"]
         Resource = [var.firehose_stream_arn]
+      },
+      {
+        Effect = "Allow"
+        Action = ["dynamodb:PutItem", "dynamodb:GetItem", "dynamodb:DeleteItem", "dynamodb:Scan"]
+        Resource = [aws_dynamodb_table.push_subscriptions.arn]
       },
       {
         Effect = "Allow"
@@ -127,4 +145,95 @@ resource "aws_lambda_function" "get_latest" {
   }
 
   depends_on = [aws_s3_bucket.artifacts]
+}
+
+resource "aws_lambda_function" "push_subscribe" {
+  function_name = "${local.name}-push-subscribe"
+  role          = aws_iam_role.lambda.arn
+  runtime       = "python3.13"
+  handler       = "handler.lambda_handler"
+
+  s3_bucket = aws_s3_bucket.artifacts.id
+  s3_key    = var.lambda_s3_keys["push_subscribe"]
+
+  timeout     = 30
+  memory_size = 128
+
+  tracing_config { mode = "Active" }
+
+  environment {
+    variables = {
+      PUSH_SUBSCRIPTIONS_TABLE = aws_dynamodb_table.push_subscriptions.name
+    }
+  }
+
+  depends_on = [aws_s3_bucket.artifacts]
+}
+
+resource "aws_lambda_function" "push_notify" {
+  function_name = "${local.name}-push-notify"
+  role          = aws_iam_role.lambda.arn
+  runtime       = "python3.13"
+  handler       = "handler.lambda_handler"
+
+  s3_bucket = aws_s3_bucket.artifacts.id
+  s3_key    = var.lambda_s3_keys["push_notify"]
+
+  timeout     = 60
+  memory_size = 256
+
+  tracing_config { mode = "Active" }
+
+  environment {
+    variables = {
+      PUSH_SUBSCRIPTIONS_TABLE = aws_dynamodb_table.push_subscriptions.name
+      VAPID_PRIVATE_KEY        = var.vapid_private_key
+    }
+  }
+
+  depends_on = [aws_s3_bucket.artifacts]
+}
+
+# ── EventBridge Scheduler (daily push notify at 21:00 JST = 12:00 UTC) ────────
+
+resource "aws_iam_role" "scheduler" {
+  name = "${local.name}-scheduler-role"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { Service = "scheduler.amazonaws.com" }
+      Action    = "sts:AssumeRole"
+    }]
+  })
+}
+
+resource "aws_iam_role_policy" "scheduler" {
+  role = aws_iam_role.scheduler.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = ["lambda:InvokeFunction"]
+      Resource = [aws_lambda_function.push_notify.arn]
+    }]
+  })
+}
+
+resource "aws_scheduler_schedule" "push_notify_daily" {
+  name       = "${local.name}-push-notify-daily"
+  group_name = "default"
+
+  flexible_time_window {
+    mode                      = "FLEXIBLE"
+    maximum_window_in_minutes = 10
+  }
+
+  schedule_expression          = "cron(0 12 * * ? *)"
+  schedule_expression_timezone = "UTC"
+
+  target {
+    arn      = aws_lambda_function.push_notify.arn
+    role_arn = aws_iam_role.scheduler.arn
+  }
 }

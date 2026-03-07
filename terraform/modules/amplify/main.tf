@@ -56,6 +56,7 @@ resource "aws_amplify_app" "main" {
     VITE_COGNITO_USER_POOL_ID = var.cognito_user_pool_id
     VITE_COGNITO_CLIENT_ID    = var.cognito_client_id
     VITE_COGNITO_DOMAIN       = var.cognito_domain
+    VITE_VAPID_PUBLIC_KEY     = var.vapid_public_key
   }
 
   # Redirect SPA routes to index.html

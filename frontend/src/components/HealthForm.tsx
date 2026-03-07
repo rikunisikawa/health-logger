@@ -75,6 +75,10 @@ export default function HealthForm() {
       setNote('')
       setFlags(0)
       flush(token).catch(() => {})
+      // PWA standalone: close the window if opened from a notification
+      if (window.matchMedia('(display-mode: standalone)').matches) {
+        setTimeout(() => window.close(), 1500)
+      }
     } catch {
       if (!navigator.onLine) {
         await enqueue(record, token).catch(() => {})

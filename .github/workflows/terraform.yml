@@ -52,10 +52,10 @@ jobs:
         id: plan
         run: |
           terraform plan \
-            -var='lambda_s3_keys={"create_record":"placeholder","get_latest":"placeholder"}' \
+            -var='lambda_s3_keys={"create_record":"placeholder","get_latest":"placeholder","push_subscribe":"placeholder","push_notify":"placeholder"}' \
             -no-color -out=tfplan
         env:
-          TF_VAR_github_access_token: ${{ secrets.AMPLIFY_GITHUB_TOKEN }}
+          TF_VAR_vapid_private_key: ${{ secrets.VAPID_PRIVATE_KEY_PROD }}
 
       - name: Comment PR with plan
         if: github.event_name == 'pull_request'

@@ -66,6 +66,37 @@ async function cacheFirst(request) {
   return cached || fetch(request).catch(() => new Response('', { status: 503 }))
 }
 
+// ── Push Notifications ─────────────────────────────────────────────────────────
+self.addEventListener('push', (event) => {
+  if (!event.data) return
+  const data = event.data.json()
+  event.waitUntil(
+    self.registration.showNotification(data.title || 'Health Logger', {
+      body: data.body || '今日の体調を記録しましょう',
+      icon: '/icon-192.png',
+      badge: '/icon-192.png',
+      data: { url: data.url || '/' },
+      requireInteraction: false,
+    }),
+  )
+})
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close()
+  const targetUrl = event.notification.data?.url || '/'
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
+      const existing = clients.find((c) => c.url.includes(self.location.origin))
+      if (existing) {
+        existing.focus()
+        existing.navigate(targetUrl)
+      } else {
+        self.clients.openWindow(targetUrl)
+      }
+    }),
+  )
+})
+
 // ── Background Sync (flush offline queue) ──────────────────────────────────────
 // Note: The offline queue (IndexedDB) is managed by useOfflineQueue.ts.
 // Background Sync is triggered by the app on reconnect via the 'online' event.

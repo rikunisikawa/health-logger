@@ -19,8 +19,10 @@ jobs:
     name: Build Lambda ZIPs
     runs-on: ubuntu-latest
     outputs:
-      create_record_key: ${{ steps.upload.outputs.create_record_key }}
-      get_latest_key:    ${{ steps.upload.outputs.get_latest_key }}
+      create_record_key:  ${{ steps.upload.outputs.create_record_key }}
+      get_latest_key:     ${{ steps.upload.outputs.get_latest_key }}
+      push_subscribe_key: ${{ steps.upload.outputs.push_subscribe_key }}
+      push_notify_key:    ${{ steps.upload.outputs.push_notify_key }}
 
     steps:
       - uses: actions/checkout@v4
@@ -47,6 +49,18 @@ jobs:
           pip install -r requirements.txt -t . --quiet
           zip -r ../../get_latest.zip . -x "test_*" "*.pyc" "__pycache__/*"
 
+      - name: Package push_subscribe Lambda
+        run: |
+          cd lambda/push_subscribe
+          pip install -r requirements.txt -t . --quiet
+          zip -r ../../push_subscribe.zip . -x "*.pyc" "__pycache__/*"
+
+      - name: Package push_notify Lambda
+        run: |
+          cd lambda/push_notify
+          pip install -r requirements.txt -t . --quiet
+          zip -r ../../push_notify.zip . -x "*.pyc" "__pycache__/*"
+
       - name: Upload ZIPs to S3 artifacts bucket
         id: upload
         run: |
@@ -54,12 +68,18 @@ jobs:
           SHA="${{ github.sha }}"
           CREATE_KEY="create_record/${SHA}.zip"
           LATEST_KEY="get_latest/${SHA}.zip"
+          PUSH_SUB_KEY="push_subscribe/${SHA}.zip"
+          PUSH_NOTIFY_KEY="push_notify/${SHA}.zip"
 
-          aws s3 cp create_record.zip "s3://${BUCKET}/${CREATE_KEY}"
-          aws s3 cp get_latest.zip    "s3://${BUCKET}/${LATEST_KEY}"
+          aws s3 cp create_record.zip   "s3://${BUCKET}/${CREATE_KEY}"
+          aws s3 cp get_latest.zip      "s3://${BUCKET}/${LATEST_KEY}"
+          aws s3 cp push_subscribe.zip  "s3://${BUCKET}/${PUSH_SUB_KEY}"
+          aws s3 cp push_notify.zip     "s3://${BUCKET}/${PUSH_NOTIFY_KEY}"
 
-          echo "create_record_key=${CREATE_KEY}" >> $GITHUB_OUTPUT
-          echo "get_latest_key=${LATEST_KEY}"    >> $GITHUB_OUTPUT
+          echo "create_record_key=${CREATE_KEY}"   >> $GITHUB_OUTPUT
+          echo "get_latest_key=${LATEST_KEY}"       >> $GITHUB_OUTPUT
+          echo "push_subscribe_key=${PUSH_SUB_KEY}" >> $GITHUB_OUTPUT
+          echo "push_notify_key=${PUSH_NOTIFY_KEY}" >> $GITHUB_OUTPUT
 
   # ── 2. Terraform apply (infrastructure + Lambda config) ───────────────────
   terraform-apply:
@@ -90,14 +110,16 @@ jobs:
       - name: Terraform Apply
         run: |
           terraform apply -auto-approve \
-            -var='lambda_s3_keys={"create_record":"${{ needs.build-lambda.outputs.create_record_key }}","get_latest":"${{ needs.build-lambda.outputs.get_latest_key }}"}'
+            -var='lambda_s3_keys={"create_record":"${{ needs.build-lambda.outputs.create_record_key }}","get_latest":"${{ needs.build-lambda.outputs.get_latest_key }}","push_subscribe":"${{ needs.build-lambda.outputs.push_subscribe_key }}","push_notify":"${{ needs.build-lambda.outputs.push_notify_key }}"}'
         env:
-          TF_VAR_github_access_token: ${{ secrets.AMPLIFY_GITHUB_TOKEN }}
+          TF_VAR_vapid_private_key: ${{ secrets.VAPID_PRIVATE_KEY_PROD }}
 
       - name: Deployment summary
         run: |
           echo "### Deployed to prod" >> $GITHUB_STEP_SUMMARY
           echo "- Commit: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- Lambda create_record: \`${{ needs.build-lambda.outputs.create_record_key }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- Lambda get_latest:    \`${{ needs.build-lambda.outputs.get_latest_key }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Lambda create_record:  \`${{ needs.build-lambda.outputs.create_record_key }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Lambda get_latest:     \`${{ needs.build-lambda.outputs.get_latest_key }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Lambda push_subscribe: \`${{ needs.build-lambda.outputs.push_subscribe_key }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Lambda push_notify:    \`${{ needs.build-lambda.outputs.push_notify_key }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- Amplify: auto-build triggered by GitHub push" >> $GITHUB_STEP_SUMMARY
