@@ -26,6 +26,7 @@ module "glue" {
   env                 = var.env
   table_bucket_arn    = module.s3tables.table_bucket_arn
   table_bucket_s3_uri = module.s3tables.table_bucket_s3_uri
+  iceberg_s3_location = "s3://${module.s3.bucket_name}/iceberg"
 }
 
 # ── Kinesis Firehose → S3 Tables (Iceberg) ────────────────────────────────────

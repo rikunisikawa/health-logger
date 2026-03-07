@@ -10,7 +10,7 @@ React+TS (Amplify) → API Gateway → Lambda (Python 3.13)
                                         ↓            ↓
                                    Firehose      Athena
                                         ↓
-                              S3 Tables (Iceberg) ← Glue
+                              S3 (Iceberg) ← Glue
 ```
 
 ---
@@ -85,7 +85,7 @@ POST /records
   → Lambda (create_record)
     → Pydantic バリデーション
     → Firehose.put_record (JSON Lines + "\n")
-      → S3 Tables / Iceberg テーブル (Glue カタログ経由)
+      → S3 (Iceberg テーブル, Glue カタログ経由)
 
 GET /records/latest
   → Lambda (get_latest)

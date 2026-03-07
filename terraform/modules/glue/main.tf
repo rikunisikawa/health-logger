@@ -49,6 +49,7 @@ resource "aws_glue_catalog_database" "main" {
 resource "aws_glue_catalog_table" "health_records" {
   name          = "health_records"
   database_name = aws_glue_catalog_database.main.name
+  table_type    = "EXTERNAL_TABLE"
 
   open_table_format_input {
     iceberg_input {
@@ -58,7 +59,7 @@ resource "aws_glue_catalog_table" "health_records" {
   }
 
   storage_descriptor {
-    location = "${var.table_bucket_s3_uri}/health/health_records"
+    location = "${var.iceberg_s3_location}/health_records"
 
     columns {
       name = "id"
@@ -110,8 +111,4 @@ resource "aws_glue_catalog_table" "health_records" {
     }
   }
 
-  partition_keys {
-    name = "dt"
-    type = "date"
-  }
 }
