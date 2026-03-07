@@ -89,8 +89,7 @@ module "amplify" {
   project = var.project
   env     = var.env
 
-  github_repository   = var.github_repository
-  github_access_token = var.github_access_token
+  github_repository = var.github_repository
 
   api_endpoint         = module.apigw.endpoint_url
   cognito_user_pool_id = module.cognito.user_pool_id
@@ -171,6 +170,10 @@ resource "aws_iam_role_policy" "github_actions" {
           "iam:GetRole", "iam:GetRolePolicy", "iam:ListRolePolicies",
           "iam:ListAttachedRolePolicies", "iam:GetOpenIDConnectProvider",
           "iam:ListOpenIDConnectProviders",
+          "iam:CreateRole", "iam:DeleteRole", "iam:UpdateRole",
+          "iam:AttachRolePolicy", "iam:DetachRolePolicy",
+          "iam:PutRolePolicy", "iam:DeleteRolePolicy",
+          "iam:PassRole", "iam:TagRole", "iam:UntagRole",
         ]
         Resource = ["*"]
       },

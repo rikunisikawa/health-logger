@@ -2,67 +2,45 @@
 
 ## 概要
 
-このプロジェクトでは2種類の GitHub 認証が使われています。
+このプロジェクトでは以下の GitHub 認証が使われています。
 
 | 用途 | 種類 | 管理場所 |
 |------|------|----------|
-| Amplify → GitHub リポジトリ接続 | PAT (Fine-grained) | GitHub Secret: `AMPLIFY_GITHUB_TOKEN` / Terraform変数 |
+| Amplify → GitHub リポジトリ接続 | GitHub App (OAuth) | Amplify Console で管理 |
 | GitHub Actions → AWS 操作 | OIDC (GitHub App) | GitHub Secret: `AWS_ROLE_ARN_PROD` |
 
 ---
 
-## 1. Amplify 用 PAT
+## 1. Amplify の GitHub 接続
 
-### なぜ必要か
+### 現在の方式
 
-AWS Amplify が GitHub リポジトリのコードを取得してビルドするために必要です。
-Terraform の `aws_amplify_app` リソースを API 経由で作成する場合、`access_token` または `oauth_token` が必須です。
+Amplify Console の「リポジトリを再接続」から GitHub App (OAuth) で接続しています。
+PAT (Personal Access Token) は不要です。
+
+### 接続手順（再接続が必要な場合）
+
+1. AWS Console → Amplify → `health-logger-prod`
+2. **App settings > Repository settings** または **Branch settings**
+3. 「リポジトリを再接続」ボタンをクリック
+4. GitHub App の OAuth 認証フローで `rikunisikawa/health-logger` へのアクセスを許可
+
+### Terraform との関係
 
 ```hcl
 # terraform/modules/amplify/main.tf
 resource "aws_amplify_app" "main" {
-  repository   = "https://github.com/${var.github_repository}"
-  access_token = var.github_access_token  ← この認証に使用
+  repository = "https://github.com/${var.github_repository}"
+  # access_token は使用しない（GitHub App 接続）
+  # lifecycle.ignore_changes = [access_token] で Terraform 管理外
+  lifecycle {
+    ignore_changes = [access_token]
+  }
 }
 ```
 
-### 作成手順
-
-1. GitHub → 右上アイコン → **Settings**
-2. 左サイドバー下部 → **Developer settings**
-3. **Personal access tokens** → **Fine-grained tokens**
-4. **Generate new token**
-5. 以下を設定：
-
-| 項目 | 値 |
-|------|-----|
-| Token name | `health-logger-amplify` |
-| Expiration | 30日（テスト） |
-| Repository access | Only select repositories → `health-logger` |
-| Permissions → Contents | Read-only |
-| Permissions → Webhooks | Read and write |
-
-6. **Generate token** → 表示された `github_pat_...` をコピー（画面を閉じると再表示不可）
-
-### 設定場所
-
-**Terraform apply 時（ローカル）:**
-
-トークンは `.env.local`（git 管理外）に保存しておきます：
-```bash
-# .env.local に値を記入後、以下で読み込む
-source .env.local
-```
-
-**GitHub Secrets（CI/CD用）:**
-リポジトリの Settings → Secrets and variables → Actions
-- シークレット名: `AMPLIFY_GITHUB_TOKEN`
-
-### 注意事項
-
-- `terraform.tfvars` には記載しない（`.gitignore` 対象外のため漏洩リスクあり）
-- トークンが切れると Amplify の自動ビルドが停止する → 期限前に更新すること
-- Amplify コンソールから GitHub App 接続に移行することで PAT を不要にできるが、Terraform 初回 apply 時は PAT が必須
+`access_token` は `ignore_changes` によって Terraform が管理しないため、
+Console 経由での GitHub App 接続が保持されます。
 
 ---
 
@@ -93,7 +71,7 @@ resource "aws_iam_openid_connect_provider" "github" {
 }
 
 resource "aws_iam_role" "github_actions" {
-  # trust policy: repo:riku_nishikawa/health-logger:* のみ許可
+  # trust policy: repo:rikunisikawa/health-logger:* のみ許可
 }
 ```
 
@@ -127,6 +105,5 @@ resource "aws_iam_role" "github_actions" {
 | シークレット名 | 内容 | 設定タイミング |
 |----------------|------|----------------|
 | `AWS_ROLE_ARN_PROD` | GitHub Actions 用 IAM ロール ARN | 初回 terraform apply 後 |
-| `AMPLIFY_GITHUB_TOKEN` | Amplify 用 GitHub PAT | Amplify 作成前 |
 | `AMPLIFY_APP_ID_PROD` | Amplify アプリ ID | 初回 terraform apply 後 |
 | `LAMBDA_ARTIFACTS_BUCKET_PROD` | Lambda ZIP 保存先 S3 バケット名 | 初回 terraform apply 後 |

@@ -24,11 +24,6 @@ variable "github_repository" {
   description = "GitHub repository in owner/repo format"
 }
 
-variable "github_access_token" {
-  type      = string
-  sensitive = true
-}
-
 # Update after first terraform apply with the real Amplify domain.
 # E.g. ["https://main.<app-id>.amplifyapp.com"]
 variable "cognito_callback_urls" {
