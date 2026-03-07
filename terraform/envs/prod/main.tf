@@ -206,7 +206,7 @@ resource "aws_iam_role_policy" "github_actions" {
       },
       {
         Effect   = "Allow"
-        Action   = ["glue:GetDatabase", "glue:GetTable", "glue:GetTables", "glue:GetTags"]
+        Action   = ["glue:GetDatabase", "glue:GetTable", "glue:GetTables", "glue:GetTags", "glue:UpdateTable", "glue:CreateTable", "glue:DeleteTable"]
         Resource = ["*"]
       },
       {
