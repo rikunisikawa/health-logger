@@ -1,0 +1,77 @@
+import importlib.util
+import json
+import os
+import sys
+
+os.environ.setdefault("ITEM_CONFIGS_TABLE", "test-item-configs")
+
+from unittest.mock import patch
+
+# Load this directory's handler explicitly to avoid sys.modules conflicts
+_spec = importlib.util.spec_from_file_location(
+    "save_item_config_handler",
+    os.path.join(os.path.dirname(__file__), "handler.py"),
+)
+handler = importlib.util.module_from_spec(_spec)
+sys.modules["save_item_config_handler"] = handler
+_spec.loader.exec_module(handler)
+
+VALID_CONFIGS = [
+    {"item_id": "1", "label": "水分補給", "type": "number", "mode": "event", "order": 0}
+]
+
+
+def _auth_event(body: dict):
+    return {
+        "requestContext": {
+            "authorizer": {"jwt": {"claims": {"sub": "user-uuid-1234"}}}
+        },
+        "body": json.dumps(body),
+    }
+
+
+@patch.object(handler, "table")
+def test_save_valid_configs(mock_table):
+    mock_table.put_item.return_value = {}
+    result = handler.lambda_handler(_auth_event({"configs": VALID_CONFIGS}), None)
+    assert result["statusCode"] == 200
+    mock_table.put_item.assert_called_once()
+
+
+@patch.object(handler, "table")
+def test_save_empty_configs(mock_table):
+    mock_table.put_item.return_value = {}
+    result = handler.lambda_handler(_auth_event({"configs": []}), None)
+    assert result["statusCode"] == 200
+
+
+@patch.object(handler, "table")
+def test_save_invalid_type(mock_table):
+    bad = [{"item_id": "1", "label": "test", "type": "invalid", "mode": "form", "order": 0}]
+    result = handler.lambda_handler(_auth_event({"configs": bad}), None)
+    assert result["statusCode"] == 400
+
+
+@patch.object(handler, "table")
+def test_save_invalid_mode(mock_table):
+    bad = [{"item_id": "1", "label": "test", "type": "checkbox", "mode": "bad", "order": 0}]
+    result = handler.lambda_handler(_auth_event({"configs": bad}), None)
+    assert result["statusCode"] == 400
+
+
+@patch.object(handler, "table")
+def test_save_missing_label(mock_table):
+    bad = [{"item_id": "1", "type": "checkbox", "mode": "form", "order": 0}]
+    result = handler.lambda_handler(_auth_event({"configs": bad}), None)
+    assert result["statusCode"] == 400
+
+
+@patch.object(handler, "table")
+def test_save_missing_configs_key(mock_table):
+    result = handler.lambda_handler(_auth_event({}), None)
+    assert result["statusCode"] == 400
+
+
+def test_missing_auth():
+    result = handler.lambda_handler({}, None)
+    assert result["statusCode"] == 401

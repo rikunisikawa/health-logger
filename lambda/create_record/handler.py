@@ -43,11 +43,13 @@ def lambda_handler(event, context):
     payload = {
         "id":               record_id,
         "user_id":          user_id,
+        "record_type":      rec.record_type,
         "fatigue_score":    rec.fatigue_score,
         "mood_score":       rec.mood_score,
         "motivation_score": rec.motivation_score,
         "flags":            rec.flags,
         "note":             rec.note,
+        "custom_fields":    json.dumps([cf.model_dump() for cf in rec.custom_fields]),
         "recorded_at":      rec.recorded_at,
         "timezone":         rec.timezone,
         "device_id":        rec.device_id,

@@ -1,4 +1,4 @@
-import type { HealthRecordInput, LatestRecord } from './types'
+import type { HealthRecordInput, ItemConfig, LatestRecord } from './types'
 
 const API_ENDPOINT = import.meta.env.VITE_API_ENDPOINT as string
 
@@ -35,4 +35,18 @@ export function getLatest(
   limit = 10,
 ): Promise<{ records: LatestRecord[] }> {
   return apiFetch(`/records/latest?limit=${limit}`, token)
+}
+
+export function getItemConfig(token: string): Promise<{ configs: ItemConfig[] }> {
+  return apiFetch('/items/config', token)
+}
+
+export function saveItemConfig(
+  configs: ItemConfig[],
+  token: string,
+): Promise<{ message: string }> {
+  return apiFetch('/items/config', token, {
+    method: 'POST',
+    body: JSON.stringify({ configs }),
+  })
 }

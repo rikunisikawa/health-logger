@@ -1,3 +1,4 @@
+import sys, os as _os; sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
 import json
 import os
 
@@ -22,6 +23,28 @@ def test_valid_record():
     assert rec.fatigue_score == 50
     assert rec.flags == 0
     assert rec.note == ""
+    assert rec.record_type == "daily"
+    assert rec.custom_fields == []
+
+
+def test_event_record_no_scores():
+    rec = HealthRecordInput(
+        record_type="event",
+        recorded_at="2024-01-01T10:30:00Z",
+        custom_fields=[{"item_id": "abc", "label": "水分補給", "type": "number", "value": 500}],
+    )
+    assert rec.record_type == "event"
+    assert rec.fatigue_score is None
+    assert rec.custom_fields[0].value == 500
+
+
+def test_custom_field_invalid_type():
+    with pytest.raises(ValidationError):
+        HealthRecordInput(
+            fatigue_score=50, mood_score=50, motivation_score=50,
+            recorded_at="2024-01-01T00:00:00Z",
+            custom_fields=[{"item_id": "x", "label": "test", "type": "invalid", "value": 1}],
+        )
 
 
 def test_score_above_max():

@@ -16,3 +16,7 @@ variable "create_record_function_name" { type = string }
 variable "get_latest_function_name" { type = string }
 variable "push_subscribe_lambda_invoke_arn" { type = string }
 variable "push_subscribe_function_name" { type = string }
+variable "get_item_config_lambda_invoke_arn" { type = string }
+variable "get_item_config_function_name" { type = string }
+variable "save_item_config_lambda_invoke_arn" { type = string }
+variable "save_item_config_function_name" { type = string }

@@ -1,13 +1,36 @@
+export type ItemType = 'slider' | 'checkbox' | 'number' | 'text'
+export type ItemMode = 'form' | 'event'
+
+export interface ItemConfig {
+  item_id: string
+  label:   string
+  type:    ItemType
+  mode:    ItemMode
+  order:   number
+  min?:    number
+  max?:    number
+  unit?:   string
+}
+
+export interface CustomFieldValue {
+  item_id: string
+  label:   string
+  type:    ItemType
+  value:   number | boolean | string
+}
+
 export interface HealthRecordInput {
-  fatigue_score:    number
-  mood_score:       number
-  motivation_score: number
+  record_type:      'daily' | 'event'
+  fatigue_score?:   number
+  mood_score?:      number
+  motivation_score?: number
   flags:            number
   note:             string
   recorded_at:      string
   timezone:         string
   device_id:        string
   app_version:      string
+  custom_fields:    CustomFieldValue[]
 }
 
 export interface LatestRecord {

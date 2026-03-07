@@ -109,6 +109,14 @@ resource "aws_glue_catalog_table" "health_records" {
       name = "written_at"
       type = "timestamp"
     }
+    columns {
+      name = "record_type"
+      type = "string"
+    }
+    columns {
+      name = "custom_fields"
+      type = "string"
+    }
   }
 
 }
