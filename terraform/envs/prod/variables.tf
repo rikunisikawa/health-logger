@@ -1,6 +1,17 @@
-variable "project"    { type = string; default = "health-logger" }
-variable "env"        { type = string; default = "prod" }
-variable "aws_region" { type = string; default = "ap-northeast-1" }
+variable "project" {
+  type    = string
+  default = "health-logger"
+}
+
+variable "env" {
+  type    = string
+  default = "prod"
+}
+
+variable "aws_region" {
+  type    = string
+  default = "ap-northeast-1"
+}
 
 variable "lambda_s3_keys" {
   type        = map(string)

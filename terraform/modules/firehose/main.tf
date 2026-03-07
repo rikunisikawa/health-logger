@@ -71,7 +71,7 @@ resource "aws_kinesis_firehose_delivery_stream" "health_records" {
 
   iceberg_configuration {
     role_arn    = aws_iam_role.firehose.arn
-    catalog_arn = "arn:aws:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:catalog"
+    catalog_arn = "arn:aws:glue:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:catalog"
 
     destination_table_configuration {
       database_name = var.glue_database_name

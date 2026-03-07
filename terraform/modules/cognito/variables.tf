@@ -1,5 +1,5 @@
 variable "project" { type = string }
-variable "env"     { type = string }
+variable "env" { type = string }
 
 variable "callback_urls" {
   type        = list(string)

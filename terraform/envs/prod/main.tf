@@ -1,16 +1,3 @@
-terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = ">= 5.75"
-    }
-  }
-}
-
-provider "aws" {
-  region = var.aws_region
-}
-
 locals {
   name = "${var.project}-${var.env}"
 }
@@ -39,14 +26,15 @@ module "glue" {
   env                 = var.env
   table_bucket_arn    = module.s3tables.table_bucket_arn
   table_bucket_s3_uri = module.s3tables.table_bucket_s3_uri
+  iceberg_s3_location = "s3://${module.s3.bucket_name}/iceberg"
 }
 
 # ── Kinesis Firehose → S3 Tables (Iceberg) ────────────────────────────────────
 module "firehose" {
-  source              = "../../modules/firehose"
-  project             = var.project
-  env                 = var.env
-  glue_database_name  = module.glue.database_name
+  source               = "../../modules/firehose"
+  project              = var.project
+  env                  = var.env
+  glue_database_name   = module.glue.database_name
   s3_backup_bucket_arn = module.s3.bucket_arn
 }
 
@@ -160,12 +148,12 @@ resource "aws_iam_role_policy" "github_actions" {
       },
       {
         Effect   = "Allow"
-        Action   = ["lambda:UpdateFunctionCode", "lambda:GetFunction", "lambda:PublishVersion"]
+        Action   = ["lambda:UpdateFunctionCode", "lambda:GetFunction", "lambda:PublishVersion", "lambda:ListVersionsByFunction", "lambda:GetFunctionCodeSigningConfig", "lambda:GetPolicy", "lambda:ListAliases", "lambda:GetFunctionConfiguration"]
         Resource = ["*"]
       },
       {
-        Effect   = "Allow"
-        Action   = ["s3:GetObject", "s3:PutObject", "s3:ListBucket", "s3:GetBucketVersioning"]
+        Effect = "Allow"
+        Action = ["s3:GetObject", "s3:PutObject", "s3:ListBucket", "s3:GetBucketVersioning"]
         Resource = [
           "arn:aws:s3:::health-logger-tfstate-prod",
           "arn:aws:s3:::health-logger-tfstate-prod/*",
@@ -176,14 +164,66 @@ resource "aws_iam_role_policy" "github_actions" {
         Action   = ["dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:DeleteItem"]
         Resource = "arn:aws:dynamodb:${var.aws_region}:${data.aws_caller_identity.current.account_id}:table/health-logger-tflock-prod"
       },
+      # Terraform plan: read access to all managed resources
+      {
+        Effect = "Allow"
+        Action = [
+          "iam:GetRole", "iam:GetRolePolicy", "iam:ListRolePolicies",
+          "iam:ListAttachedRolePolicies", "iam:GetOpenIDConnectProvider",
+          "iam:ListOpenIDConnectProviders",
+        ]
+        Resource = ["*"]
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetBucketVersioning", "s3:GetBucketPolicy", "s3:GetBucketPublicAccessBlock",
+          "s3:GetBucketLogging", "s3:GetBucketObjectLockConfiguration",
+          "s3:GetEncryptionConfiguration", "s3:GetLifecycleConfiguration",
+          "s3:GetReplicationConfiguration", "s3:ListBucket", "s3:GetBucketAcl",
+          "s3:GetBucketCORS", "s3:GetBucketWebsite", "s3:GetBucketRequestPayment",
+          "s3:GetBucketTagging", "s3:GetAccelerateConfiguration",
+        ]
+        Resource = ["*"]
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["s3tables:GetTableBucket", "s3tables:ListTableBuckets", "s3tables:GetNamespace", "s3tables:ListNamespaces", "s3tables:GetTable", "s3tables:ListTables", "s3tables:GetTableBucketMaintenanceConfiguration", "s3tables:GetTableBucketEncryption", "s3tables:ListTagsForResource", "s3tables:GetTablePolicy", "s3tables:GetTableEncryption", "s3tables:GetTableMaintenanceConfiguration", "s3tables:GetTableMaintenanceJobStatus"]
+        Resource = ["*"]
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["cognito-idp:DescribeUserPool", "cognito-idp:DescribeUserPoolClient", "cognito-idp:DescribeUserPoolDomain", "cognito-idp:ListUserPools", "cognito-idp:GetUserPoolMfaConfig"]
+        Resource = ["*"]
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["apigateway:GET"]
+        Resource = ["*"]
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["glue:GetDatabase", "glue:GetTable", "glue:GetTables", "glue:GetTags"]
+        Resource = ["*"]
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["firehose:DescribeDeliveryStream", "firehose:ListDeliveryStreams", "firehose:ListTagsForDeliveryStream"]
+        Resource = ["*"]
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["amplify:GetApp", "amplify:GetBranch", "amplify:ListApps", "amplify:ListBranches"]
+        Resource = ["*"]
+      },
     ]
   })
 }
 
 # ── Outputs ────────────────────────────────────────────────────────────────────
-output "api_endpoint"          { value = module.apigw.endpoint_url }
-output "amplify_app_url"       { value = module.amplify.app_url }
-output "cognito_user_pool_id"  { value = module.cognito.user_pool_id }
-output "cognito_client_id"     { value = module.cognito.client_id }
-output "github_actions_role"   { value = aws_iam_role.github_actions.arn }
+output "api_endpoint" { value = module.apigw.endpoint_url }
+output "amplify_app_url" { value = module.amplify.app_url }
+output "cognito_user_pool_id" { value = module.cognito.user_pool_id }
+output "cognito_client_id" { value = module.cognito.client_id }
+output "github_actions_role" { value = aws_iam_role.github_actions.arn }
 output "lambda_artifacts_bucket" { value = module.lambda.artifacts_bucket_name }
