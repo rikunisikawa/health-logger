@@ -164,6 +164,58 @@ resource "aws_iam_role_policy" "github_actions" {
         Action   = ["dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:DeleteItem"]
         Resource = "arn:aws:dynamodb:${var.aws_region}:${data.aws_caller_identity.current.account_id}:table/health-logger-tflock-prod"
       },
+      # Terraform plan: read access to all managed resources
+      {
+        Effect = "Allow"
+        Action = [
+          "iam:GetRole", "iam:GetRolePolicy", "iam:ListRolePolicies",
+          "iam:ListAttachedRolePolicies", "iam:GetOpenIDConnectProvider",
+          "iam:ListOpenIDConnectProviders",
+        ]
+        Resource = ["*"]
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetBucketVersioning", "s3:GetBucketPolicy", "s3:GetBucketPublicAccessBlock",
+          "s3:GetBucketLogging", "s3:GetBucketObjectLockConfiguration",
+          "s3:GetEncryptionConfiguration", "s3:GetLifecycleConfiguration",
+          "s3:GetReplicationConfiguration", "s3:ListBucket", "s3:GetBucketAcl",
+          "s3:GetBucketCORS", "s3:GetBucketWebsite", "s3:GetBucketRequestPayment",
+          "s3:GetBucketTagging", "s3:GetAccelerateConfiguration",
+        ]
+        Resource = ["*"]
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["s3tables:GetTableBucket", "s3tables:ListTableBuckets", "s3tables:GetNamespace", "s3tables:ListNamespaces", "s3tables:GetTable", "s3tables:ListTables"]
+        Resource = ["*"]
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["cognito-idp:DescribeUserPool", "cognito-idp:DescribeUserPoolClient", "cognito-idp:DescribeUserPoolDomain", "cognito-idp:ListUserPools"]
+        Resource = ["*"]
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["apigateway:GET"]
+        Resource = ["*"]
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["glue:GetDatabase", "glue:GetTable", "glue:GetTables"]
+        Resource = ["*"]
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["firehose:DescribeDeliveryStream", "firehose:ListDeliveryStreams"]
+        Resource = ["*"]
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["amplify:GetApp", "amplify:GetBranch", "amplify:ListApps", "amplify:ListBranches"]
+        Resource = ["*"]
+      },
     ]
   })
 }
