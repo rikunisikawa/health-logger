@@ -188,12 +188,12 @@ resource "aws_iam_role_policy" "github_actions" {
       },
       {
         Effect   = "Allow"
-        Action   = ["s3tables:GetTableBucket", "s3tables:ListTableBuckets", "s3tables:GetNamespace", "s3tables:ListNamespaces", "s3tables:GetTable", "s3tables:ListTables"]
+        Action   = ["s3tables:GetTableBucket", "s3tables:ListTableBuckets", "s3tables:GetNamespace", "s3tables:ListNamespaces", "s3tables:GetTable", "s3tables:ListTables", "s3tables:GetTableBucketMaintenanceConfiguration"]
         Resource = ["*"]
       },
       {
         Effect   = "Allow"
-        Action   = ["cognito-idp:DescribeUserPool", "cognito-idp:DescribeUserPoolClient", "cognito-idp:DescribeUserPoolDomain", "cognito-idp:ListUserPools"]
+        Action   = ["cognito-idp:DescribeUserPool", "cognito-idp:DescribeUserPoolClient", "cognito-idp:DescribeUserPoolDomain", "cognito-idp:ListUserPools", "cognito-idp:GetUserPoolMfaConfig"]
         Resource = ["*"]
       },
       {
@@ -203,7 +203,7 @@ resource "aws_iam_role_policy" "github_actions" {
       },
       {
         Effect   = "Allow"
-        Action   = ["glue:GetDatabase", "glue:GetTable", "glue:GetTables"]
+        Action   = ["glue:GetDatabase", "glue:GetTable", "glue:GetTables", "glue:GetTags"]
         Resource = ["*"]
       },
       {
