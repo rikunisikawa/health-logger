@@ -31,10 +31,10 @@ module "glue" {
 
 # ── Kinesis Firehose → S3 Tables (Iceberg) ────────────────────────────────────
 module "firehose" {
-  source              = "../../modules/firehose"
-  project             = var.project
-  env                 = var.env
-  glue_database_name  = module.glue.database_name
+  source               = "../../modules/firehose"
+  project              = var.project
+  env                  = var.env
+  glue_database_name   = module.glue.database_name
   s3_backup_bucket_arn = module.s3.bucket_arn
 }
 
@@ -152,8 +152,8 @@ resource "aws_iam_role_policy" "github_actions" {
         Resource = ["*"]
       },
       {
-        Effect   = "Allow"
-        Action   = ["s3:GetObject", "s3:PutObject", "s3:ListBucket", "s3:GetBucketVersioning"]
+        Effect = "Allow"
+        Action = ["s3:GetObject", "s3:PutObject", "s3:ListBucket", "s3:GetBucketVersioning"]
         Resource = [
           "arn:aws:s3:::health-logger-tfstate-prod",
           "arn:aws:s3:::health-logger-tfstate-prod/*",
@@ -169,9 +169,9 @@ resource "aws_iam_role_policy" "github_actions" {
 }
 
 # ── Outputs ────────────────────────────────────────────────────────────────────
-output "api_endpoint"          { value = module.apigw.endpoint_url }
-output "amplify_app_url"       { value = module.amplify.app_url }
-output "cognito_user_pool_id"  { value = module.cognito.user_pool_id }
-output "cognito_client_id"     { value = module.cognito.client_id }
-output "github_actions_role"   { value = aws_iam_role.github_actions.arn }
+output "api_endpoint" { value = module.apigw.endpoint_url }
+output "amplify_app_url" { value = module.amplify.app_url }
+output "cognito_user_pool_id" { value = module.cognito.user_pool_id }
+output "cognito_client_id" { value = module.cognito.client_id }
+output "github_actions_role" { value = aws_iam_role.github_actions.arn }
 output "lambda_artifacts_bucket" { value = module.lambda.artifacts_bucket_name }

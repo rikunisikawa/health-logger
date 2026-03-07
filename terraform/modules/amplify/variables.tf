@@ -1,5 +1,5 @@
 variable "project" { type = string }
-variable "env"     { type = string }
+variable "env" { type = string }
 
 variable "github_repository" {
   type        = string
@@ -12,7 +12,7 @@ variable "github_access_token" {
   description = "GitHub personal access token for Amplify GitHub connection"
 }
 
-variable "api_endpoint"         { type = string }
+variable "api_endpoint" { type = string }
 variable "cognito_user_pool_id" { type = string }
-variable "cognito_client_id"    { type = string }
-variable "cognito_domain"       { type = string }
+variable "cognito_client_id" { type = string }
+variable "cognito_domain" { type = string }

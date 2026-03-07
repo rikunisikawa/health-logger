@@ -1,5 +1,5 @@
 variable "project" { type = string }
-variable "env"     { type = string }
+variable "env" { type = string }
 
 variable "table_bucket_arn" {
   type        = string
