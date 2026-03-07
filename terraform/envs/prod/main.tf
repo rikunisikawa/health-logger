@@ -148,7 +148,7 @@ resource "aws_iam_role_policy" "github_actions" {
       },
       {
         Effect   = "Allow"
-        Action   = ["lambda:UpdateFunctionCode", "lambda:GetFunction", "lambda:PublishVersion"]
+        Action   = ["lambda:UpdateFunctionCode", "lambda:GetFunction", "lambda:PublishVersion", "lambda:ListVersionsByFunction"]
         Resource = ["*"]
       },
       {
@@ -188,7 +188,7 @@ resource "aws_iam_role_policy" "github_actions" {
       },
       {
         Effect   = "Allow"
-        Action   = ["s3tables:GetTableBucket", "s3tables:ListTableBuckets", "s3tables:GetNamespace", "s3tables:ListNamespaces", "s3tables:GetTable", "s3tables:ListTables", "s3tables:GetTableBucketMaintenanceConfiguration"]
+        Action   = ["s3tables:GetTableBucket", "s3tables:ListTableBuckets", "s3tables:GetNamespace", "s3tables:ListNamespaces", "s3tables:GetTable", "s3tables:ListTables", "s3tables:GetTableBucketMaintenanceConfiguration", "s3tables:GetTableBucketEncryption"]
         Resource = ["*"]
       },
       {
@@ -208,7 +208,7 @@ resource "aws_iam_role_policy" "github_actions" {
       },
       {
         Effect   = "Allow"
-        Action   = ["firehose:DescribeDeliveryStream", "firehose:ListDeliveryStreams"]
+        Action   = ["firehose:DescribeDeliveryStream", "firehose:ListDeliveryStreams", "firehose:ListTagsForDeliveryStream"]
         Resource = ["*"]
       },
       {
