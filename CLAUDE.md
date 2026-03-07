@@ -182,19 +182,83 @@ LAMBDA_ARTIFACTS_BUCKET_PROD
 ### 1. イシューを作成する
 
 作業を始める前に GitHub イシューを作成し、何をやるかを明確にする。
+イシューの種類に応じて以下のテンプレートを使うこと（`.github/ISSUE_TEMPLATE/` 参照）。
+
+#### 新機能 (`feature` ラベル)
 
 ```bash
 gh issue create \
-  --title "<変更内容の要約>" \
+  --label "feature" \
+  --title "<機能の要約>" \
   --body "$(cat <<'EOF'
 ## 背景・目的
-- ...
+- 現状の課題: ...
+- これにより: ...
 
 ## やること
-- [ ] ...
+- [ ]
+- [ ]
 
 ## 完了条件
-- ...
+- ...が動作すること
+- テストが全件 PASSED
+
+## 影響範囲
+<!-- フロントエンドのみ / Lambda のみ / Terraform のみ / フルスタック -->
+EOF
+)"
+```
+
+#### バグ修正 (`bug` ラベル)
+
+```bash
+gh issue create \
+  --label "bug" \
+  --title "<バグの要約>" \
+  --body "$(cat <<'EOF'
+## 何が起きているか
+**実際**: ...
+**期待**: ...
+
+## 再現手順
+1.
+2.
+3.
+
+## 環境・ログ
+\`\`\`
+\`\`\`
+
+## 対応内容
+- [ ] 原因調査
+- [ ] 修正実装
+- [ ] テスト追加
+EOF
+)"
+```
+
+#### 設定・インフラ・リファクタ (`chore` ラベル)
+
+```bash
+gh issue create \
+  --label "chore" \
+  --title "<変更の要約>" \
+  --body "$(cat <<'EOF'
+## 背景・目的
+- 現状: ...
+- 変更理由: ...
+
+## やること
+- [ ]
+- [ ]
+
+## 完了条件
+- terraform validate が通ること
+- CI が全件 PASSED
+
+## 注意事項
+- [ ] terraform apply が必要
+- [ ] GitHub Secrets の更新が必要
 EOF
 )"
 ```
