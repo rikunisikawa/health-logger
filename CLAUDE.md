@@ -179,7 +179,31 @@ LAMBDA_ARTIFACTS_BUCKET_PROD
 
 コーディング作業は必ず以下の順序で行うこと。
 
-### 1. ブランチを切る
+### 1. イシューを作成する
+
+作業を始める前に GitHub イシューを作成し、何をやるかを明確にする。
+
+```bash
+gh issue create \
+  --title "<変更内容の要約>" \
+  --body "$(cat <<'EOF'
+## 背景・目的
+- ...
+
+## やること
+- [ ] ...
+
+## 完了条件
+- ...
+EOF
+)"
+```
+
+作成されたイシュー番号（例: `#42`）を控えておく。ブランチ名・コミット・PR で参照する。
+
+### 2. ブランチを切る
+
+イシュー番号をブランチ名に含めると追跡しやすい。
 
 ```bash
 git switch main
@@ -194,9 +218,9 @@ git switch -c <prefix>/<簡潔な名前>
 | `chore/` | 設定変更・依存更新・リファクタ |
 | `terraform/` | インフラ変更のみ |
 
-例: `feature/add-sleep-quality-score`、`fix/offline-queue-flush`
+例: `feature/42-add-sleep-quality-score`、`fix/43-offline-queue-flush`
 
-### 2. テストを先に書く（Red）
+### 3. テストを先に書く（Red）
 
 実装の前にテストを作成し、失敗することを確認する。
 
@@ -212,7 +236,7 @@ cd frontend && npx tsc --noEmit          # → エラーであることを確認
 - Lambda: `test_handler.py` にユニットテストを追加
 - フロントエンド: 型システムを活用し、型エラーで Red 状態を表現する
 
-### 3. 実装する（Green）
+### 4. 実装する（Green）
 
 テストが通る最小限のコードを書く。過剰な汎用化・先回りした設計は避ける。
 
@@ -224,7 +248,7 @@ pytest lambda/<対象>/ -v                 # → PASSED を確認
 cd frontend && npx tsc --noEmit && npm run build
 ```
 
-### 4. 全テストを通す
+### 5. 全テストを通す
 
 個別テストが通った後、すべてのテストが壊れていないか確認する。
 
@@ -238,7 +262,7 @@ cd frontend && npx tsc --noEmit && npm run build
 
 すべて通ることを確認してからコミットに進む。失敗があれば必ず修正する。
 
-### 5. 機能単位でコミットする
+### 6. 機能単位でコミットする
 
 1 コミット = 1 つの論理的な変更。複数の変更をまとめてコミットしない。
 
@@ -264,11 +288,14 @@ test: add validation tests for flags bitmask range
 terraform: restrict CORS to Amplify domain
 ```
 
-### 6. PR を作成する
+### 7. PR を作成する
 
 ```bash
 git push origin HEAD
 gh pr create --title "<変更内容>" --body "$(cat <<'EOF'
+## 関連イシュー
+Closes #<issue番号>
+
 ## 変更内容
 - ...
 
