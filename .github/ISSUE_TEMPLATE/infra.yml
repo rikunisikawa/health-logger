@@ -1,0 +1,127 @@
+name: Infra
+description: Terraformによるインフラ変更を追跡します。
+title: "[Infra] "
+labels: ["infra"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## インフラ変更
+        Terraform によるインフラ変更を管理するためのテンプレートです。
+        **⚠️ `terraform apply` は必ずレビュー・承認後に実施してください。AIが自律的に apply することは禁止です。**
+
+  - type: textarea
+    id: change_summary
+    attributes:
+      label: 変更内容
+      description: インフラの変更内容を説明してください。
+      placeholder: |
+        例: CORS allow_origins を `["*"]` から Amplify URL に制限する
+    validations:
+      required: true
+
+  - type: textarea
+    id: target_resources
+    attributes:
+      label: 対象リソース
+      description: 変更する Terraform リソース・モジュールを列挙してください。
+      placeholder: |
+        - `terraform/modules/apigw/main.tf` - CORS 設定
+        - `terraform/envs/prod/terraform.tfvars` - `cors_allow_origins` 変数
+      render: markdown
+    validations:
+      required: true
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: 影響範囲
+      description: この変更が影響するシステム・サービスを記載してください。ダウンタイムの有無も明記してください。
+      placeholder: |
+        - API Gateway: CORS ヘッダーが変更される（ダウンタイムなし）
+        - フロントエンド: Amplify URL 以外からのアクセスが 403 になる
+        - ダウンタイム: なし（設定変更のみ）
+    validations:
+      required: true
+
+  - type: textarea
+    id: procedure
+    attributes:
+      label: 実施手順
+      description: apply までの手順を記載してください。plan 結果の確認事項も含めてください。
+      value: |
+        ```bash
+        cd terraform/envs/prod
+
+        # 1. フォーマット確認
+        terraform fmt -recursive
+
+        # 2. 構文検証
+        terraform validate
+
+        # 3. Plan（内容を PR にコメントとして貼る）
+        terraform plan \
+          -var='lambda_s3_keys={"create_record":"placeholder","get_latest":"placeholder"}'
+
+        # 4. レビュー・承認後に apply（ユーザー確認必須）
+        # terraform apply ...
+        ```
+
+        **Plan 確認ポイント**
+        - [ ] 削除されるリソースがないこと（または意図的な削除であること）
+        - [ ] 変更件数が想定内であること
+      render: markdown
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: 完了条件
+      description: この変更を「完了」とみなすための条件を列挙してください。
+      value: |
+        - [ ] `terraform plan` の差分が意図通りであることを確認した
+        - [ ] レビュアーが plan 結果を承認した
+        - [ ] `terraform apply` が成功した
+        - [ ] 変更後の動作を本番環境で確認した
+      render: markdown
+    validations:
+      required: true
+
+  - type: textarea
+    id: rollback
+    attributes:
+      label: ロールバック手順
+      description: 問題が発生した場合のロールバック手順を記載してください。
+      placeholder: |
+        例:
+        - `cors_allow_origins` を元の値に戻して `terraform apply` を再実行する
+        - 状態: `health-logger-tfstate-prod` バケットで管理
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: 事前確認チェックリスト
+      options:
+        - label: "`terraform.tfvars` にシークレット値を含めていない"
+          required: true
+        - label: "`terraform apply` はユーザーの承認後にのみ実施することを確認した"
+          required: true
+        - label: "本番環境（ap-northeast-1 / アカウント 143944071087）への変更であることを確認した"
+          required: true
+
+  - type: textarea
+    id: plan_output
+    attributes:
+      label: terraform plan 出力（apply 前に記入）
+      description: plan の出力結果をここに貼り付けてください。
+      render: shell
+
+  - type: textarea
+    id: references
+    attributes:
+      label: 関連情報
+      description: 関連イシュー、設計ドキュメント等があれば記載してください。
+      placeholder: |
+        - 関連設計: #42
+        - 参考: https://...

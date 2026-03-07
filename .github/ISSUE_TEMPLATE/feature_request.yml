@@ -1,0 +1,94 @@
+name: Feature Request
+description: 新機能の追加を提案します。
+title: "[Feature] "
+labels: ["feature"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 機能追加リクエスト
+        新しい機能を提案する際に使用してください。
+        ユーザーストーリーと要件を具体的に記載することで、実装の方向性が明確になります。
+
+  - type: textarea
+    id: background
+    attributes:
+      label: 背景
+      description: この機能が必要になった背景・課題を説明してください。
+      placeholder: |
+        例:
+        - 毎日の記録を振り返りたいが、過去データを確認する手段がない
+        - 週次・月次でのトレンドを把握したい
+    validations:
+      required: true
+
+  - type: textarea
+    id: user_story
+    attributes:
+      label: ユーザーストーリー
+      description: 誰が・何をしたい・なぜ、という形式で記載してください。
+      placeholder: |
+        例:
+        - ユーザーとして、過去7日間の疲労感の推移をグラフで確認したい。なぜなら、体調パターンを把握してセルフケアに役立てたいから。
+        - ユーザーとして、フラグ（運動・アルコール等）と体調スコアの相関を見たい。
+    validations:
+      required: true
+
+  - type: textarea
+    id: requirements
+    attributes:
+      label: 要件
+      description: 機能の具体的な要件を記載してください。必須要件と任意要件を区別すると明確です。
+      placeholder: |
+        **必須**
+        - [ ] 過去 7 日分のデータを折れ線グラフで表示する
+        - [ ] fatigue / mood / motivation の 3 系列を表示する
+
+        **任意（あれば嬉しい）**
+        - [ ] 表示期間を 7 日 / 30 日 / 90 日 で切り替えられる
+      render: markdown
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: 完了条件
+      description: このイシューを「完了」とみなすための条件を列挙してください。
+      value: |
+        - [ ] 要件をすべて満たしている
+        - [ ] `pytest lambda/ -v` → 全件 PASSED
+        - [ ] `npx tsc --noEmit` → エラーなし
+        - [ ] `npm run build` → 成功
+        - [ ] PR が CI を通過している
+      render: markdown
+    validations:
+      required: true
+
+  - type: textarea
+    id: ui_mockup
+    attributes:
+      label: UI/UXイメージ（任意）
+      description: 画面イメージやモックアップがあれば添付・記載してください。
+      placeholder: |
+        スクリーンショット、Figmaリンク、ASCII図など
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: 優先度
+      options:
+        - high（なるべく早く対応したい）
+        - medium（通常の優先度）
+        - low（余裕があれば対応）
+    validations:
+      required: true
+
+  - type: textarea
+    id: references
+    attributes:
+      label: 参考情報
+      description: 関連イシュー、PR、参考になる実装例などがあれば記載してください。
+      placeholder: |
+        - 関連: #42
+        - 参考: https://...

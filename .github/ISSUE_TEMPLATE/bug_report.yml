@@ -1,0 +1,109 @@
+name: Bug Report
+description: バグや予期しない動作を報告します。
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## バグ報告
+        バグや予期しない動作を報告する際に使用してください。
+        再現手順を詳しく記載することで、原因の特定が早くなります。
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: 発生内容
+      description: バグの概要を簡潔に説明してください。
+      placeholder: |
+        例: オフラインで記録した後にネットワーク復帰しても、キューがフラッシュされず記録が送信されない
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: 再現手順
+      description: バグを再現するための手順を番号付きで記載してください。
+      placeholder: |
+        1. ネットワークを無効にした状態でアプリを開く
+        2. 疲労感・気分・やる気を入力して「記録する」をタップ
+        3. ネットワークを有効に戻す
+        4. アプリをバックグラウンドから復帰させる
+        5. → キューが残ったまま送信されない
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期待する動作
+      description: 本来どのような動作をすべきか記載してください。
+      placeholder: |
+        例: ネットワーク復帰後、オフラインキューが自動的にフラッシュされ、記録が Firehose に送信される
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: 実際の動作
+      description: 実際にどのような動作が起きているか記載してください。エラーメッセージも含めてください。
+      placeholder: |
+        例:
+        - キューが残ったままになる
+        - コンソールにエラーは表示されない
+        - ネットワークタブを見ると POST /records が送信されていない
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: 環境
+      description: バグが発生した環境を記載してください。
+      value: |
+        - OS:
+        - ブラウザ / バージョン:
+        - アプリバージョン / コミットハッシュ:
+        - AWS リージョン: ap-northeast-1
+        - 再現頻度: （常に / たまに / 一度だけ）
+      render: markdown
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: ログ・スタックトレース（任意）
+      description: ブラウザのコンソールログ、Lambda のエラーログ（CloudWatch）等があれば貼り付けてください。
+      render: shell
+
+  - type: textarea
+    id: workaround
+    attributes:
+      label: 回避策（任意）
+      description: 現時点での回避策があれば記載してください。
+      placeholder: |
+        例: 手動でページをリロードするとキューがフラッシュされる
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: 深刻度
+      options:
+        - critical（データ損失・セキュリティ問題）
+        - high（主要機能が使えない）
+        - medium（機能の一部が使えない）
+        - low（軽微な表示崩れ等）
+    validations:
+      required: true
+
+  - type: textarea
+    id: references
+    attributes:
+      label: 関連情報（任意）
+      description: 関連するイシュー、PR、コードの場所などがあれば記載してください。
+      placeholder: |
+        - 関連: #42
+        - 該当ファイル: `frontend/src/hooks/useOfflineQueue.ts`

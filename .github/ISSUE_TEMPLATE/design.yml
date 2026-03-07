@@ -1,0 +1,110 @@
+name: Design
+description: アーキテクチャや設計の議論・意思決定を記録します。
+title: "[Design] "
+labels: ["design"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 設計議論
+        アーキテクチャの変更や技術選定の議論に使用してください。
+        決定した内容はこのイシューに記録し、実装イシューから参照します。
+
+  - type: textarea
+    id: overview
+    attributes:
+      label: 概要
+      description: 何を設計・検討するか、一言で説明してください。
+      placeholder: |
+        例: GET /records/latest を廃止し、リアルタイム Subscription に移行する設計
+    validations:
+      required: true
+
+  - type: textarea
+    id: motivation
+    attributes:
+      label: 背景・動機
+      description: なぜこの設計変更が必要か、現状の問題点を説明してください。
+      placeholder: |
+        例:
+        - Athena のコールドスタートで P95 レイテンシが 3 秒を超えている
+        - ポーリング実装がフロントエンドを複雑にしている
+    validations:
+      required: true
+
+  - type: textarea
+    id: architecture
+    attributes:
+      label: アーキテクチャ
+      description: 提案するアーキテクチャを図や箇条書きで説明してください。変更前後の比較があると議論しやすいです。
+      placeholder: |
+        **現状**
+        ```
+        GET /records/latest → Lambda → Athena（ポーリング）→ JSON レスポンス
+        ```
+
+        **提案**
+        ```
+        AppSync Subscription → Lambda Resolver → DynamoDB Stream → フロントエンド
+        ```
+
+        **変更ファイル（予想）**
+        - `terraform/modules/apigw/` → AppSync モジュールに置き換え
+        - `lambda/get_latest/` → Resolver Lambda に変更
+        - `frontend/src/hooks/useLatestRecord.ts` → Subscription 対応
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: 代替案
+      description: 検討した別の案と、採用しなかった理由を記載してください。
+      placeholder: |
+        **案A: DynamoDB + AppSync（提案案）**
+        - メリット: リアルタイム更新、低レイテンシ
+        - デメリット: Terraform 変更量が大きい
+
+        **案B: ElastiCache でキャッシュ**
+        - メリット: 既存 Athena 構成を維持
+        - デメリット: VPC 設定が必要、コスト増
+
+        **→ 案A を採用。理由: ...**
+
+  - type: textarea
+    id: risks
+    attributes:
+      label: リスク
+      description: この設計変更に伴うリスクや懸念事項を列挙してください。
+      placeholder: |
+        - [ ] データ移行が必要（既存 Iceberg テーブルとの二重管理期間が発生）
+        - [ ] AppSync のコストが未試算
+        - [ ] フロントエンドの認証フロー変更が必要
+    validations:
+      required: true
+
+  - type: textarea
+    id: decision
+    attributes:
+      label: 決定事項（議論後に記入）
+      description: 議論の結果、採用する設計と理由を記載してください。
+      placeholder: |
+        ## 決定
+        案A（DynamoDB + AppSync）を採用する。
+
+        ## 理由
+        - ...
+
+        ## 実装イシュー
+        - #44 AppSync モジュール作成
+        - #45 フロントエンド Subscription 対応
+
+  - type: textarea
+    id: references
+    attributes:
+      label: 参考情報
+      description: 関連ドキュメント、ADR、参考実装などがあれば記載してください。
+      placeholder: |
+        - AWS ドキュメント: https://...
+        - 関連イシュー: #42
+        - ADR: docs/adr/001-...

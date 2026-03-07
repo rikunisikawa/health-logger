@@ -1,0 +1,110 @@
+name: AI Task
+description: AIに実装させるタスク。Claude Code等のAIエージェントへの指示書として使用します。
+title: "[AI Task] "
+labels: ["ai-task"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## AI実装タスク
+        このテンプレートはAI（Claude Code等）に実装を依頼するための指示書です。
+        AIが迷わず実装できるよう、仕様・完了条件を具体的に記載してください。
+
+  - type: textarea
+    id: purpose
+    attributes:
+      label: 目的
+      description: このタスクで何を実現したいか、一言で説明してください。
+      placeholder: |
+        例: オフラインキューのフラッシュ処理をアプリ起動時に自動実行する
+    validations:
+      required: true
+
+  - type: textarea
+    id: background
+    attributes:
+      label: 背景
+      description: なぜこのタスクが必要か、現状の問題点や経緯を説明してください。
+      placeholder: |
+        例:
+        - 現状: ネットワーク復帰後も手動でフラッシュ操作が必要
+        - 問題: ユーザーが記録の未送信に気づかないケースがある
+    validations:
+      required: true
+
+  - type: textarea
+    id: spec
+    attributes:
+      label: 仕様
+      description: AIへの実装指示として、具体的な仕様を記載してください。関連ファイル・関数名も含めると精度が上がります。
+      placeholder: |
+        例:
+        - `frontend/src/hooks/useOfflineQueue.ts` の `useOfflineQueue` フックに起動時フラッシュを追加
+        - アプリ初回マウント時（`useEffect` 依存配列空）に `flushQueue()` を呼び出す
+        - ネットワーク未接続時はスキップし、エラーをコンソールに出力しない
+        - 既存の手動フラッシュ機能は変更しない
+    validations:
+      required: true
+
+  - type: textarea
+    id: tasks
+    attributes:
+      label: 実装タスク
+      description: AIが順番に実行すべきタスクをチェックリスト形式で記載してください。
+      value: |
+        - [ ] テストを先に書く（Red）
+        - [ ] 実装する（Green）
+        - [ ] 全テストを通す
+        - [ ] コミット・PR作成
+      render: markdown
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: 完了条件
+      description: このイシューを「完了」とみなすための条件を列挙してください。
+      value: |
+        - [ ] `pytest lambda/ -v` → 全件 PASSED
+        - [ ] `npx tsc --noEmit` → エラーなし
+        - [ ] `npm run build` → 成功
+        - [ ] PR が CI を通過している
+      render: markdown
+    validations:
+      required: true
+
+  - type: textarea
+    id: constraints
+    attributes:
+      label: 制約・注意事項
+      description: AIが実装する際に守るべき制約や注意事項があれば記載してください。
+      placeholder: |
+        例:
+        - `terraform apply` は実行しない（plan のみ）
+        - 既存の API インターフェースを変更しない
+        - `app/` ディレクトリは編集しない
+
+  - type: dropdown
+    id: target_area
+    attributes:
+      label: 対象領域
+      description: 主に変更する領域を選択してください。
+      options:
+        - frontend
+        - lambda
+        - terraform
+        - github-actions
+        - docs
+        - multiple
+    validations:
+      required: true
+
+  - type: textarea
+    id: references
+    attributes:
+      label: 参考情報
+      description: 関連イシュー、PR、ドキュメントへのリンクがあれば記載してください。
+      placeholder: |
+        - 関連: #42
+        - 参考ドキュメント: https://...
