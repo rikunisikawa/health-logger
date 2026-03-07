@@ -14,3 +14,5 @@ variable "create_record_lambda_invoke_arn" { type = string }
 variable "get_latest_lambda_invoke_arn" { type = string }
 variable "create_record_function_name" { type = string }
 variable "get_latest_function_name" { type = string }
+variable "push_subscribe_lambda_invoke_arn" { type = string }
+variable "push_subscribe_function_name" { type = string }

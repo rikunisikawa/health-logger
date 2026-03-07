@@ -8,7 +8,7 @@ resource "aws_apigatewayv2_api" "main" {
 
   cors_configuration {
     allow_headers = ["content-type", "authorization"]
-    allow_methods = ["GET", "POST", "OPTIONS"]
+    allow_methods = ["GET", "POST", "DELETE", "OPTIONS"]
     allow_origins = var.cors_allow_origins
     max_age       = 86400
   }
@@ -99,6 +99,39 @@ resource "aws_lambda_permission" "get_latest" {
   statement_id  = "AllowAPIGatewayInvoke"
   action        = "lambda:InvokeFunction"
   function_name = var.get_latest_function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.main.execution_arn}/*/*"
+}
+
+resource "aws_apigatewayv2_integration" "push_subscribe" {
+  api_id                 = aws_apigatewayv2_api.main.id
+  integration_type       = "AWS_PROXY"
+  integration_uri        = var.push_subscribe_lambda_invoke_arn
+  payload_format_version = "2.0"
+}
+
+resource "aws_apigatewayv2_route" "push_subscribe_post" {
+  api_id    = aws_apigatewayv2_api.main.id
+  route_key = "POST /push/subscribe"
+  target    = "integrations/${aws_apigatewayv2_integration.push_subscribe.id}"
+
+  authorization_type = "JWT"
+  authorizer_id      = aws_apigatewayv2_authorizer.cognito.id
+}
+
+resource "aws_apigatewayv2_route" "push_subscribe_delete" {
+  api_id    = aws_apigatewayv2_api.main.id
+  route_key = "DELETE /push/subscribe"
+  target    = "integrations/${aws_apigatewayv2_integration.push_subscribe.id}"
+
+  authorization_type = "JWT"
+  authorizer_id      = aws_apigatewayv2_authorizer.cognito.id
+}
+
+resource "aws_lambda_permission" "push_subscribe" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = var.push_subscribe_function_name
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_apigatewayv2_api.main.execution_arn}/*/*"
 }

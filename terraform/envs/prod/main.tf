@@ -53,6 +53,9 @@ module "lambda" {
   s3_results_bucket_name = module.s3.bucket_name
 
   athena_database = module.glue.database_name
+
+  vapid_private_key = var.vapid_private_key
+  vapid_public_key  = var.vapid_public_key
 }
 
 # ── Cognito (User Pool + Client + Domain) ─────────────────────────────────────
@@ -77,10 +80,12 @@ module "apigw" {
   cognito_issuer_url = module.cognito.issuer_url
   cognito_client_id  = module.cognito.client_id
 
-  create_record_lambda_invoke_arn = module.lambda.create_record_invoke_arn
-  get_latest_lambda_invoke_arn    = module.lambda.get_latest_invoke_arn
-  create_record_function_name     = module.lambda.create_record_function_name
-  get_latest_function_name        = module.lambda.get_latest_function_name
+  create_record_lambda_invoke_arn  = module.lambda.create_record_invoke_arn
+  get_latest_lambda_invoke_arn     = module.lambda.get_latest_invoke_arn
+  create_record_function_name      = module.lambda.create_record_function_name
+  get_latest_function_name         = module.lambda.get_latest_function_name
+  push_subscribe_lambda_invoke_arn = module.lambda.push_subscribe_invoke_arn
+  push_subscribe_function_name     = module.lambda.push_subscribe_function_name
 }
 
 # ── Amplify (React frontend hosting) ─────────────────────────────────────────
@@ -95,6 +100,7 @@ module "amplify" {
   cognito_user_pool_id = module.cognito.user_pool_id
   cognito_client_id    = module.cognito.client_id
   cognito_domain       = module.cognito.domain
+  vapid_public_key     = var.vapid_public_key
 }
 
 # ── GitHub OIDC (for Actions → AWS) ──────────────────────────────────────────
@@ -217,6 +223,21 @@ resource "aws_iam_role_policy" "github_actions" {
       {
         Effect   = "Allow"
         Action   = ["amplify:GetApp", "amplify:GetBranch", "amplify:ListApps", "amplify:ListBranches"]
+        Resource = ["*"]
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "scheduler:GetSchedule", "scheduler:ListSchedules",
+          "scheduler:CreateSchedule", "scheduler:UpdateSchedule", "scheduler:DeleteSchedule",
+          "scheduler:GetScheduleGroup", "scheduler:ListScheduleGroups",
+          "scheduler:ListTagsForResource",
+        ]
+        Resource = ["*"]
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["dynamodb:DescribeTable", "dynamodb:DescribeTimeToLive", "dynamodb:ListTagsOfResource"]
         Resource = ["*"]
       },
     ]

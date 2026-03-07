@@ -15,8 +15,8 @@ variable "aws_region" {
 
 variable "lambda_s3_keys" {
   type        = map(string)
-  description = "Lambda ZIP S3 keys: {create_record=..., get_latest=...}"
-  default     = { create_record = "placeholder", get_latest = "placeholder" }
+  description = "Lambda ZIP S3 keys: {create_record=..., get_latest=..., push_subscribe=..., push_notify=...}"
+  default     = { create_record = "placeholder", get_latest = "placeholder", push_subscribe = "placeholder", push_notify = "placeholder" }
 }
 
 variable "github_repository" {
@@ -34,4 +34,13 @@ variable "cognito_callback_urls" {
 variable "cors_allow_origins" {
   type    = list(string)
   default = ["*"]
+}
+
+variable "vapid_private_key" {
+  type      = string
+  sensitive = true
+}
+
+variable "vapid_public_key" {
+  type = string
 }
