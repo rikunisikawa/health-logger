@@ -37,6 +37,10 @@ export function getLatest(
   return apiFetch(`/records/latest?limit=${limit}`, token)
 }
 
+export function deleteRecord(id: string, token: string): Promise<{ message: string }> {
+  return apiFetch(`/records/${id}`, token, { method: 'DELETE' })
+}
+
 export function getItemConfig(token: string): Promise<{ configs: ItemConfig[] }> {
   return apiFetch('/items/config', token)
 }

@@ -2,10 +2,13 @@ import { useEffect, useState } from 'react'
 import AuthGuard from './components/AuthGuard'
 import HealthForm from './components/HealthForm'
 import ItemConfigScreen from './components/ItemConfigScreen'
+import RecordHistory from './components/RecordHistory'
+import { getLatest } from './api'
 import { useAuth } from './hooks/useAuth'
 import { useItemConfig } from './hooks/useItemConfig'
 import { useOfflineQueue } from './hooks/useOfflineQueue'
 import { usePushNotification } from './hooks/usePushNotification'
+import type { LatestRecord } from './types'
 
 const API_ENDPOINT = import.meta.env.VITE_API_ENDPOINT as string
 
@@ -15,6 +18,7 @@ function AppContent() {
   const { subscribed, subscribe, unsubscribe } = usePushNotification(token)
   const { configs, save } = useItemConfig(token)
   const [showSettings, setShowSettings] = useState(false)
+  const [records, setRecords] = useState<LatestRecord[]>([])
 
   useEffect(() => {
     if (!token) return
@@ -22,6 +26,17 @@ function AppContent() {
     window.addEventListener('online', handleOnline)
     return () => window.removeEventListener('online', handleOnline)
   }, [token, flush])
+
+  useEffect(() => {
+    if (!token) return
+    getLatest(token, 10)
+      .then((res) => setRecords(res.records))
+      .catch(() => {})
+  }, [token])
+
+  const handleRecordDeleted = (id: string) => {
+    setRecords((prev) => prev.filter((r) => r.id !== id))
+  }
 
   const formItems  = configs.filter((c) => c.mode === 'form').sort((a, b) => a.order - b.order)
   const eventItems = configs.filter((c) => c.mode === 'event').sort((a, b) => a.order - b.order)
@@ -54,6 +69,10 @@ function AppContent() {
       </nav>
 
       <HealthForm formItems={formItems} eventItems={eventItems} />
+
+      <div className="container" style={{ maxWidth: '540px' }}>
+        <RecordHistory records={records} onDeleted={handleRecordDeleted} />
+      </div>
 
       {showSettings && (
         <ItemConfigScreen

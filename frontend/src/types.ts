@@ -35,6 +35,7 @@ export interface HealthRecordInput {
 
 export interface LatestRecord {
   id:               string
+  record_type:      string
   fatigue_score:    string
   mood_score:       string
   motivation_score: string
@@ -44,6 +45,7 @@ export interface LatestRecord {
   timezone:         string
   device_id:        string
   app_version:      string
+  custom_fields:    string
   written_at:       string
   dt:               string
 }
