@@ -226,7 +226,7 @@ resource "aws_iam_role_policy" "github_actions" {
       },
       {
         Effect   = "Allow"
-        Action   = ["amplify:GetApp", "amplify:GetBranch", "amplify:ListApps", "amplify:ListBranches"]
+        Action   = ["amplify:GetApp", "amplify:GetBranch", "amplify:ListApps", "amplify:ListBranches", "amplify:UpdateApp", "amplify:UpdateBranch", "amplify:CreateBranch", "amplify:DeleteBranch"]
         Resource = ["*"]
       },
       {
@@ -241,7 +241,7 @@ resource "aws_iam_role_policy" "github_actions" {
       },
       {
         Effect   = "Allow"
-        Action   = ["dynamodb:DescribeTable", "dynamodb:DescribeTimeToLive", "dynamodb:ListTagsOfResource", "dynamodb:CreateTable", "dynamodb:DeleteTable", "dynamodb:UpdateTable", "dynamodb:TagResource", "dynamodb:UntagResource"]
+        Action   = ["dynamodb:DescribeTable", "dynamodb:DescribeTimeToLive", "dynamodb:ListTagsOfResource", "dynamodb:CreateTable", "dynamodb:DeleteTable", "dynamodb:UpdateTable", "dynamodb:TagResource", "dynamodb:UntagResource", "dynamodb:DescribeContinuousBackups"]
         Resource = ["*"]
       },
     ]
