@@ -47,5 +47,4 @@ export interface LatestRecord {
   app_version:      string
   custom_fields:    string
   written_at:       string
-  dt:               string
 }
