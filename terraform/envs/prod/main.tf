@@ -157,7 +157,7 @@ resource "aws_iam_role_policy" "github_actions" {
       },
       {
         Effect   = "Allow"
-        Action   = ["lambda:UpdateFunctionCode", "lambda:GetFunction", "lambda:PublishVersion", "lambda:ListVersionsByFunction", "lambda:GetFunctionCodeSigningConfig", "lambda:GetPolicy", "lambda:ListAliases", "lambda:GetFunctionConfiguration"]
+        Action   = ["lambda:UpdateFunctionCode", "lambda:GetFunction", "lambda:PublishVersion", "lambda:ListVersionsByFunction", "lambda:GetFunctionCodeSigningConfig", "lambda:GetPolicy", "lambda:ListAliases", "lambda:GetFunctionConfiguration", "lambda:CreateFunction", "lambda:DeleteFunction", "lambda:UpdateFunctionConfiguration", "lambda:AddPermission", "lambda:RemovePermission", "lambda:TagResource", "lambda:UntagResource", "lambda:GetFunctionConcurrency"]
         Resource = ["*"]
       },
       {
