@@ -19,10 +19,12 @@ jobs:
     name: Build Lambda ZIPs
     runs-on: ubuntu-latest
     outputs:
-      create_record_key:  ${{ steps.upload.outputs.create_record_key }}
-      get_latest_key:     ${{ steps.upload.outputs.get_latest_key }}
-      push_subscribe_key: ${{ steps.upload.outputs.push_subscribe_key }}
-      push_notify_key:    ${{ steps.upload.outputs.push_notify_key }}
+      create_record_key:   ${{ steps.upload.outputs.create_record_key }}
+      get_latest_key:      ${{ steps.upload.outputs.get_latest_key }}
+      push_subscribe_key:  ${{ steps.upload.outputs.push_subscribe_key }}
+      push_notify_key:     ${{ steps.upload.outputs.push_notify_key }}
+      get_item_config_key: ${{ steps.upload.outputs.get_item_config_key }}
+      save_item_config_key: ${{ steps.upload.outputs.save_item_config_key }}
 
     steps:
       - uses: actions/checkout@v4
@@ -61,6 +63,18 @@ jobs:
           pip install -r requirements.txt -t . --quiet
           zip -r ../../push_notify.zip . -x "*.pyc" "__pycache__/*"
 
+      - name: Package get_item_config Lambda
+        run: |
+          cd lambda/get_item_config
+          pip install -r requirements.txt -t . --quiet
+          zip -r ../../get_item_config.zip . -x "test_*" "*.pyc" "__pycache__/*"
+
+      - name: Package save_item_config Lambda
+        run: |
+          cd lambda/save_item_config
+          pip install -r requirements.txt -t . --quiet
+          zip -r ../../save_item_config.zip . -x "test_*" "*.pyc" "__pycache__/*"
+
       - name: Upload ZIPs to S3 artifacts bucket
         id: upload
         run: |
@@ -70,16 +84,22 @@ jobs:
           LATEST_KEY="get_latest/${SHA}.zip"
           PUSH_SUB_KEY="push_subscribe/${SHA}.zip"
           PUSH_NOTIFY_KEY="push_notify/${SHA}.zip"
+          GET_ITEM_KEY="get_item_config/${SHA}.zip"
+          SAVE_ITEM_KEY="save_item_config/${SHA}.zip"
 
-          aws s3 cp create_record.zip   "s3://${BUCKET}/${CREATE_KEY}"
-          aws s3 cp get_latest.zip      "s3://${BUCKET}/${LATEST_KEY}"
-          aws s3 cp push_subscribe.zip  "s3://${BUCKET}/${PUSH_SUB_KEY}"
-          aws s3 cp push_notify.zip     "s3://${BUCKET}/${PUSH_NOTIFY_KEY}"
+          aws s3 cp create_record.zip    "s3://${BUCKET}/${CREATE_KEY}"
+          aws s3 cp get_latest.zip       "s3://${BUCKET}/${LATEST_KEY}"
+          aws s3 cp push_subscribe.zip   "s3://${BUCKET}/${PUSH_SUB_KEY}"
+          aws s3 cp push_notify.zip      "s3://${BUCKET}/${PUSH_NOTIFY_KEY}"
+          aws s3 cp get_item_config.zip  "s3://${BUCKET}/${GET_ITEM_KEY}"
+          aws s3 cp save_item_config.zip "s3://${BUCKET}/${SAVE_ITEM_KEY}"
 
-          echo "create_record_key=${CREATE_KEY}"   >> $GITHUB_OUTPUT
-          echo "get_latest_key=${LATEST_KEY}"       >> $GITHUB_OUTPUT
-          echo "push_subscribe_key=${PUSH_SUB_KEY}" >> $GITHUB_OUTPUT
-          echo "push_notify_key=${PUSH_NOTIFY_KEY}" >> $GITHUB_OUTPUT
+          echo "create_record_key=${CREATE_KEY}"     >> $GITHUB_OUTPUT
+          echo "get_latest_key=${LATEST_KEY}"         >> $GITHUB_OUTPUT
+          echo "push_subscribe_key=${PUSH_SUB_KEY}"   >> $GITHUB_OUTPUT
+          echo "push_notify_key=${PUSH_NOTIFY_KEY}"   >> $GITHUB_OUTPUT
+          echo "get_item_config_key=${GET_ITEM_KEY}"  >> $GITHUB_OUTPUT
+          echo "save_item_config_key=${SAVE_ITEM_KEY}" >> $GITHUB_OUTPUT
 
   # ── 2. Terraform apply (infrastructure + Lambda config) ───────────────────
   terraform-apply:
@@ -110,7 +130,7 @@ jobs:
       - name: Terraform Apply
         run: |
           terraform apply -auto-approve \
-            -var='lambda_s3_keys={"create_record":"${{ needs.build-lambda.outputs.create_record_key }}","get_latest":"${{ needs.build-lambda.outputs.get_latest_key }}","push_subscribe":"${{ needs.build-lambda.outputs.push_subscribe_key }}","push_notify":"${{ needs.build-lambda.outputs.push_notify_key }}"}'
+            -var='lambda_s3_keys={"create_record":"${{ needs.build-lambda.outputs.create_record_key }}","get_latest":"${{ needs.build-lambda.outputs.get_latest_key }}","push_subscribe":"${{ needs.build-lambda.outputs.push_subscribe_key }}","push_notify":"${{ needs.build-lambda.outputs.push_notify_key }}","get_item_config":"${{ needs.build-lambda.outputs.get_item_config_key }}","save_item_config":"${{ needs.build-lambda.outputs.save_item_config_key }}"}'
         env:
           TF_VAR_vapid_private_key: ${{ secrets.VAPID_PRIVATE_KEY_PROD }}
 

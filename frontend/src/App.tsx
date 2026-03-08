@@ -1,7 +1,9 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import AuthGuard from './components/AuthGuard'
 import HealthForm from './components/HealthForm'
+import ItemConfigScreen from './components/ItemConfigScreen'
 import { useAuth } from './hooks/useAuth'
+import { useItemConfig } from './hooks/useItemConfig'
 import { useOfflineQueue } from './hooks/useOfflineQueue'
 import { usePushNotification } from './hooks/usePushNotification'
 
@@ -11,8 +13,9 @@ function AppContent() {
   const { token, signOut } = useAuth()
   const { flush } = useOfflineQueue(API_ENDPOINT)
   const { subscribed, subscribe, unsubscribe } = usePushNotification(token)
+  const { configs, save } = useItemConfig(token)
+  const [showSettings, setShowSettings] = useState(false)
 
-  // Flush offline queue when connection is restored
   useEffect(() => {
     if (!token) return
     const handleOnline = () => flush(token).catch(() => {})
@@ -20,12 +23,22 @@ function AppContent() {
     return () => window.removeEventListener('online', handleOnline)
   }, [token, flush])
 
+  const formItems  = configs.filter((c) => c.mode === 'form').sort((a, b) => a.order - b.order)
+  const eventItems = configs.filter((c) => c.mode === 'event').sort((a, b) => a.order - b.order)
+
   return (
     <div>
       <nav className="navbar navbar-expand navbar-light bg-light border-bottom">
         <div className="container">
           <span className="navbar-brand fw-bold text-success">Health Logger</span>
           <div className="d-flex gap-2">
+            <button
+              className="btn btn-sm btn-outline-secondary"
+              onClick={() => setShowSettings(true)}
+              title="記録項目の設定"
+            >
+              ⚙️
+            </button>
             <button
               className={`btn btn-sm ${subscribed ? 'btn-outline-warning' : 'btn-outline-success'}`}
               onClick={subscribed ? unsubscribe : subscribe}
@@ -39,7 +52,16 @@ function AppContent() {
           </div>
         </div>
       </nav>
-      <HealthForm />
+
+      <HealthForm formItems={formItems} eventItems={eventItems} />
+
+      {showSettings && (
+        <ItemConfigScreen
+          configs={configs}
+          onSave={save}
+          onClose={() => setShowSettings(false)}
+        />
+      )}
     </div>
   )
 }

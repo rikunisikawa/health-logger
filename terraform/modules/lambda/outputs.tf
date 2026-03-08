@@ -6,3 +6,7 @@ output "artifacts_bucket_arn" { value = aws_s3_bucket.artifacts.arn }
 output "artifacts_bucket_name" { value = aws_s3_bucket.artifacts.id }
 output "push_subscribe_invoke_arn" { value = aws_lambda_function.push_subscribe.invoke_arn }
 output "push_subscribe_function_name" { value = aws_lambda_function.push_subscribe.function_name }
+output "get_item_config_invoke_arn" { value = aws_lambda_function.get_item_config.invoke_arn }
+output "get_item_config_function_name" { value = aws_lambda_function.get_item_config.function_name }
+output "save_item_config_invoke_arn" { value = aws_lambda_function.save_item_config.invoke_arn }
+output "save_item_config_function_name" { value = aws_lambda_function.save_item_config.function_name }

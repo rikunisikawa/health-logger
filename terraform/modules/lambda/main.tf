@@ -36,6 +36,17 @@ resource "aws_iam_role_policy_attachment" "lambda_basic" {
 
 # ── DynamoDB: push subscriptions ───────────────────────────────────────────────
 
+resource "aws_dynamodb_table" "item_configs" {
+  name         = "${local.name}-item-configs"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "user_id"
+
+  attribute {
+    name = "user_id"
+    type = "S"
+  }
+}
+
 resource "aws_dynamodb_table" "push_subscriptions" {
   name         = "${local.name}-push-subscriptions"
   billing_mode = "PAY_PER_REQUEST"
@@ -61,6 +72,11 @@ resource "aws_iam_role_policy" "lambda" {
         Effect = "Allow"
         Action = ["dynamodb:PutItem", "dynamodb:GetItem", "dynamodb:DeleteItem", "dynamodb:Scan"]
         Resource = [aws_dynamodb_table.push_subscriptions.arn]
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["dynamodb:PutItem", "dynamodb:GetItem"]
+        Resource = [aws_dynamodb_table.item_configs.arn]
       },
       {
         Effect = "Allow"
@@ -141,6 +157,52 @@ resource "aws_lambda_function" "get_latest" {
     variables = {
       ATHENA_DATABASE      = var.athena_database
       ATHENA_OUTPUT_BUCKET = var.s3_results_bucket_name
+    }
+  }
+
+  depends_on = [aws_s3_bucket.artifacts]
+}
+
+resource "aws_lambda_function" "get_item_config" {
+  function_name = "${local.name}-get-item-config"
+  role          = aws_iam_role.lambda.arn
+  runtime       = "python3.13"
+  handler       = "handler.lambda_handler"
+
+  s3_bucket = aws_s3_bucket.artifacts.id
+  s3_key    = var.lambda_s3_keys["get_item_config"]
+
+  timeout     = 30
+  memory_size = 128
+
+  tracing_config { mode = "Active" }
+
+  environment {
+    variables = {
+      ITEM_CONFIGS_TABLE = aws_dynamodb_table.item_configs.name
+    }
+  }
+
+  depends_on = [aws_s3_bucket.artifacts]
+}
+
+resource "aws_lambda_function" "save_item_config" {
+  function_name = "${local.name}-save-item-config"
+  role          = aws_iam_role.lambda.arn
+  runtime       = "python3.13"
+  handler       = "handler.lambda_handler"
+
+  s3_bucket = aws_s3_bucket.artifacts.id
+  s3_key    = var.lambda_s3_keys["save_item_config"]
+
+  timeout     = 30
+  memory_size = 128
+
+  tracing_config { mode = "Active" }
+
+  environment {
+    variables = {
+      ITEM_CONFIGS_TABLE = aws_dynamodb_table.item_configs.name
     }
   }
 
