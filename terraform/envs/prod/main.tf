@@ -80,10 +80,10 @@ module "apigw" {
   cognito_issuer_url = module.cognito.issuer_url
   cognito_client_id  = module.cognito.client_id
 
-  create_record_lambda_invoke_arn  = module.lambda.create_record_invoke_arn
-  get_latest_lambda_invoke_arn     = module.lambda.get_latest_invoke_arn
-  create_record_function_name      = module.lambda.create_record_function_name
-  get_latest_function_name         = module.lambda.get_latest_function_name
+  create_record_lambda_invoke_arn    = module.lambda.create_record_invoke_arn
+  get_latest_lambda_invoke_arn       = module.lambda.get_latest_invoke_arn
+  create_record_function_name        = module.lambda.create_record_function_name
+  get_latest_function_name           = module.lambda.get_latest_function_name
   push_subscribe_lambda_invoke_arn   = module.lambda.push_subscribe_invoke_arn
   push_subscribe_function_name       = module.lambda.push_subscribe_function_name
   get_item_config_lambda_invoke_arn  = module.lambda.get_item_config_invoke_arn
