@@ -39,7 +39,7 @@ def lambda_handler(event, context):
 
     query = f"""
         SELECT id, record_type, fatigue_score, mood_score, motivation_score, flags, note,
-               recorded_at, timezone, device_id, app_version, custom_fields, written_at, dt
+               recorded_at, timezone, device_id, app_version, custom_fields, written_at
         FROM health_records
         WHERE user_id = '{user_id}'
         ORDER BY recorded_at DESC
