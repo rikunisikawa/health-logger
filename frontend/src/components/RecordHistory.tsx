@@ -10,7 +10,9 @@ interface Props {
 
 function formatTime(isoStr: string): string {
   try {
-    return new Date(isoStr).toLocaleString('ja-JP', {
+    // Athena returns timestamps without timezone (UTC); append 'Z' to parse as UTC
+    const utcStr = isoStr.includes('T') ? isoStr : isoStr.replace(' ', 'T') + 'Z'
+    return new Date(utcStr).toLocaleString('ja-JP', {
       month: 'numeric', day: 'numeric',
       hour: '2-digit', minute: '2-digit',
     })
