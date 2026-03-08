@@ -90,6 +90,8 @@ module "apigw" {
   get_item_config_function_name      = module.lambda.get_item_config_function_name
   save_item_config_lambda_invoke_arn = module.lambda.save_item_config_invoke_arn
   save_item_config_function_name     = module.lambda.save_item_config_function_name
+  delete_record_lambda_invoke_arn    = module.lambda.delete_record_invoke_arn
+  delete_record_function_name        = module.lambda.delete_record_function_name
 }
 
 # ── Amplify (React frontend hosting) ─────────────────────────────────────────

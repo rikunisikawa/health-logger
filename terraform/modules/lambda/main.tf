@@ -299,3 +299,27 @@ resource "aws_scheduler_schedule" "push_notify_daily" {
     role_arn = aws_iam_role.scheduler.arn
   }
 }
+
+resource "aws_lambda_function" "delete_record" {
+  function_name = "${local.name}-delete-record"
+  role          = aws_iam_role.lambda.arn
+  runtime       = "python3.13"
+  handler       = "handler.lambda_handler"
+
+  s3_bucket = aws_s3_bucket.artifacts.id
+  s3_key    = var.lambda_s3_keys["delete_record"]
+
+  timeout     = 60
+  memory_size = 256
+
+  tracing_config { mode = "Active" }
+
+  environment {
+    variables = {
+      ATHENA_DATABASE      = var.athena_database
+      ATHENA_OUTPUT_BUCKET = var.s3_results_bucket_name
+    }
+  }
+
+  depends_on = [aws_s3_bucket.artifacts]
+}
