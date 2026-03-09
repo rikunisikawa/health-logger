@@ -1,6 +1,15 @@
 import { useState } from 'react'
 import type { ItemConfig, ItemMode, ItemType } from '../types'
 
+const ICON_OPTIONS = [
+  '😴', '💤', '🤕', '🤢', '😣', '🤧', '💊', '🌡️',
+  '🏃', '🚶', '🧘', '🏋️', '🚴', '🤸', '⚽', '🏊',
+  '🍺', '🍷', '🍸', '🍻', '☕', '🧃', '💧', '🍵',
+  '😊', '😔', '😤', '😰', '💪', '🧠', '❤️', '💔',
+  '🌙', '☀️', '🌿', '⚡', '🎯', '📝', '⏰', '🔥',
+  '🍎', '🥗', '🥦', '🍣', '🍜', '🍕', '🎂', '🍫',
+]
+
 const TYPE_OPTIONS: { value: ItemType; label: string }[] = [
   { value: 'checkbox', label: 'チェックボックス' },
   { value: 'number',   label: '数値入力' },
@@ -18,6 +27,7 @@ interface EditState {
   label:   string
   type:    ItemType
   mode:    ItemMode
+  icon:    string
   min:     string
   max:     string
   unit:    string
@@ -28,6 +38,7 @@ const emptyEdit = (): EditState => ({
   label:   '',
   type:    'checkbox',
   mode:    'event',
+  icon:    '',
   min:     '',
   max:     '',
   unit:    '',
@@ -52,6 +63,7 @@ export default function ItemConfigScreen({ configs, onSave, onClose }: Props) {
       label:   item.label,
       type:    item.type,
       mode:    item.mode,
+      icon:    item.icon ?? '',
       min:     item.min != null ? String(item.min) : '',
       max:     item.max != null ? String(item.max) : '',
       unit:    item.unit ?? '',
@@ -65,6 +77,7 @@ export default function ItemConfigScreen({ configs, onSave, onClose }: Props) {
       type:    edit.type,
       mode:    edit.mode,
       order:   0,
+      ...(edit.icon !== '' && { icon: edit.icon }),
       ...(edit.min !== '' && { min: Number(edit.min) }),
       ...(edit.max !== '' && { max: Number(edit.max) }),
       ...(edit.unit !== '' && { unit: edit.unit }),
@@ -125,7 +138,10 @@ export default function ItemConfigScreen({ configs, onSave, onClose }: Props) {
           <div key={item.item_id} className="card mb-2">
             <div className="card-body py-2 d-flex align-items-center gap-2">
               <div className="flex-grow-1">
-                <div className="fw-semibold">{item.label}</div>
+                <div className="fw-semibold">
+                  {item.icon && <span className="me-2" style={{ fontSize: '1.1rem' }}>{item.icon}</span>}
+                  {item.label}
+                </div>
                 <small className="text-muted">
                   {TYPE_OPTIONS.find((t) => t.value === item.type)?.label}
                   {' · '}
@@ -178,6 +194,49 @@ export default function ItemConfigScreen({ configs, onSave, onClose }: Props) {
                   placeholder="例: 水分補給, 筋トレ"
                   autoFocus
                 />
+              </div>
+              <div className="mb-2">
+                <label className="form-label fw-semibold">アイコン（任意）</label>
+                <div
+                  className="d-flex flex-wrap gap-1 p-2 border rounded"
+                  style={{ maxHeight: '120px', overflowY: 'auto' }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setEdit({ ...edit, icon: '' })}
+                    style={{
+                      width: '36px',
+                      height: '36px',
+                      border: `2px solid ${edit.icon === '' ? '#0d6efd' : '#dee2e6'}`,
+                      borderRadius: '6px',
+                      background: edit.icon === '' ? '#cfe2ff' : '#f8f9fa',
+                      cursor: 'pointer',
+                      fontSize: '0.65rem',
+                      color: '#6c757d',
+                    }}
+                  >
+                    なし
+                  </button>
+                  {ICON_OPTIONS.map((emoji) => (
+                    <button
+                      key={emoji}
+                      type="button"
+                      onClick={() => setEdit({ ...edit, icon: emoji })}
+                      style={{
+                        width: '36px',
+                        height: '36px',
+                        border: `2px solid ${edit.icon === emoji ? '#0d6efd' : '#dee2e6'}`,
+                        borderRadius: '6px',
+                        background: edit.icon === emoji ? '#cfe2ff' : '#f8f9fa',
+                        cursor: 'pointer',
+                        fontSize: '1.2rem',
+                        lineHeight: 1,
+                      }}
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
               </div>
               <div className="mb-2">
                 <label className="form-label fw-semibold">入力タイプ</label>

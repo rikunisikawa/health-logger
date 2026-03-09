@@ -24,6 +24,15 @@ const FLAG_LABELS: Record<keyof typeof FLAGS, string> = {
   caffeine:    'カフェイン',
 }
 
+const FLAG_ICONS: Record<keyof typeof FLAGS, string> = {
+  poor_sleep:  '😴',
+  headache:    '🤕',
+  stomachache: '🤢',
+  exercise:    '🏃',
+  alcohol:     '🍺',
+  caffeine:    '☕',
+}
+
 type ToastVariant = 'success' | 'danger' | 'warning'
 interface ToastState { show: boolean; message: string; variant: ToastVariant }
 
@@ -192,7 +201,10 @@ export default function HealthForm({ formItems, eventItems }: Props) {
                   disabled={eventSending[item.item_id]}
                   style={{ whiteSpace: 'nowrap' }}
                 >
-                  {eventSending[item.item_id] ? '…' : `✓ ${item.label}${item.unit ? ` (${item.unit})` : ''}`}
+                  {eventSending[item.item_id]
+                    ? '…'
+                    : <>{item.icon ? item.icon : '✓'} {item.label}{item.unit ? ` (${item.unit})` : ''}</>
+                  }
                 </button>
               </div>
             ))}
@@ -230,21 +242,35 @@ export default function HealthForm({ formItems, eventItems }: Props) {
         {/* Flags */}
         <div className="mb-3">
           <label className="form-label">フラグ</label>
-          <div className="d-flex flex-wrap gap-3">
-            {(Object.entries(FLAGS) as [keyof typeof FLAGS, number][]).map(([key, bit]) => (
-              <div className="form-check" key={key}>
-                <input
-                  type="checkbox"
-                  className="form-check-input"
-                  id={`flag-${key}`}
-                  checked={(flags & bit) !== 0}
-                  onChange={() => toggleFlag(bit)}
-                />
-                <label className="form-check-label" htmlFor={`flag-${key}`}>
-                  {FLAG_LABELS[key]}
-                </label>
-              </div>
-            ))}
+          <div className="d-flex flex-wrap gap-2">
+            {(Object.entries(FLAGS) as [keyof typeof FLAGS, number][]).map(([key, bit]) => {
+              const active = (flags & bit) !== 0
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => toggleFlag(bit)}
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '2px',
+                    padding: '8px 12px',
+                    border: `2px solid ${active ? '#198754' : '#dee2e6'}`,
+                    borderRadius: '12px',
+                    background: active ? '#d1e7dd' : '#f8f9fa',
+                    cursor: 'pointer',
+                    minWidth: '64px',
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  <span style={{ fontSize: '1.4rem', lineHeight: 1 }}>{FLAG_ICONS[key]}</span>
+                  <span style={{ fontSize: '0.7rem', color: active ? '#198754' : '#6c757d', fontWeight: active ? 600 : 400 }}>
+                    {FLAG_LABELS[key]}
+                  </span>
+                </button>
+              )
+            })}
           </div>
         </div>
 
@@ -264,6 +290,7 @@ export default function HealthForm({ formItems, eventItems }: Props) {
                       onChange={(e) => setCustomValue(item.item_id, e.target.checked)}
                     />
                     <label className="form-check-label" htmlFor={`custom-${item.item_id}`}>
+                      {item.icon && <span className="me-1">{item.icon}</span>}
                       {item.label}
                     </label>
                   </div>
@@ -271,7 +298,7 @@ export default function HealthForm({ formItems, eventItems }: Props) {
                 {(item.type === 'slider') && (
                   <div>
                     <label className="form-label d-flex justify-content-between">
-                      <span>{item.label}</span>
+                      <span>{item.icon && <span className="me-1">{item.icon}</span>}{item.label}</span>
                       <span className="badge bg-secondary">
                         {customValues[item.item_id] ?? item.min ?? 0}
                         {item.unit && ` ${item.unit}`}
@@ -289,7 +316,10 @@ export default function HealthForm({ formItems, eventItems }: Props) {
                 )}
                 {item.type === 'number' && (
                   <div>
-                    <label className="form-label">{item.label}</label>
+                    <label className="form-label">
+                      {item.icon && <span className="me-1">{item.icon}</span>}
+                      {item.label}
+                    </label>
                     <div className="input-group" style={{ maxWidth: '200px' }}>
                       <input
                         type="number"
@@ -306,7 +336,10 @@ export default function HealthForm({ formItems, eventItems }: Props) {
                 )}
                 {item.type === 'text' && (
                   <div>
-                    <label className="form-label">{item.label}</label>
+                    <label className="form-label">
+                      {item.icon && <span className="me-1">{item.icon}</span>}
+                      {item.label}
+                    </label>
                     <input
                       type="text"
                       className="form-control"
