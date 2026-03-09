@@ -7,6 +7,7 @@ export interface ItemConfig {
   type:    ItemType
   mode:    ItemMode
   order:   number
+  icon?:   string
   min?:    number
   max?:    number
   unit?:   string
