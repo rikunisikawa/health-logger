@@ -14,18 +14,38 @@ env:
   TF_VERSION: "1.7.5"
 
 jobs:
+  # ── 0. Detect changed paths ────────────────────────────────────────────────
+  detect-changes:
+    name: Detect Changed Paths
+    runs-on: ubuntu-latest
+    outputs:
+      lambda:    ${{ steps.filter.outputs.lambda }}
+      terraform: ${{ steps.filter.outputs.terraform }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            lambda:
+              - 'lambda/**'
+            terraform:
+              - 'terraform/**'
+
   # ── 1. Build Lambda ZIPs and upload to S3 artifacts ───────────────────────
   build-lambda:
     name: Build Lambda ZIPs
     runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.lambda == 'true' || needs.detect-changes.outputs.terraform == 'true'
     outputs:
-      create_record_key:   ${{ steps.upload.outputs.create_record_key }}
-      get_latest_key:      ${{ steps.upload.outputs.get_latest_key }}
-      push_subscribe_key:  ${{ steps.upload.outputs.push_subscribe_key }}
-      push_notify_key:     ${{ steps.upload.outputs.push_notify_key }}
-      get_item_config_key: ${{ steps.upload.outputs.get_item_config_key }}
+      create_record_key:    ${{ steps.upload.outputs.create_record_key }}
+      get_latest_key:       ${{ steps.upload.outputs.get_latest_key }}
+      push_subscribe_key:   ${{ steps.upload.outputs.push_subscribe_key }}
+      push_notify_key:      ${{ steps.upload.outputs.push_notify_key }}
+      get_item_config_key:  ${{ steps.upload.outputs.get_item_config_key }}
       save_item_config_key: ${{ steps.upload.outputs.save_item_config_key }}
-      delete_record_key:   ${{ steps.upload.outputs.delete_record_key }}
+      delete_record_key:    ${{ steps.upload.outputs.delete_record_key }}
 
     steps:
       - uses: actions/checkout@v4
@@ -93,6 +113,7 @@ jobs:
           PUSH_NOTIFY_KEY="push_notify/${SHA}.zip"
           GET_ITEM_KEY="get_item_config/${SHA}.zip"
           SAVE_ITEM_KEY="save_item_config/${SHA}.zip"
+          DELETE_KEY="delete_record/${SHA}.zip"
 
           aws s3 cp create_record.zip    "s3://${BUCKET}/${CREATE_KEY}"
           aws s3 cp get_latest.zip       "s3://${BUCKET}/${LATEST_KEY}"
@@ -100,22 +121,22 @@ jobs:
           aws s3 cp push_notify.zip      "s3://${BUCKET}/${PUSH_NOTIFY_KEY}"
           aws s3 cp get_item_config.zip  "s3://${BUCKET}/${GET_ITEM_KEY}"
           aws s3 cp save_item_config.zip "s3://${BUCKET}/${SAVE_ITEM_KEY}"
-          DELETE_KEY="delete_record/${SHA}.zip"
           aws s3 cp delete_record.zip    "s3://${BUCKET}/${DELETE_KEY}"
-          echo "delete_record_key=${DELETE_KEY}" >> $GITHUB_OUTPUT
 
-          echo "create_record_key=${CREATE_KEY}"     >> $GITHUB_OUTPUT
-          echo "get_latest_key=${LATEST_KEY}"         >> $GITHUB_OUTPUT
-          echo "push_subscribe_key=${PUSH_SUB_KEY}"   >> $GITHUB_OUTPUT
-          echo "push_notify_key=${PUSH_NOTIFY_KEY}"   >> $GITHUB_OUTPUT
-          echo "get_item_config_key=${GET_ITEM_KEY}"  >> $GITHUB_OUTPUT
+          echo "create_record_key=${CREATE_KEY}"      >> $GITHUB_OUTPUT
+          echo "get_latest_key=${LATEST_KEY}"          >> $GITHUB_OUTPUT
+          echo "push_subscribe_key=${PUSH_SUB_KEY}"    >> $GITHUB_OUTPUT
+          echo "push_notify_key=${PUSH_NOTIFY_KEY}"    >> $GITHUB_OUTPUT
+          echo "get_item_config_key=${GET_ITEM_KEY}"   >> $GITHUB_OUTPUT
           echo "save_item_config_key=${SAVE_ITEM_KEY}" >> $GITHUB_OUTPUT
+          echo "delete_record_key=${DELETE_KEY}"       >> $GITHUB_OUTPUT
 
   # ── 2. Terraform apply (infrastructure + Lambda config) ───────────────────
   terraform-apply:
     name: Terraform Apply
     runs-on: ubuntu-latest
-    needs: build-lambda
+    needs: [detect-changes, build-lambda]
+    if: needs.detect-changes.outputs.lambda == 'true' || needs.detect-changes.outputs.terraform == 'true'
     environment: prod
     defaults:
       run:
