@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import AuthGuard from './components/AuthGuard'
+import DashboardPage from './components/DashboardPage'
 import HealthForm from './components/HealthForm'
 import ItemConfigScreen from './components/ItemConfigScreen'
 import RecordHistory from './components/RecordHistory'
@@ -18,6 +19,7 @@ function AppContent() {
   const { subscribed, subscribe, unsubscribe } = usePushNotification(token)
   const { configs, save } = useItemConfig(token)
   const [showSettings, setShowSettings] = useState(false)
+  const [showDashboard, setShowDashboard] = useState(false)
   const [records, setRecords] = useState<LatestRecord[]>([])
 
   useEffect(() => {
@@ -41,12 +43,23 @@ function AppContent() {
   const formItems  = configs.filter((c) => c.mode === 'form').sort((a, b) => a.order - b.order)
   const eventItems = configs.filter((c) => c.mode === 'event').sort((a, b) => a.order - b.order)
 
+  if (showDashboard) {
+    return <DashboardPage onBack={() => setShowDashboard(false)} />
+  }
+
   return (
     <div>
       <nav className="navbar navbar-expand navbar-light bg-light border-bottom">
         <div className="container">
           <span className="navbar-brand fw-bold text-success">Health Logger</span>
           <div className="d-flex gap-2">
+            <button
+              className="btn btn-sm btn-outline-secondary"
+              onClick={() => setShowDashboard(true)}
+              title="ダッシュボード"
+            >
+              📊
+            </button>
             <button
               className="btn btn-sm btn-outline-secondary"
               onClick={() => setShowSettings(true)}
