@@ -9,10 +9,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "aws-amplify": "^6.0.0",
     "@aws-amplify/auth": "^6.0.0",
+    "@types/recharts": "^1.8.29",
+    "aws-amplify": "^6.0.0",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "recharts": "^3.8.0"
   },
   "devDependencies": {
     "@types/react": "^18.3.3",
