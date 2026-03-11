@@ -1,0 +1,10 @@
+health_logger:
+  target: prod
+  outputs:
+    prod:
+      type: athena
+      database: health_logger_env_prod
+      schema: health_logger_env_prod
+      s3_staging_dir: s3://health-logger-prod-env-data/athena-results/
+      region_name: ap-northeast-1
+      work_group: primary

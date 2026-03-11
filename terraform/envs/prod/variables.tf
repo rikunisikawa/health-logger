@@ -15,8 +15,8 @@ variable "aws_region" {
 
 variable "lambda_s3_keys" {
   type        = map(string)
-  description = "Lambda ZIP S3 keys: {create_record=..., get_latest=..., push_subscribe=..., push_notify=...}"
-  default     = { create_record = "placeholder", get_latest = "placeholder", push_subscribe = "placeholder", push_notify = "placeholder", get_item_config = "placeholder", save_item_config = "placeholder" }
+  description = "Lambda ZIP S3 keys: {create_record=..., get_latest=..., push_subscribe=..., push_notify=..., get_item_config=..., save_item_config=..., delete_record=..., get_env_data=...}"
+  default     = { create_record = "placeholder", get_latest = "placeholder", push_subscribe = "placeholder", push_notify = "placeholder", get_item_config = "placeholder", save_item_config = "placeholder", delete_record = "placeholder", get_env_data = "placeholder" }
 }
 
 variable "github_repository" {

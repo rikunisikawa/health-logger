@@ -250,6 +250,14 @@ resource "aws_iam_role_policy" "github_actions" {
   })
 }
 
+# ── External environment data ingest (weather/air quality) ────────────────────
+module "env_data_ingest" {
+  source           = "../../modules/env_data_ingest"
+  environment      = var.env
+  lambda_s3_bucket = module.lambda.artifacts_bucket_name
+  lambda_s3_key    = var.lambda_s3_keys["get_env_data"]
+}
+
 # ── Outputs ────────────────────────────────────────────────────────────────────
 output "api_endpoint" { value = module.apigw.endpoint_url }
 output "amplify_app_url" { value = module.amplify.app_url }
