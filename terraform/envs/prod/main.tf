@@ -260,6 +260,7 @@ module "env_data_ingest" {
   environment      = var.env
   lambda_s3_bucket = module.lambda.artifacts_bucket_name
   lambda_s3_key    = var.lambda_s3_keys["get_env_data"]
+  depends_on       = [aws_iam_role_policy.github_actions]
 }
 
 # ── Outputs ────────────────────────────────────────────────────────────────────
