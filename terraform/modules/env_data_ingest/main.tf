@@ -12,7 +12,18 @@ resource "aws_s3_bucket" "env_data" {
 resource "aws_s3_bucket_versioning" "env_data" {
   bucket = aws_s3_bucket.env_data.id
   versioning_configuration {
+    status = "Disabled"
+  }
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "env_data" {
+  bucket = aws_s3_bucket.env_data.id
+
+  rule {
+    id     = "expire-athena-results"
     status = "Enabled"
+    filter { prefix = "athena-results/" }
+    expiration { days = 30 }
   }
 }
 
@@ -95,7 +106,7 @@ resource "aws_iam_role_policy" "get_env_data" {
           "athena:GetQueryExecution",
           "athena:GetQueryResults",
         ]
-        Resource = ["*"]
+        Resource = ["arn:aws:athena:*:*:workgroup/primary"]
       },
       {
         Effect = "Allow"
