@@ -92,18 +92,27 @@ class OpenMeteoClient(WeatherProvider):
             },
         )
 
-        # Fetch air quality data
-        aq_data = _fetch_with_retry(
-            AIR_QUALITY_API_URL,
-            {
-                "latitude": lat,
-                "longitude": lng,
-                "start_date": date_from,
-                "end_date": date_to,
-                "hourly": AIR_QUALITY_HOURLY_PARAMS,
-                "timezone": "Asia/Tokyo",
-            },
-        )
+        # Fetch air quality data (forecast API: supports only recent ~5 days via past_days)
+        # For historical backfill beyond 5 days, this API returns 400 → skip gracefully
+        try:
+            aq_data = _fetch_with_retry(
+                AIR_QUALITY_API_URL,
+                {
+                    "latitude": lat,
+                    "longitude": lng,
+                    "start_date": date_from,
+                    "end_date": date_to,
+                    "hourly": AIR_QUALITY_HOURLY_PARAMS,
+                    "timezone": "Asia/Tokyo",
+                },
+            )
+        except Exception as e:
+            logger.warning(
+                '{"level": "WARNING", "message": "Air quality API unavailable, skipping",'
+                ' "date_from": "%s", "date_to": "%s", "error": "%s"}',
+                date_from, date_to, str(e),
+            )
+            aq_data = {"hourly": {}}
 
         return self._merge_records(
             archive_data=archive_data,
