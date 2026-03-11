@@ -1,0 +1,56 @@
+version: 2
+
+sources:
+  - name: raw_env
+    database: health_logger_env_prod
+    schema: health_logger_env_prod
+    tables:
+      - name: ext_environment_raw
+        description: "Open-Meteo から取得した生の環境データ（気象・花粉・大気質）"
+        columns:
+          - name: observation_datetime_jst
+            description: "観測日時（JST）"
+          - name: observation_date
+            description: "観測日付（YYYY-MM-DD）"
+          - name: observation_hour
+            description: "観測時刻の時（0-23）"
+          - name: location_id
+            description: "観測地点ID"
+          - name: latitude
+            description: "緯度"
+          - name: longitude
+            description: "経度"
+          - name: source_name
+            description: "データソース名（open_meteo）"
+          - name: temperature_c
+            description: "気温（摂氏）"
+          - name: apparent_temperature_c
+            description: "体感気温（摂氏）"
+          - name: pressure_hpa
+            description: "気圧（hPa）"
+          - name: humidity_pct
+            description: "相対湿度（%）"
+          - name: weather_code
+            description: "WMO 天気コード"
+          - name: precipitation_mm
+            description: "降水量（mm）"
+          - name: wind_speed_mps
+            description: "風速（m/s）"
+          - name: uv_index
+            description: "UV指数"
+          - name: aqi
+            description: "欧州大気質指数"
+          - name: pm25
+            description: "PM2.5（μg/m³）"
+          - name: birch_pollen
+            description: "白樺花粉（grains/m³）"
+          - name: grass_pollen
+            description: "イネ科花粉（grains/m³）"
+          - name: weed_pollen
+            description: "雑草花粉（grains/m³）"
+          - name: raw_ingested_at
+            description: "取込日時（UTC）"
+          - name: request_id
+            description: "Lambda リクエストID"
+          - name: record_created_at
+            description: "レコード作成日時（UTC）"
