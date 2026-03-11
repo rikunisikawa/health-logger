@@ -198,6 +198,10 @@ resource "aws_iam_role_policy" "github_actions" {
           "s3:GetReplicationConfiguration", "s3:ListBucket", "s3:GetBucketAcl",
           "s3:GetBucketCORS", "s3:GetBucketWebsite", "s3:GetBucketRequestPayment",
           "s3:GetBucketTagging", "s3:GetAccelerateConfiguration",
+          "s3:CreateBucket", "s3:DeleteBucket",
+          "s3:PutBucketVersioning", "s3:PutBucketPublicAccessBlock",
+          "s3:PutEncryptionConfiguration", "s3:PutLifecycleConfiguration",
+          "s3:PutBucketTagging",
         ]
         Resource = ["*"]
       },
@@ -218,7 +222,7 @@ resource "aws_iam_role_policy" "github_actions" {
       },
       {
         Effect   = "Allow"
-        Action   = ["glue:GetDatabase", "glue:GetTable", "glue:GetTables", "glue:GetTags", "glue:UpdateTable", "glue:CreateTable", "glue:DeleteTable"]
+        Action   = ["glue:GetDatabase", "glue:GetDatabases", "glue:CreateDatabase", "glue:DeleteDatabase", "glue:GetTable", "glue:GetTables", "glue:GetTags", "glue:UpdateTable", "glue:CreateTable", "glue:DeleteTable"]
         Resource = ["*"]
       },
       {
@@ -256,6 +260,7 @@ module "env_data_ingest" {
   environment      = var.env
   lambda_s3_bucket = module.lambda.artifacts_bucket_name
   lambda_s3_key    = var.lambda_s3_keys["get_env_data"]
+  depends_on       = [aws_iam_role_policy.github_actions]
 }
 
 # ── Outputs ────────────────────────────────────────────────────────────────────
