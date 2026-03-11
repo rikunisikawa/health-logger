@@ -231,6 +231,16 @@ resource "aws_iam_role_policy" "github_actions" {
         Resource = ["*"]
       },
       {
+        Effect = "Allow"
+        Action = [
+          "events:PutRule", "events:DeleteRule", "events:DescribeRule",
+          "events:ListRules", "events:TagResource", "events:UntagResource",
+          "events:ListTagsForResource", "events:PutTargets",
+          "events:RemoveTargets", "events:ListTargetsByRule",
+        ]
+        Resource = ["*"]
+      },
+      {
         Effect   = "Allow"
         Action   = ["amplify:GetApp", "amplify:GetBranch", "amplify:ListApps", "amplify:ListBranches", "amplify:UpdateApp", "amplify:UpdateBranch", "amplify:CreateBranch", "amplify:DeleteBranch"]
         Resource = ["*"]
