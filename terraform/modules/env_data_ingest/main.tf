@@ -109,8 +109,8 @@ resource "aws_iam_role_policy" "get_env_data" {
         Resource = ["arn:aws:athena:*:*:workgroup/primary"]
       },
       {
-        Effect = "Allow"
-        Action = ["s3:GetObject", "s3:PutObject"]
+        Effect   = "Allow"
+        Action   = ["s3:GetObject", "s3:PutObject"]
         Resource = ["${aws_s3_bucket.env_data.arn}/athena-results/*"]
       },
     ]
@@ -148,7 +148,7 @@ resource "aws_lambda_function" "get_env_data" {
 
 resource "aws_cloudwatch_event_rule" "env_data_daily" {
   name                = "${local.name}-env-data-daily"
-  description         = "Trigger get_env_data Lambda daily at 10:00 JST (01:00 UTC)"
+  description         = "Trigger get_env_data Lambda daily at 15:00 JST (06:00 UTC)"
   schedule_expression = var.schedule_expression
 }
 
