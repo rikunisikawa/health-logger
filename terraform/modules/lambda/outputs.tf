@@ -12,3 +12,5 @@ output "save_item_config_invoke_arn" { value = aws_lambda_function.save_item_con
 output "save_item_config_function_name" { value = aws_lambda_function.save_item_config.function_name }
 output "delete_record_invoke_arn" { value = aws_lambda_function.delete_record.invoke_arn }
 output "delete_record_function_name" { value = aws_lambda_function.delete_record.function_name }
+output "get_env_data_latest_invoke_arn" { value = aws_lambda_function.get_env_data_latest.invoke_arn }
+output "get_env_data_latest_function_name" { value = aws_lambda_function.get_env_data_latest.function_name }

@@ -1,4 +1,4 @@
-import type { HealthRecordInput, ItemConfig, LatestRecord } from './types'
+import type { EnvDataRecord, HealthRecordInput, ItemConfig, LatestRecord } from './types'
 
 const API_ENDPOINT = import.meta.env.VITE_API_ENDPOINT as string
 
@@ -53,4 +53,11 @@ export function saveItemConfig(
     method: 'POST',
     body: JSON.stringify({ configs }),
   })
+}
+
+export function getEnvData(
+  token: string,
+  days = 14,
+): Promise<{ records: EnvDataRecord[] }> {
+  return apiFetch(`/env-data/latest?days=${days}`, token)
 }
