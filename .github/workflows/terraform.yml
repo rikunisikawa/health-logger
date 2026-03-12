@@ -27,7 +27,7 @@ jobs:
         working-directory: terraform/envs/prod
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
