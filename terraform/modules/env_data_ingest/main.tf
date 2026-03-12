@@ -148,7 +148,7 @@ resource "aws_lambda_function" "get_env_data" {
 
 resource "aws_cloudwatch_event_rule" "env_data_daily" {
   name                = "${local.name}-env-data-daily"
-  description         = "Trigger get_env_data Lambda daily at 15:00 JST (06:00 UTC)"
+  description         = "Trigger get_env_data Lambda daily at 00:00 JST (15:00 UTC) after CAMS air quality data is ready"
   schedule_expression = var.schedule_expression
 }
 
