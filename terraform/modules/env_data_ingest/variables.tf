@@ -33,6 +33,6 @@ variable "longitude" {
 
 variable "schedule_expression" {
   type        = string
-  default     = "cron(0 6 * * ? *)"
-  description = "EventBridge schedule expression (UTC). Default: 15:00 JST = 06:00 UTC"
+  default     = "cron(0 15 * * ? *)"
+  description = "EventBridge schedule expression (UTC). Default: 00:00 JST (next day) = 15:00 UTC (after CAMS data is ready)"
 }
