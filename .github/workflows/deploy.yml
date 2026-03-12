@@ -46,7 +46,8 @@ jobs:
       get_item_config_key:  ${{ steps.upload.outputs.get_item_config_key }}
       save_item_config_key: ${{ steps.upload.outputs.save_item_config_key }}
       delete_record_key:    ${{ steps.upload.outputs.delete_record_key }}
-      get_env_data_key:     ${{ steps.upload.outputs.get_env_data_key }}
+      get_env_data_key:          ${{ steps.upload.outputs.get_env_data_key }}
+      get_env_data_latest_key:   ${{ steps.upload.outputs.get_env_data_latest_key }}
 
     steps:
       - uses: actions/checkout@v4
@@ -109,6 +110,12 @@ jobs:
           pip install -r requirements.txt -t . --quiet
           zip -r ../../get_env_data.zip . -x "test_*" "conftest.py" "*.pyc" "__pycache__/*"
 
+      - name: Package get_env_data_latest Lambda
+        run: |
+          cd lambda/get_env_data_latest
+          pip install -r requirements.txt -t . --quiet
+          zip -r ../../get_env_data_latest.zip . -x "test_*" "*.pyc" "__pycache__/*"
+
       - name: Upload ZIPs to S3 artifacts bucket
         id: upload
         run: |
@@ -122,24 +129,27 @@ jobs:
           SAVE_ITEM_KEY="save_item_config/${SHA}.zip"
           DELETE_KEY="delete_record/${SHA}.zip"
           GET_ENV_KEY="get_env_data/${SHA}.zip"
+          GET_ENV_LATEST_KEY="get_env_data_latest/${SHA}.zip"
 
-          aws s3 cp create_record.zip    "s3://${BUCKET}/${CREATE_KEY}"
-          aws s3 cp get_latest.zip       "s3://${BUCKET}/${LATEST_KEY}"
-          aws s3 cp push_subscribe.zip   "s3://${BUCKET}/${PUSH_SUB_KEY}"
-          aws s3 cp push_notify.zip      "s3://${BUCKET}/${PUSH_NOTIFY_KEY}"
-          aws s3 cp get_item_config.zip  "s3://${BUCKET}/${GET_ITEM_KEY}"
-          aws s3 cp save_item_config.zip "s3://${BUCKET}/${SAVE_ITEM_KEY}"
-          aws s3 cp delete_record.zip    "s3://${BUCKET}/${DELETE_KEY}"
-          aws s3 cp get_env_data.zip     "s3://${BUCKET}/${GET_ENV_KEY}"
+          aws s3 cp create_record.zip         "s3://${BUCKET}/${CREATE_KEY}"
+          aws s3 cp get_latest.zip            "s3://${BUCKET}/${LATEST_KEY}"
+          aws s3 cp push_subscribe.zip        "s3://${BUCKET}/${PUSH_SUB_KEY}"
+          aws s3 cp push_notify.zip           "s3://${BUCKET}/${PUSH_NOTIFY_KEY}"
+          aws s3 cp get_item_config.zip       "s3://${BUCKET}/${GET_ITEM_KEY}"
+          aws s3 cp save_item_config.zip      "s3://${BUCKET}/${SAVE_ITEM_KEY}"
+          aws s3 cp delete_record.zip         "s3://${BUCKET}/${DELETE_KEY}"
+          aws s3 cp get_env_data.zip          "s3://${BUCKET}/${GET_ENV_KEY}"
+          aws s3 cp get_env_data_latest.zip   "s3://${BUCKET}/${GET_ENV_LATEST_KEY}"
 
-          echo "create_record_key=${CREATE_KEY}"      >> $GITHUB_OUTPUT
-          echo "get_latest_key=${LATEST_KEY}"          >> $GITHUB_OUTPUT
-          echo "push_subscribe_key=${PUSH_SUB_KEY}"    >> $GITHUB_OUTPUT
-          echo "push_notify_key=${PUSH_NOTIFY_KEY}"    >> $GITHUB_OUTPUT
-          echo "get_item_config_key=${GET_ITEM_KEY}"   >> $GITHUB_OUTPUT
-          echo "save_item_config_key=${SAVE_ITEM_KEY}" >> $GITHUB_OUTPUT
-          echo "delete_record_key=${DELETE_KEY}"       >> $GITHUB_OUTPUT
-          echo "get_env_data_key=${GET_ENV_KEY}"       >> $GITHUB_OUTPUT
+          echo "create_record_key=${CREATE_KEY}"           >> $GITHUB_OUTPUT
+          echo "get_latest_key=${LATEST_KEY}"               >> $GITHUB_OUTPUT
+          echo "push_subscribe_key=${PUSH_SUB_KEY}"         >> $GITHUB_OUTPUT
+          echo "push_notify_key=${PUSH_NOTIFY_KEY}"         >> $GITHUB_OUTPUT
+          echo "get_item_config_key=${GET_ITEM_KEY}"        >> $GITHUB_OUTPUT
+          echo "save_item_config_key=${SAVE_ITEM_KEY}"      >> $GITHUB_OUTPUT
+          echo "delete_record_key=${DELETE_KEY}"            >> $GITHUB_OUTPUT
+          echo "get_env_data_key=${GET_ENV_KEY}"            >> $GITHUB_OUTPUT
+          echo "get_env_data_latest_key=${GET_ENV_LATEST_KEY}" >> $GITHUB_OUTPUT
 
   # ── 2. Terraform apply (infrastructure + Lambda config) ───────────────────
   terraform-apply:
@@ -171,7 +181,7 @@ jobs:
       - name: Terraform Apply
         run: |
           terraform apply -auto-approve \
-            -var='lambda_s3_keys={"create_record":"${{ needs.build-lambda.outputs.create_record_key }}","get_latest":"${{ needs.build-lambda.outputs.get_latest_key }}","push_subscribe":"${{ needs.build-lambda.outputs.push_subscribe_key }}","push_notify":"${{ needs.build-lambda.outputs.push_notify_key }}","get_item_config":"${{ needs.build-lambda.outputs.get_item_config_key }}","save_item_config":"${{ needs.build-lambda.outputs.save_item_config_key }}","delete_record":"${{ needs.build-lambda.outputs.delete_record_key }}","get_env_data":"${{ needs.build-lambda.outputs.get_env_data_key }}"}'
+            -var='lambda_s3_keys={"create_record":"${{ needs.build-lambda.outputs.create_record_key }}","get_latest":"${{ needs.build-lambda.outputs.get_latest_key }}","push_subscribe":"${{ needs.build-lambda.outputs.push_subscribe_key }}","push_notify":"${{ needs.build-lambda.outputs.push_notify_key }}","get_item_config":"${{ needs.build-lambda.outputs.get_item_config_key }}","save_item_config":"${{ needs.build-lambda.outputs.save_item_config_key }}","delete_record":"${{ needs.build-lambda.outputs.delete_record_key }}","get_env_data":"${{ needs.build-lambda.outputs.get_env_data_key }}","get_env_data_latest":"${{ needs.build-lambda.outputs.get_env_data_latest_key }}"}'
         env:
           TF_VAR_vapid_private_key: ${{ secrets.VAPID_PRIVATE_KEY_PROD }}
 

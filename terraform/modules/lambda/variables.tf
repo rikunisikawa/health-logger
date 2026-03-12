@@ -20,3 +20,6 @@ variable "vapid_private_key" {
 }
 
 variable "vapid_public_key" { type = string }
+
+variable "s3_env_data_bucket_arn" { type = string }
+variable "s3_env_data_bucket_name" { type = string }

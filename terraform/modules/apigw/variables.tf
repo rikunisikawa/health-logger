@@ -22,3 +22,5 @@ variable "save_item_config_lambda_invoke_arn" { type = string }
 variable "save_item_config_function_name" { type = string }
 variable "delete_record_lambda_invoke_arn" { type = string }
 variable "delete_record_function_name" { type = string }
+variable "get_env_data_latest_lambda_invoke_arn" { type = string }
+variable "get_env_data_latest_function_name" { type = string }

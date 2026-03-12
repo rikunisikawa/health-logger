@@ -1,9 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
+  Bar,
+  BarChart,
   CartesianGrid,
   Legend,
   Line,
   LineChart,
+  ReferenceLine,
   ResponsiveContainer,
   Scatter,
   ScatterChart,
@@ -11,9 +14,9 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-import { getLatest } from '../api'
+import { getEnvData, getLatest } from '../api'
 import { useAuth } from '../hooks/useAuth'
-import type { LatestRecord } from '../types'
+import type { EnvDataRecord, LatestRecord } from '../types'
 
 /** Athena returns timestamps without timezone (UTC); append 'Z' to parse correctly */
 function parseUtc(isoStr: string): Date {
@@ -36,7 +39,7 @@ function toLocalMinutes(d: Date): number {
   return d.getHours() * 60 + d.getMinutes()
 }
 
-type Tab = 'trend' | 'intraday' | 'events'
+type Tab = 'trend' | 'intraday' | 'events' | 'env'
 
 interface DailyAvg {
   date: string
@@ -85,10 +88,12 @@ interface Props {
 export default function DashboardPage({ onBack }: Props) {
   const { token } = useAuth()
   const [records, setRecords] = useState<LatestRecord[]>([])
+  const [envRecords, setEnvRecords] = useState<EnvDataRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [fetchError, setFetchError] = useState<string | null>(null)
   const [tab, setTab] = useState<Tab>('trend')
   const [trendDays, setTrendDays] = useState(30)
+  const [envDays, setEnvDays] = useState(14)
   const [selectedDate, setSelectedDate] = useState(() => toLocalDateStr(new Date()))
 
   useEffect(() => {
@@ -99,6 +104,11 @@ export default function DashboardPage({ onBack }: Props) {
       .catch((e: unknown) => setFetchError((e as Error).message ?? '取得に失敗しました'))
       .finally(() => setLoading(false))
   }, [token])
+
+  useEffect(() => {
+    if (!token) return
+    getEnvData(token, envDays).then((res) => setEnvRecords(res.records)).catch(() => {})
+  }, [token, envDays])
 
   // ── 長期トレンド ─────────────────────────────────────────────────────
   const trendData = useMemo((): DailyAvg[] => {
@@ -183,6 +193,36 @@ export default function DashboardPage({ onBack }: Props) {
     return { eventPoints: points, eventCategories: cats }
   }, [records, selectedDate])
 
+  // ── 環境データ × ヘルスデータ結合 ───────────────────────────────────
+  const envChartData = useMemo(() => {
+    const healthByDate: Record<string, { fatigue: number[]; mood: number[]; motivation: number[] }> = {}
+    for (const r of records) {
+      if (r.record_type !== 'daily') continue
+      const key = toLocalDateStr(parseUtc(r.recorded_at))
+      if (!healthByDate[key]) healthByDate[key] = { fatigue: [], mood: [], motivation: [] }
+      const f = parseFloat(r.fatigue_score)
+      const m = parseFloat(r.mood_score)
+      const mv = parseFloat(r.motivation_score)
+      if (!isNaN(f)) healthByDate[key].fatigue.push(f)
+      if (!isNaN(m)) healthByDate[key].mood.push(m)
+      if (!isNaN(mv)) healthByDate[key].motivation.push(mv)
+    }
+    const avg = (arr: number[]) =>
+      arr.length ? Math.round(arr.reduce((a, b) => a + b, 0) / arr.length) : null
+
+    return envRecords.map((env) => {
+      const h = healthByDate[env.date]
+      return {
+        date: env.date.slice(5), // MM-DD
+        pressure_hpa: env.pressure_hpa,
+        pm25: env.pm25,
+        fatigue: h ? avg(h.fatigue) : null,
+        mood: h ? avg(h.mood) : null,
+        motivation: h ? avg(h.motivation) : null,
+      }
+    })
+  }, [envRecords, records])
+
   // ── 日付リスト ───────────────────────────────────────────────────────
   const availableDates = useMemo(() => {
     const dates = new Set<string>()
@@ -213,6 +253,7 @@ export default function DashboardPage({ onBack }: Props) {
               { key: 'trend', label: '長期トレンド' },
               { key: 'intraday', label: '日内変動' },
               { key: 'events', label: 'イベント' },
+              { key: 'env', label: '環境データ' },
             ] as { key: Tab; label: string }[]
           ).map(({ key, label }) => (
             <li className="nav-item" key={key}>
@@ -363,6 +404,72 @@ export default function DashboardPage({ onBack }: Props) {
                   <Scatter data={eventPoints} fill="#6f42c1" />
                 </ScatterChart>
               </ResponsiveContainer>
+            )}
+          </div>
+        )}
+
+        {/* ── 環境データ ── */}
+        {!loading && tab === 'env' && (
+          <div>
+            <div className="d-flex gap-2 mb-3">
+              {[14, 30].map((d) => (
+                <button
+                  key={d}
+                  className={`btn btn-sm ${envDays === d ? 'btn-success' : 'btn-outline-secondary'}`}
+                  onClick={() => setEnvDays(d)}
+                >
+                  {d}日
+                </button>
+              ))}
+            </div>
+
+            {envChartData.length === 0 ? (
+              <p className="text-muted small">この期間の環境データがありません。</p>
+            ) : (
+              <div className="d-flex flex-column gap-1">
+                {/* パネル1: ヘルスデータ */}
+                <p className="mb-0 small text-muted fw-semibold">体調スコア</p>
+                <ResponsiveContainer width="100%" height={160}>
+                  <LineChart data={envChartData} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" tick={false} />
+                    <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} />
+                    <Tooltip />
+                    <Legend wrapperStyle={{ fontSize: 11 }} />
+                    <Line type="monotone" dataKey="fatigue" name="疲労度" stroke="#dc3545" dot={false} connectNulls />
+                    <Line type="monotone" dataKey="mood" name="気分" stroke="#0d6efd" dot={false} connectNulls />
+                    <Line type="monotone" dataKey="motivation" name="やる気" stroke="#198754" dot={false} connectNulls />
+                  </LineChart>
+                </ResponsiveContainer>
+
+                {/* パネル2: 気圧 */}
+                <p className="mb-0 small text-muted fw-semibold">気圧 (hPa)</p>
+                <ResponsiveContainer width="100%" height={120}>
+                  <LineChart data={envChartData} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" tick={false} />
+                    <YAxis domain={['auto', 'auto']} tick={{ fontSize: 10 }} />
+                    <Tooltip formatter={(v) => [`${v} hPa`, '気圧']} />
+                    <ReferenceLine y={1010} stroke="#dc3545" strokeDasharray="4 2"
+                      label={{ value: '低気圧', position: 'insideTopRight', fontSize: 10, fill: '#dc3545' }} />
+                    <Line type="monotone" dataKey="pressure_hpa" name="気圧" stroke="#6f42c1" dot={false} connectNulls />
+                  </LineChart>
+                </ResponsiveContainer>
+
+                {/* パネル3: PM2.5 */}
+                <p className="mb-0 small text-muted fw-semibold">PM2.5 (μg/m³)</p>
+                <ResponsiveContainer width="100%" height={120}>
+                  <BarChart data={envChartData} margin={{ top: 4, right: 8, left: -20, bottom: 4 }}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" tick={{ fontSize: 10 }} interval="preserveStartEnd" />
+                    <YAxis tick={{ fontSize: 10 }} />
+                    <Tooltip formatter={(v) => [`${v} μg/m³`, 'PM2.5']} />
+                    <ReferenceLine y={15} stroke="#fd7e14" strokeDasharray="4 2"
+                      label={{ value: 'WHO基準', position: 'insideTopRight', fontSize: 10, fill: '#fd7e14' }} />
+                    <Bar dataKey="pm25" name="PM2.5" fill="#20c997" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             )}
           </div>
         )}

@@ -56,6 +56,9 @@ module "lambda" {
 
   vapid_private_key = var.vapid_private_key
   vapid_public_key  = var.vapid_public_key
+
+  s3_env_data_bucket_arn  = module.env_data_ingest.s3_bucket_arn
+  s3_env_data_bucket_name = module.env_data_ingest.s3_bucket_name
 }
 
 # ── Cognito (User Pool + Client + Domain) ─────────────────────────────────────
@@ -80,18 +83,20 @@ module "apigw" {
   cognito_issuer_url = module.cognito.issuer_url
   cognito_client_id  = module.cognito.client_id
 
-  create_record_lambda_invoke_arn    = module.lambda.create_record_invoke_arn
-  get_latest_lambda_invoke_arn       = module.lambda.get_latest_invoke_arn
-  create_record_function_name        = module.lambda.create_record_function_name
-  get_latest_function_name           = module.lambda.get_latest_function_name
-  push_subscribe_lambda_invoke_arn   = module.lambda.push_subscribe_invoke_arn
-  push_subscribe_function_name       = module.lambda.push_subscribe_function_name
-  get_item_config_lambda_invoke_arn  = module.lambda.get_item_config_invoke_arn
-  get_item_config_function_name      = module.lambda.get_item_config_function_name
-  save_item_config_lambda_invoke_arn = module.lambda.save_item_config_invoke_arn
-  save_item_config_function_name     = module.lambda.save_item_config_function_name
-  delete_record_lambda_invoke_arn    = module.lambda.delete_record_invoke_arn
-  delete_record_function_name        = module.lambda.delete_record_function_name
+  create_record_lambda_invoke_arn       = module.lambda.create_record_invoke_arn
+  get_latest_lambda_invoke_arn          = module.lambda.get_latest_invoke_arn
+  create_record_function_name           = module.lambda.create_record_function_name
+  get_latest_function_name              = module.lambda.get_latest_function_name
+  push_subscribe_lambda_invoke_arn      = module.lambda.push_subscribe_invoke_arn
+  push_subscribe_function_name          = module.lambda.push_subscribe_function_name
+  get_item_config_lambda_invoke_arn     = module.lambda.get_item_config_invoke_arn
+  get_item_config_function_name         = module.lambda.get_item_config_function_name
+  save_item_config_lambda_invoke_arn    = module.lambda.save_item_config_invoke_arn
+  save_item_config_function_name        = module.lambda.save_item_config_function_name
+  delete_record_lambda_invoke_arn       = module.lambda.delete_record_invoke_arn
+  delete_record_function_name           = module.lambda.delete_record_function_name
+  get_env_data_latest_lambda_invoke_arn = module.lambda.get_env_data_latest_invoke_arn
+  get_env_data_latest_function_name     = module.lambda.get_env_data_latest_function_name
 }
 
 # ── Amplify (React frontend hosting) ─────────────────────────────────────────

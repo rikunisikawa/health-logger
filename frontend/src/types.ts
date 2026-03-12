@@ -34,6 +34,12 @@ export interface HealthRecordInput {
   custom_fields:    CustomFieldValue[]
 }
 
+export interface EnvDataRecord {
+  date:         string
+  pressure_hpa: number | null
+  pm25:         number | null
+}
+
 export interface LatestRecord {
   id:               string
   record_type:      string

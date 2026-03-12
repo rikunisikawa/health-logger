@@ -69,8 +69,8 @@ resource "aws_iam_role_policy" "lambda" {
         Resource = [var.firehose_stream_arn]
       },
       {
-        Effect = "Allow"
-        Action = ["dynamodb:PutItem", "dynamodb:GetItem", "dynamodb:DeleteItem", "dynamodb:Scan"]
+        Effect   = "Allow"
+        Action   = ["dynamodb:PutItem", "dynamodb:GetItem", "dynamodb:DeleteItem", "dynamodb:Scan"]
         Resource = [aws_dynamodb_table.push_subscriptions.arn]
       },
       {
@@ -104,6 +104,11 @@ resource "aws_iam_role_policy" "lambda" {
         Effect   = "Allow"
         Action   = ["glue:GetDatabase", "glue:GetTable", "glue:GetPartitions"]
         Resource = ["*"]
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["s3:GetObject", "s3:ListBucket"]
+        Resource = [var.s3_env_data_bucket_arn, "${var.s3_env_data_bucket_arn}/*"]
       },
       {
         Effect   = "Allow"
@@ -318,6 +323,29 @@ resource "aws_lambda_function" "delete_record" {
     variables = {
       ATHENA_DATABASE      = var.athena_database
       ATHENA_OUTPUT_BUCKET = var.s3_results_bucket_name
+    }
+  }
+
+  depends_on = [aws_s3_bucket.artifacts]
+}
+
+resource "aws_lambda_function" "get_env_data_latest" {
+  function_name = "${local.name}-get-env-data-latest"
+  role          = aws_iam_role.lambda.arn
+  runtime       = "python3.13"
+  handler       = "handler.lambda_handler"
+
+  s3_bucket = aws_s3_bucket.artifacts.id
+  s3_key    = var.lambda_s3_keys["get_env_data_latest"]
+
+  timeout     = 30
+  memory_size = 256
+
+  tracing_config { mode = "Active" }
+
+  environment {
+    variables = {
+      S3_ENV_DATA_BUCKET = var.s3_env_data_bucket_name
     }
   }
 
