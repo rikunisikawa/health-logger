@@ -40,6 +40,7 @@ function toLocalMinutes(d: Date): number {
 }
 
 type Tab = 'trend' | 'intraday' | 'events' | 'env'
+type EventsView = 'timeline' | 'trend'
 
 interface DailyAvg {
   date: string
@@ -81,6 +82,8 @@ function EventTooltip({ payload }: EventTooltipProps) {
   )
 }
 
+const EVENT_COLORS = ['#6f42c1', '#fd7e14', '#20c997', '#ffc107', '#0dcaf0', '#d63384', '#6610f2', '#0d6efd']
+
 interface Props {
   onBack: () => void
 }
@@ -92,7 +95,9 @@ export default function DashboardPage({ onBack }: Props) {
   const [loading, setLoading] = useState(true)
   const [fetchError, setFetchError] = useState<string | null>(null)
   const [tab, setTab] = useState<Tab>('trend')
+  const [eventsView, setEventsView] = useState<EventsView>('timeline')
   const [trendDays, setTrendDays] = useState(30)
+  const [eventTrendDays, setEventTrendDays] = useState(30)
   const [envDays, setEnvDays] = useState(14)
   const [selectedDate, setSelectedDate] = useState(() => toLocalDateStr(new Date()))
 
@@ -192,6 +197,69 @@ export default function DashboardPage({ onBack }: Props) {
 
     return { eventPoints: points, eventCategories: cats }
   }, [records, selectedDate])
+
+  // ── イベント長期トレンド ─────────────────────────────────────────────
+  const { eventTrendData, eventTrendCategories } = useMemo(() => {
+    const cutoff = new Date()
+    cutoff.setDate(cutoff.getDate() - eventTrendDays)
+
+    // 日次ヘルス平均
+    const healthByDate: Record<string, { fatigue: number[]; mood: number[]; motivation: number[] }> = {}
+    for (const r of records) {
+      if (r.record_type !== 'daily') continue
+      const d = parseUtc(r.recorded_at)
+      if (d < cutoff) continue
+      const key = toLocalDateStr(d)
+      if (!healthByDate[key]) healthByDate[key] = { fatigue: [], mood: [], motivation: [] }
+      const f = parseFloat(r.fatigue_score)
+      const m = parseFloat(r.mood_score)
+      const mv = parseFloat(r.motivation_score)
+      if (!isNaN(f)) healthByDate[key].fatigue.push(f)
+      if (!isNaN(m)) healthByDate[key].mood.push(m)
+      if (!isNaN(mv)) healthByDate[key].motivation.push(mv)
+    }
+
+    // 日次イベントカウント
+    const cats = new Set<string>()
+    const countByDate: Record<string, Record<string, number>> = {}
+    for (const r of records) {
+      if (r.record_type !== 'event') continue
+      const d = parseUtc(r.recorded_at)
+      if (d < cutoff) continue
+      const key = toLocalDateStr(d)
+      if (!countByDate[key]) countByDate[key] = {}
+      try {
+        const fields = JSON.parse(r.custom_fields || '[]') as { label: string; value: unknown }[]
+        for (const f of fields) {
+          cats.add(f.label)
+          countByDate[key][f.label] = (countByDate[key][f.label] ?? 0) + 1
+        }
+      } catch {
+        // skip malformed
+      }
+    }
+
+    // 全日付（health + event の union）をソート
+    const allDates = new Set<string>([...Object.keys(healthByDate), ...Object.keys(countByDate)])
+    const avg = (arr: number[]) =>
+      arr.length ? Math.round(arr.reduce((a, b) => a + b, 0) / arr.length) : null
+
+    const data = Array.from(allDates)
+      .sort()
+      .map((date) => {
+        const h = healthByDate[date]
+        const counts = countByDate[date] ?? {}
+        return {
+          date: date.slice(5), // MM-DD
+          fatigue: h ? avg(h.fatigue) : null,
+          mood: h ? avg(h.mood) : null,
+          motivation: h ? avg(h.motivation) : null,
+          ...counts,
+        }
+      })
+
+    return { eventTrendData: data, eventTrendCategories: Array.from(cats) }
+  }, [records, eventTrendDays])
 
   // ── 環境データ × ヘルスデータ結合 ───────────────────────────────────
   const envChartData = useMemo(() => {
@@ -358,52 +426,136 @@ export default function DashboardPage({ onBack }: Props) {
           </div>
         )}
 
-        {/* ── イベントタイムライン ── */}
+        {/* ── イベント ── */}
         {!loading && tab === 'events' && (
           <div>
-            <select
-              className="form-select form-select-sm mb-3"
-              style={{ maxWidth: '180px' }}
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-            >
-              {availableDates.map((d) => (
-                <option key={d} value={d}>
-                  {d}
-                </option>
-              ))}
-            </select>
-            {eventPoints.length === 0 ? (
-              <p className="text-muted small">この日のイベント記録がありません。</p>
-            ) : (
-              <ResponsiveContainer
-                width="100%"
-                height={Math.max(200, eventCategories.length * 60 + 80)}
+            {/* サブビュー切り替え */}
+            <div className="btn-group btn-group-sm mb-3">
+              <button
+                className={`btn ${eventsView === 'timeline' ? 'btn-success' : 'btn-outline-secondary'}`}
+                onClick={() => setEventsView('timeline')}
               >
-                <ScatterChart margin={{ top: 4, right: 16, left: 4, bottom: 16 }}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis
-                    type="number"
-                    dataKey="x"
-                    domain={[0, 1440]}
-                    ticks={[0, 180, 360, 540, 720, 900, 1080, 1260, 1440]}
-                    tickFormatter={minuteTick}
-                    tick={{ fontSize: 11 }}
-                    label={{ value: '時刻', position: 'insideBottomRight', offset: -4, fontSize: 11 }}
-                  />
-                  <YAxis
-                    type="number"
-                    dataKey="y"
-                    domain={[-0.5, Math.max(eventCategories.length - 0.5, 0.5)]}
-                    ticks={eventCategories.map((_, i) => i)}
-                    tickFormatter={(v: number) => eventCategories[v] ?? ''}
-                    tick={{ fontSize: 11 }}
-                    width={80}
-                  />
-                  <Tooltip content={<EventTooltip />} />
-                  <Scatter data={eventPoints} fill="#6f42c1" />
-                </ScatterChart>
-              </ResponsiveContainer>
+                日別タイムライン
+              </button>
+              <button
+                className={`btn ${eventsView === 'trend' ? 'btn-success' : 'btn-outline-secondary'}`}
+                onClick={() => setEventsView('trend')}
+              >
+                長期トレンド
+              </button>
+            </div>
+
+            {/* 日別タイムライン */}
+            {eventsView === 'timeline' && (
+              <>
+                <select
+                  className="form-select form-select-sm mb-3"
+                  style={{ maxWidth: '180px' }}
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                >
+                  {availableDates.map((d) => (
+                    <option key={d} value={d}>
+                      {d}
+                    </option>
+                  ))}
+                </select>
+                {eventPoints.length === 0 ? (
+                  <p className="text-muted small">この日のイベント記録がありません。</p>
+                ) : (
+                  <ResponsiveContainer
+                    width="100%"
+                    height={Math.max(200, eventCategories.length * 60 + 80)}
+                  >
+                    <ScatterChart margin={{ top: 4, right: 16, left: 4, bottom: 16 }}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis
+                        type="number"
+                        dataKey="x"
+                        domain={[0, 1440]}
+                        ticks={[0, 180, 360, 540, 720, 900, 1080, 1260, 1440]}
+                        tickFormatter={minuteTick}
+                        tick={{ fontSize: 11 }}
+                        label={{ value: '時刻', position: 'insideBottomRight', offset: -4, fontSize: 11 }}
+                      />
+                      <YAxis
+                        type="number"
+                        dataKey="y"
+                        domain={[-0.5, Math.max(eventCategories.length - 0.5, 0.5)]}
+                        ticks={eventCategories.map((_, i) => i)}
+                        tickFormatter={(v: number) => eventCategories[v] ?? ''}
+                        tick={{ fontSize: 11 }}
+                        width={80}
+                      />
+                      <Tooltip content={<EventTooltip />} />
+                      <Scatter data={eventPoints} fill="#6f42c1" />
+                    </ScatterChart>
+                  </ResponsiveContainer>
+                )}
+              </>
+            )}
+
+            {/* 長期トレンド */}
+            {eventsView === 'trend' && (
+              <>
+                <div className="d-flex gap-2 mb-3">
+                  {[30, 90].map((d) => (
+                    <button
+                      key={d}
+                      className={`btn btn-sm ${eventTrendDays === d ? 'btn-success' : 'btn-outline-secondary'}`}
+                      onClick={() => setEventTrendDays(d)}
+                    >
+                      {d}日
+                    </button>
+                  ))}
+                </div>
+                {eventTrendData.length === 0 ? (
+                  <p className="text-muted small">この期間のイベント記録がありません。</p>
+                ) : (
+                  <div className="d-flex flex-column gap-1">
+                    {/* パネル1: 体調スコア */}
+                    <p className="mb-0 small text-muted fw-semibold">体調スコア</p>
+                    <ResponsiveContainer width="100%" height={160}>
+                      <LineChart data={eventTrendData} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="date" tick={false} />
+                        <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} />
+                        <Tooltip />
+                        <Legend wrapperStyle={{ fontSize: 11 }} />
+                        <Line type="monotone" dataKey="fatigue" name="疲労度" stroke="#dc3545" dot={false} connectNulls />
+                        <Line type="monotone" dataKey="mood" name="気分" stroke="#0d6efd" dot={false} connectNulls />
+                        <Line type="monotone" dataKey="motivation" name="やる気" stroke="#198754" dot={false} connectNulls />
+                      </LineChart>
+                    </ResponsiveContainer>
+
+                    {/* パネル2: イベント頻度 */}
+                    {eventTrendCategories.length === 0 ? (
+                      <p className="text-muted small">この期間のイベント種別がありません。</p>
+                    ) : (
+                      <>
+                        <p className="mb-0 small text-muted fw-semibold">イベント発生回数</p>
+                        <ResponsiveContainer width="100%" height={160}>
+                          <BarChart data={eventTrendData} margin={{ top: 4, right: 8, left: -20, bottom: 4 }}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="date" tick={{ fontSize: 10 }} interval="preserveStartEnd" />
+                            <YAxis allowDecimals={false} tick={{ fontSize: 10 }} />
+                            <Tooltip />
+                            <Legend wrapperStyle={{ fontSize: 11 }} />
+                            {eventTrendCategories.map((cat, i) => (
+                              <Bar
+                                key={cat}
+                                dataKey={cat}
+                                stackId="events"
+                                fill={EVENT_COLORS[i % EVENT_COLORS.length]}
+                              />
+                            ))}
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </>
+                    )}
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}
