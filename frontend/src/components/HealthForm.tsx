@@ -6,32 +6,14 @@ import type { CustomFieldValue, HealthRecordInput, ItemConfig } from '../types'
 
 const API_ENDPOINT = import.meta.env.VITE_API_ENDPOINT as string
 
-const FLAGS = {
-  poor_sleep:  1,
-  headache:    2,
-  stomachache: 4,
-  exercise:    8,
-  alcohol:     16,
-  caffeine:    32,
-} as const
-
-const FLAG_LABELS: Record<keyof typeof FLAGS, string> = {
-  poor_sleep:  '睡眠不足',
-  headache:    '頭痛',
-  stomachache: '腹痛',
-  exercise:    '運動',
-  alcohol:     'アルコール',
-  caffeine:    'カフェイン',
-}
-
-const FLAG_ICONS: Record<keyof typeof FLAGS, string> = {
-  poor_sleep:  '😴',
-  headache:    '🤕',
-  stomachache: '🤢',
-  exercise:    '🏃',
-  alcohol:     '🍺',
-  caffeine:    '☕',
-}
+const FLAG_ITEMS = [
+  { item_id: 'poor_sleep',  label: '睡眠不足',    icon: '😴' },
+  { item_id: 'headache',    label: '頭痛',        icon: '🤕' },
+  { item_id: 'stomachache', label: '腹痛',        icon: '🤢' },
+  { item_id: 'exercise',    label: '運動',        icon: '🏃' },
+  { item_id: 'alcohol',     label: 'アルコール', icon: '🍺' },
+  { item_id: 'caffeine',    label: 'カフェイン', icon: '☕' },
+] as const
 
 type ToastVariant = 'success' | 'danger' | 'warning'
 interface ToastState { show: boolean; message: string; variant: ToastVariant }
@@ -49,12 +31,11 @@ export default function HealthForm({ formItems, eventItems }: Props) {
   const [fatigue, setFatigue]         = useState(50)
   const [mood, setMood]               = useState(50)
   const [motivation, setMotivation]   = useState(50)
-  const [flags, setFlags]             = useState(0)
   const [note, setNote]               = useState('')
   const [customValues, setCustomValues] = useState<Record<string, number | boolean | string>>({})
   const [submitting, setSubmitting]   = useState(false)
 
-  // Quick event state: eventItemId → pending number value (for number/slider types)
+  // Quick event state: item_id → pending value (for number/slider/text types)
   const [eventInputs, setEventInputs] = useState<Record<string, string>>({})
   const [eventSending, setEventSending] = useState<Record<string, boolean>>({})
 
@@ -64,8 +45,6 @@ export default function HealthForm({ formItems, eventItems }: Props) {
     setToast({ show: true, message, variant })
     setTimeout(() => setToast((t) => ({ ...t, show: false })), 3000)
   }
-
-  const toggleFlag = (bit: number) => setFlags((f) => f ^ bit)
 
   const setCustomValue = (itemId: string, value: number | boolean | string) =>
     setCustomValues((prev) => ({ ...prev, [itemId]: value }))
@@ -102,7 +81,7 @@ export default function HealthForm({ formItems, eventItems }: Props) {
       fatigue_score:    fatigue,
       mood_score:       mood,
       motivation_score: motivation,
-      flags,
+      flags:            0,
       note:             note.slice(0, 280),
       recorded_at:      new Date().toISOString(),
       timezone:         Intl.DateTimeFormat().resolvedOptions().timeZone,
@@ -114,7 +93,6 @@ export default function HealthForm({ formItems, eventItems }: Props) {
     if (ok) {
       showToast('記録しました！', 'success')
       setNote('')
-      setFlags(0)
       setCustomValues({})
       flush(token).catch(() => {})
       if (window.matchMedia('(display-mode: standalone)').matches) {
@@ -122,6 +100,27 @@ export default function HealthForm({ formItems, eventItems }: Props) {
       }
     }
     setSubmitting(false)
+  }
+
+  const sendFlagEvent = async (item: typeof FLAG_ITEMS[number]) => {
+    if (!token) return
+    setEventSending((s) => ({ ...s, [item.item_id]: true }))
+    const record: HealthRecordInput = {
+      record_type:   'event',
+      flags:         0,
+      note:          '',
+      recorded_at:   new Date().toISOString(),
+      timezone:      Intl.DateTimeFormat().resolvedOptions().timeZone,
+      device_id:     navigator.userAgent.slice(0, 100),
+      app_version:   '1.0.0',
+      custom_fields: [{ item_id: item.item_id, label: item.label, type: 'checkbox', value: true }],
+    }
+    const ok = await submitRecord(record)
+    if (ok) {
+      showToast(`${item.label} を記録しました`, 'success')
+      flush(token).catch(() => {})
+    }
+    setEventSending((s) => ({ ...s, [item.item_id]: false }))
   }
 
   const handleQuickEvent = async (item: ItemConfig) => {
@@ -165,10 +164,31 @@ export default function HealthForm({ formItems, eventItems }: Props) {
         </div>
       )}
 
-      {/* ── Quick Events ──────────────────────────────────────── */}
-      {eventItems.length > 0 && (
-        <div className="mb-4">
-          <h2 className="h6 text-muted mb-2">クイックイベント</h2>
+      {/* ── Quick Events (flags + custom event items) ──────────── */}
+      <div className="mb-4">
+        <h2 className="h6 text-muted mb-2">クイックイベント</h2>
+        <div className="d-flex flex-wrap gap-2 mb-2">
+          {FLAG_ITEMS.map((item) => (
+            <button
+              key={item.item_id}
+              type="button"
+              className="btn btn-outline-secondary"
+              onClick={() => sendFlagEvent(item)}
+              disabled={eventSending[item.item_id]}
+              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', padding: '8px 12px', minWidth: '64px' }}
+            >
+              {eventSending[item.item_id] ? (
+                <span className="spinner-border spinner-border-sm" role="status" />
+              ) : (
+                <>
+                  <span style={{ fontSize: '1.4rem', lineHeight: 1 }}>{item.icon}</span>
+                  <span style={{ fontSize: '0.7rem' }}>{item.label}</span>
+                </>
+              )}
+            </button>
+          ))}
+        </div>
+        {eventItems.length > 0 && (
           <div className="d-flex flex-column gap-2">
             {eventItems.map((item) => (
               <div key={item.item_id} className="d-flex align-items-center gap-2">
@@ -209,8 +229,8 @@ export default function HealthForm({ formItems, eventItems }: Props) {
               </div>
             ))}
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* ── Daily Form ────────────────────────────────────────── */}
       <h1 className="h4 mb-4 text-success">体調記録</h1>
@@ -238,41 +258,6 @@ export default function HealthForm({ formItems, eventItems }: Props) {
             />
           </div>
         ))}
-
-        {/* Flags */}
-        <div className="mb-3">
-          <label className="form-label">フラグ</label>
-          <div className="d-flex flex-wrap gap-2">
-            {(Object.entries(FLAGS) as [keyof typeof FLAGS, number][]).map(([key, bit]) => {
-              const active = (flags & bit) !== 0
-              return (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => toggleFlag(bit)}
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: '2px',
-                    padding: '8px 12px',
-                    border: `2px solid ${active ? '#198754' : '#dee2e6'}`,
-                    borderRadius: '12px',
-                    background: active ? '#d1e7dd' : '#f8f9fa',
-                    cursor: 'pointer',
-                    minWidth: '64px',
-                    transition: 'all 0.15s',
-                  }}
-                >
-                  <span style={{ fontSize: '1.4rem', lineHeight: 1 }}>{FLAG_ICONS[key]}</span>
-                  <span style={{ fontSize: '0.7rem', color: active ? '#198754' : '#6c757d', fontWeight: active ? 600 : 400 }}>
-                    {FLAG_LABELS[key]}
-                  </span>
-                </button>
-              )
-            })}
-          </div>
-        </div>
 
         {/* Custom form items */}
         {formItems.length > 0 && (
