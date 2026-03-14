@@ -2,13 +2,12 @@ import { test, expect } from '@playwright/test'
 import { mockApi } from './mocks'
 
 test.beforeEach(async ({ page }) => {
-  // localStorage をクリアしてテスト間の状態汚染を防ぐ
-  await page.addInitScript(() => {
-    localStorage.removeItem('health_logger_active_statuses')
-  })
   await mockApi(page)
   await page.goto('/')
   await expect(page.locator('text=Health Logger')).toBeVisible()
+  // テスト間の状態汚染を防ぐ: ページ読み込み後に localStorage をクリア
+  // addInitScript を使わないことで、テスト06のリロード時に状態が保持される
+  await page.evaluate(() => localStorage.removeItem('health_logger_active_statuses'))
 })
 
 // ── テスト 04: ステータスボタン → ON になる ──────────────────────────
@@ -46,12 +45,12 @@ test('06: ページリロード後も ON 状態が保持される（localStorage
   await btn.click()
   await expect(btn.locator('text=ON')).toBeVisible()
 
-  // リロード
-  await mockApi(page) // route は reload 後に再設定が必要
+  // リロード（routes はページレベルで永続するため再設定不要だが念のため）
+  await mockApi(page)
   await page.reload()
   await expect(page.locator('text=Health Logger')).toBeVisible()
 
-  // ON 状態が復元されている
+  // ON 状態が復元されている（localStorage が保持されているため）
   const reloadedBtn = page.locator('button', { hasText: '眠い' })
   await expect(reloadedBtn.locator('text=ON')).toBeVisible()
   await expect(reloadedBtn).toHaveClass(/btn-warning/)

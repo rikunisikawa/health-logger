@@ -43,7 +43,7 @@ export async function mockApi(page: Page) {
   })
 
   // GET /item-config（カスタム項目取得）
-  await page.route('**/item-config**', async (route) => {
+  await page.route('**/items/config**', async (route) => {
     if (route.request().method() === 'GET') {
       await route.fulfill({
         status: 200,

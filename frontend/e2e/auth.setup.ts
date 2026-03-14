@@ -1,10 +1,17 @@
 import { test as setup, expect } from '@playwright/test'
-import * as fs from 'fs'
+import { fileURLToPath } from 'url'
 import * as path from 'path'
-import * as dotenv from 'dotenv'
+import * as fs from 'fs'
 
-// .env.test.local から認証情報を読み込む
-dotenv.config({ path: path.resolve(__dirname, '../.env.test.local') })
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
+const envPath = path.resolve(__dirname, '../.env.test.local')
+if (fs.existsSync(envPath)) {
+  for (const line of fs.readFileSync(envPath, 'utf-8').split('\n')) {
+    const m = line.match(/^([^#=]+)=(.*)$/)
+    if (m) process.env[m[1].trim()] = m[2].trim()
+  }
+}
 
 const AUTH_FILE = path.join(__dirname, '.auth/user.json')
 
@@ -13,25 +20,26 @@ setup('Cognito ログインしてセッションを保存', async ({ page }) => 
   const password = process.env.E2E_TEST_PASSWORD
 
   if (!email || !password) {
-    throw new Error(
-      'E2E_TEST_EMAIL と E2E_TEST_PASSWORD を frontend/.env.test.local に設定してください'
-    )
+    throw new Error('E2E_TEST_EMAIL と E2E_TEST_PASSWORD を frontend/.env.test.local に設定してください')
   }
 
-  // アプリにアクセス → Cognito Hosted UI にリダイレクト
   await page.goto('/')
-  await page.getByRole('button', { name: 'ログイン' }).click()
+  await page.waitForLoadState('networkidle')
 
-  // Cognito ログインページ (auth.ap-northeast-1.amazoncognito.com)
-  await page.waitForURL(/amazoncognito\.com/)
-  await page.locator('input[name="username"]').fill(email)
-  await page.locator('input[name="password"]').fill(password)
-  await page.locator('[type="submit"]').click()
+  if (!page.url().includes('amazoncognito.com')) {
+    await page.getByRole('button', { name: 'ログイン' }).click()
+    await page.waitForURL(/amazoncognito\.com/, { timeout: 15_000 })
+  }
 
-  // アプリ本体に戻るまで待つ
-  await page.waitForURL('https://main.d24eyg8x5429ma.amplifyapp.com/**')
+  // visible な要素のみを対象にする
+  await page.locator('input[name="username"]:visible').fill(email)
+  await page.locator('input[name="password"]:visible').fill(password)
+  // Cognito Hosted UI の Sign in ボタンはクリックが効かないため Enter キーで送信
+  await page.locator('input[name="password"]:visible').press('Enter')
+
+  await page.waitForURL('https://main.d24eyg8x5429ma.amplifyapp.com/**', { timeout: 20_000 })
   await expect(page.locator('text=Health Logger')).toBeVisible({ timeout: 15_000 })
 
-  // セッション状態を保存（以後のテストで再利用）
   await page.context().storageState({ path: AUTH_FILE })
+  console.log('✓ セッションを保存しました:', AUTH_FILE)
 })

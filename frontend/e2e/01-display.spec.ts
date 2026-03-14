@@ -10,9 +10,10 @@ test.beforeEach(async ({ page }) => {
 
 // ── テスト 01: スライダー3本が表示される ──────────────────────────────
 test('01: スライダー3本（疲労感・気分・やる気）が表示される', async ({ page }) => {
-  await expect(page.locator('text=疲労感')).toBeVisible()
-  await expect(page.locator('text=気分')).toBeVisible()
-  await expect(page.locator('text=やる気')).toBeVisible()
+  // 最近の記録の "気分:70" などと重複しないよう exact 指定
+  await expect(page.getByText('疲労感', { exact: true })).toBeVisible()
+  await expect(page.getByText('気分', { exact: true })).toBeVisible()
+  await expect(page.getByText('やる気', { exact: true })).toBeVisible()
 
   // スライダー（type=range）が3本存在する
   const sliders = page.locator('input[type="range"]')
@@ -21,18 +22,19 @@ test('01: スライダー3本（疲労感・気分・やる気）が表示され
 
 // ── テスト 02: ステータスボタン4件が表示される ───────────────────────
 test('02: ステータスボタン4件（頭痛・腹痛・眠い・勤務中）が表示される', async ({ page }) => {
-  await expect(page.locator('text=ステータス')).toBeVisible()
-  await expect(page.locator('text=頭痛')).toBeVisible()
-  await expect(page.locator('text=腹痛')).toBeVisible()
-  await expect(page.locator('text=眠い')).toBeVisible()
-  await expect(page.locator('text=勤務中')).toBeVisible()
+  // "カスタムステータス" ボタンと重複しないよう heading ロールで指定
+  await expect(page.getByRole('heading', { name: 'ステータス' })).toBeVisible()
+  await expect(page.getByText('頭痛', { exact: true })).toBeVisible()
+  await expect(page.getByText('腹痛', { exact: true })).toBeVisible()
+  await expect(page.getByText('眠い', { exact: true })).toBeVisible()
+  await expect(page.getByText('勤務中', { exact: true })).toBeVisible()
 })
 
 // ── テスト 03: クイックイベントボタン4件が表示される ─────────────────
 test('03: クイックイベントボタン4件（睡眠不足・運動・アルコール・カフェイン）が表示される', async ({ page }) => {
-  await expect(page.locator('text=クイックイベント')).toBeVisible()
-  await expect(page.locator('text=睡眠不足')).toBeVisible()
-  await expect(page.locator('text=運動')).toBeVisible()
-  await expect(page.locator('text=アルコール')).toBeVisible()
-  await expect(page.locator('text=カフェイン')).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'クイックイベント' })).toBeVisible()
+  await expect(page.getByText('睡眠不足', { exact: true })).toBeVisible()
+  await expect(page.getByText('運動', { exact: true })).toBeVisible()
+  await expect(page.getByText('アルコール', { exact: true })).toBeVisible()
+  await expect(page.getByText('カフェイン', { exact: true })).toBeVisible()
 })
