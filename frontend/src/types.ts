@@ -1,5 +1,5 @@
 export type ItemType = 'slider' | 'checkbox' | 'number' | 'text'
-export type ItemMode = 'form' | 'event'
+export type ItemMode = 'form' | 'event' | 'status'
 
 export interface ItemConfig {
   item_id: string
@@ -21,7 +21,7 @@ export interface CustomFieldValue {
 }
 
 export interface HealthRecordInput {
-  record_type:      'daily' | 'event'
+  record_type:      'daily' | 'event' | 'status'
   fatigue_score?:   number
   mood_score?:      number
   motivation_score?: number

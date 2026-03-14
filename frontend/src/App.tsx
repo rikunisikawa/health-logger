@@ -40,8 +40,9 @@ function AppContent() {
     setRecords((prev) => prev.filter((r) => r.id !== id))
   }
 
-  const formItems  = configs.filter((c) => c.mode === 'form').sort((a, b) => a.order - b.order)
-  const eventItems = configs.filter((c) => c.mode === 'event').sort((a, b) => a.order - b.order)
+  const formItems   = configs.filter((c) => c.mode === 'form').sort((a, b) => a.order - b.order)
+  const eventItems  = configs.filter((c) => c.mode === 'event').sort((a, b) => a.order - b.order)
+  const statusItems = configs.filter((c) => c.mode === 'status').sort((a, b) => a.order - b.order)
 
   // 最新の daily 記録を HealthForm に渡す（前回値表示用）
   const latestDailyRecord = records.find((r) => r.record_type === 'daily')
@@ -87,6 +88,7 @@ function AppContent() {
       <HealthForm
         formItems={formItems}
         eventItems={eventItems}
+        statusItems={statusItems}
         latestDailyRecord={latestDailyRecord}
       />
 

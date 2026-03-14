@@ -7,12 +7,17 @@ import type { CustomFieldValue, HealthRecordInput, ItemConfig, LatestRecord } fr
 const API_ENDPOINT = import.meta.env.VITE_API_ENDPOINT as string
 
 const FLAG_ITEMS = [
-  { item_id: 'poor_sleep',  label: '睡眠不足',    icon: '😴' },
-  { item_id: 'headache',    label: '頭痛',        icon: '🤕' },
-  { item_id: 'stomachache', label: '腹痛',        icon: '🤢' },
-  { item_id: 'exercise',    label: '運動',        icon: '🏃' },
-  { item_id: 'alcohol',     label: 'アルコール', icon: '🍺' },
-  { item_id: 'caffeine',    label: 'カフェイン', icon: '☕' },
+  { item_id: 'poor_sleep', label: '睡眠不足',    icon: '😴' },
+  { item_id: 'exercise',   label: '運動',        icon: '🏃' },
+  { item_id: 'alcohol',    label: 'アルコール', icon: '🍺' },
+  { item_id: 'caffeine',   label: 'カフェイン', icon: '☕' },
+] as const
+
+const STATUS_ITEMS = [
+  { item_id: 'headache',    label: '頭痛',   icon: '🤕' },
+  { item_id: 'stomachache', label: '腹痛',   icon: '🤢' },
+  { item_id: 'sleepy',      label: '眠い',   icon: '😪' },
+  { item_id: 'working',     label: '勤務中', icon: '💼' },
 ] as const
 
 /** スライダー各項目の accent-color */
@@ -41,12 +46,13 @@ type ToastVariant = 'success' | 'danger' | 'warning'
 interface ToastState { show: boolean; message: string; variant: ToastVariant }
 
 interface Props {
-  formItems:  ItemConfig[]
-  eventItems: ItemConfig[]
+  formItems:    ItemConfig[]
+  eventItems:   ItemConfig[]
+  statusItems:  ItemConfig[]
   latestDailyRecord?: LatestRecord
 }
 
-export default function HealthForm({ formItems, eventItems, latestDailyRecord }: Props) {
+export default function HealthForm({ formItems, eventItems, statusItems, latestDailyRecord }: Props) {
   const { token } = useAuth()
   const { enqueue, flush } = useOfflineQueue(API_ENDPOINT)
 
@@ -173,7 +179,28 @@ export default function HealthForm({ formItems, eventItems, latestDailyRecord }:
     setEventSending((s) => ({ ...s, [item.item_id]: false }))
   }
 
-  const handleQuickEvent = async (item: ItemConfig) => {
+  const sendStatusEvent = async (item: typeof STATUS_ITEMS[number]) => {
+    if (!token) return
+    setEventSending((s) => ({ ...s, [item.item_id]: true }))
+    const record: HealthRecordInput = {
+      record_type:   'status',
+      flags:         0,
+      note:          '',
+      recorded_at:   getRecordedAtISO(),
+      timezone:      Intl.DateTimeFormat().resolvedOptions().timeZone,
+      device_id:     navigator.userAgent.slice(0, 100),
+      app_version:   '1.0.0',
+      custom_fields: [{ item_id: item.item_id, label: item.label, type: 'checkbox', value: true }],
+    }
+    const ok = await submitRecord(record)
+    if (ok) {
+      showToast(`${item.label} を記録しました`, 'success')
+      flush(token).catch(() => {})
+    }
+    setEventSending((s) => ({ ...s, [item.item_id]: false }))
+  }
+
+  const handleQuickEvent = async (item: ItemConfig, recordType: 'event' | 'status' = 'event') => {
     if (!token) return
     let value: number | boolean | string
     if (item.type === 'checkbox') {
@@ -188,7 +215,7 @@ export default function HealthForm({ formItems, eventItems, latestDailyRecord }:
 
     setEventSending((s) => ({ ...s, [item.item_id]: true }))
     const record: HealthRecordInput = {
-      record_type:   'event',
+      record_type:   recordType,
       flags:         0,
       note:          '',
       recorded_at:   getRecordedAtISO(),   // ← 選択日時を使用
@@ -254,9 +281,72 @@ export default function HealthForm({ formItems, eventItems, latestDailyRecord }:
         </div>
         {!isNowSelected && (
           <p className="mb-0 mt-1 text-warning-emphasis" style={{ fontSize: '0.72rem' }}>
-            ※ クイックイベント・体調記録ともにこの日時で登録されます
+            ※ ステータス・クイックイベント・体調記録ともにこの日時で登録されます
           </p>
         )}
+      </div>
+
+      {/* ── Status (ongoing conditions) ───────────────────────── */}
+      <div className="mb-4">
+        <h2 className="h6 text-muted mb-2">ステータス</h2>
+        <div className="d-flex flex-wrap gap-2">
+          {STATUS_ITEMS.map((item) => (
+            <button
+              key={item.item_id}
+              type="button"
+              className="btn btn-outline-warning"
+              onClick={() => sendStatusEvent(item)}
+              disabled={eventSending[item.item_id]}
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '2px',
+                padding: '8px 12px',
+                minWidth: '64px',
+              }}
+            >
+              {eventSending[item.item_id] ? (
+                <span className="spinner-border spinner-border-sm" role="status" />
+              ) : (
+                <>
+                  <span style={{ fontSize: '1.4rem', lineHeight: 1 }}>{item.icon}</span>
+                  <span style={{ fontSize: '0.7rem' }}>{item.label}</span>
+                </>
+              )}
+            </button>
+          ))}
+
+          {/* カスタムステータス項目 */}
+          {statusItems
+            .filter((item) => item.type === 'checkbox')
+            .map((item) => (
+              <button
+                key={item.item_id}
+                type="button"
+                className="btn btn-outline-warning"
+                onClick={() => handleQuickEvent(item, 'status')}
+                disabled={eventSending[item.item_id]}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '2px',
+                  padding: '8px 12px',
+                  minWidth: '64px',
+                }}
+              >
+                {eventSending[item.item_id] ? (
+                  <span className="spinner-border spinner-border-sm" role="status" />
+                ) : (
+                  <>
+                    <span style={{ fontSize: '1.4rem', lineHeight: 1 }}>{item.icon ?? '●'}</span>
+                    <span style={{ fontSize: '0.7rem' }}>{item.label}</span>
+                  </>
+                )}
+              </button>
+            ))}
+        </div>
       </div>
 
       {/* ── Quick Events (flags + custom event items) ──────────── */}
