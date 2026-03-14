@@ -22,6 +22,21 @@ const SLIDER_COLORS = {
   motivation: '#198754', // 緑: やる気
 } as const
 
+/** Date → datetime-local input の値形式 "YYYY-MM-DDTHH:MM" (ローカル時刻) */
+function toDatetimeLocal(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return (
+    `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}` +
+    `T${pad(date.getHours())}:${pad(date.getMinutes())}`
+  )
+}
+
+/** datetime-local の値 "YYYY-MM-DDTHH:MM" → ISO 8601 文字列 (UTC) */
+function datetimeLocalToISO(value: string): string {
+  // new Date("YYYY-MM-DDTHH:MM") はローカル時刻として解釈される
+  return new Date(value).toISOString()
+}
+
 type ToastVariant = 'success' | 'danger' | 'warning'
 interface ToastState { show: boolean; message: string; variant: ToastVariant }
 
@@ -49,6 +64,16 @@ export default function HealthForm({ formItems, eventItems, latestDailyRecord }:
     return isNaN(v) ? 50 : v
   }, [latestDailyRecord])
 
+  // 記録日時（フォーム全体で共通。デフォルト = 現在時刻）
+  const [recordedAt, setRecordedAt] = useState(() => toDatetimeLocal(new Date()))
+  const isNowSelected = useMemo(() => {
+    // 現在時刻から1分以内なら「現在」とみなす
+    const diff = Math.abs(new Date(recordedAt).getTime() - Date.now())
+    return diff < 60 * 1000
+  }, [recordedAt])
+
+  const resetToNow = () => setRecordedAt(toDatetimeLocal(new Date()))
+
   // Daily form state（前回値で初期化）
   const [fatigue, setFatigue]         = useState(prevFatigue)
   const [mood, setMood]               = useState(prevMood)
@@ -57,7 +82,7 @@ export default function HealthForm({ formItems, eventItems, latestDailyRecord }:
   const [customValues, setCustomValues] = useState<Record<string, number | boolean | string>>({})
   const [submitting, setSubmitting]   = useState(false)
 
-  // Quick event state: item_id → pending value (for number/slider/text types)
+  // Quick event state
   const [eventInputs, setEventInputs] = useState<Record<string, string>>({})
   const [eventSending, setEventSending] = useState<Record<string, boolean>>({})
 
@@ -78,6 +103,9 @@ export default function HealthForm({ formItems, eventItems, latestDailyRecord }:
       type:    item.type,
       value:   customValues[item.item_id] ?? (item.type === 'checkbox' ? false : item.type === 'text' ? '' : item.min ?? 0),
     }))
+
+  /** recordedAt の値を ISO 文字列に変換（共通） */
+  const getRecordedAtISO = () => datetimeLocalToISO(recordedAt)
 
   const submitRecord = async (record: HealthRecordInput) => {
     try {
@@ -105,7 +133,7 @@ export default function HealthForm({ formItems, eventItems, latestDailyRecord }:
       motivation_score: motivation,
       flags:            0,
       note:             note.slice(0, 280),
-      recorded_at:      new Date().toISOString(),
+      recorded_at:      getRecordedAtISO(),   // ← 選択日時を使用
       timezone:         Intl.DateTimeFormat().resolvedOptions().timeZone,
       device_id:        navigator.userAgent.slice(0, 100),
       app_version:      '1.0.0',
@@ -131,7 +159,7 @@ export default function HealthForm({ formItems, eventItems, latestDailyRecord }:
       record_type:   'event',
       flags:         0,
       note:          '',
-      recorded_at:   new Date().toISOString(),
+      recorded_at:   getRecordedAtISO(),   // ← 選択日時を使用
       timezone:      Intl.DateTimeFormat().resolvedOptions().timeZone,
       device_id:     navigator.userAgent.slice(0, 100),
       app_version:   '1.0.0',
@@ -163,7 +191,7 @@ export default function HealthForm({ formItems, eventItems, latestDailyRecord }:
       record_type:   'event',
       flags:         0,
       note:          '',
-      recorded_at:   new Date().toISOString(),
+      recorded_at:   getRecordedAtISO(),   // ← 選択日時を使用
       timezone:      Intl.DateTimeFormat().resolvedOptions().timeZone,
       device_id:     navigator.userAgent.slice(0, 100),
       app_version:   '1.0.0',
@@ -178,7 +206,6 @@ export default function HealthForm({ formItems, eventItems, latestDailyRecord }:
     setEventSending((s) => ({ ...s, [item.item_id]: false }))
   }
 
-  // 前回値があるかどうか（ラベル表示用）
   const hasPrev = latestDailyRecord != null
 
   return (
@@ -189,10 +216,52 @@ export default function HealthForm({ formItems, eventItems, latestDailyRecord }:
         </div>
       )}
 
+      {/* ── 記録日時ピッカー（全体共通）──────────────────────── */}
+      <div
+        className="mb-4 p-3 rounded"
+        style={{
+          backgroundColor: isNowSelected ? '#f8f9fa' : '#fff3cd',
+          border: `1px solid ${isNowSelected ? '#dee2e6' : '#ffc107'}`,
+        }}
+      >
+        <div className="d-flex align-items-center gap-2 flex-wrap">
+          <label className="form-label mb-0 fw-semibold" style={{ whiteSpace: 'nowrap' }}>
+            🕐 記録日時
+          </label>
+          <input
+            type="datetime-local"
+            className="form-control form-control-sm"
+            style={{ maxWidth: '220px' }}
+            value={recordedAt}
+            max={toDatetimeLocal(new Date())}   // 未来日時は選択不可
+            onChange={(e) => setRecordedAt(e.target.value)}
+          />
+          {!isNowSelected && (
+            <>
+              <span className="badge bg-warning text-dark" style={{ fontSize: '0.72rem' }}>
+                過去日時で記録中
+              </span>
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-secondary"
+                onClick={resetToNow}
+                style={{ fontSize: '0.75rem', whiteSpace: 'nowrap' }}
+              >
+                現在時刻に戻す
+              </button>
+            </>
+          )}
+        </div>
+        {!isNowSelected && (
+          <p className="mb-0 mt-1 text-warning-emphasis" style={{ fontSize: '0.72rem' }}>
+            ※ クイックイベント・体調記録ともにこの日時で登録されます
+          </p>
+        )}
+      </div>
+
       {/* ── Quick Events (flags + custom event items) ──────────── */}
       <div className="mb-4">
         <h2 className="h6 text-muted mb-2">クイックイベント</h2>
-        {/* フラグイベント + チェックボックス型カスタムイベントを横並びに */}
         <div className="d-flex flex-wrap gap-2">
           {FLAG_ITEMS.map((item) => (
             <button
@@ -251,7 +320,7 @@ export default function HealthForm({ formItems, eventItems, latestDailyRecord }:
               </button>
             ))}
 
-          {/* カスタムイベント: number/slider/text は入力付きカード（横並び） */}
+          {/* カスタムイベント: number/slider/text はコンパクトカード */}
           {eventItems
             .filter((item) => item.type !== 'checkbox')
             .map((item) => (
