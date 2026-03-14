@@ -1,7 +1,7 @@
 ---
-skill: git_workflow
-purpose: Git ブランチ戦略・コミット規約・PR フローのパターン
-used_by: [project_management, orchestrator]
+name: git-workflow
+description: Git ブランチ戦略・コミット規約・PR/Issue テンプレートのパターン集。feature/fix/chore/terraform プレフィックス、Conventional Commits を含む。ブランチ作成・コミット・PR 作成・Issue 管理をするときに自動適用する。
+user-invocable: false
 ---
 
 ## Purpose
@@ -50,43 +50,34 @@ terraform: env_data_ingest モジュールを追加
 
 ## Issue テンプレート
 
-```bash
-gh issue create \
-  --title "<変更内容の要約>" \
-  --body "$(cat <<'EOF'
-## 背景・目的
-- ...
-
-## やること
-- [ ] ...
-
-## 完了条件
-- ...
-EOF
-)"
+Issue 作成コマンド（gh issue create）:
+```
+--title "<変更内容の要約>"
+--body に以下を含める:
+  ## 背景・目的
+  - ...
+  ## やること
+  - [ ] ...
+  ## 完了条件
+  - ...
 ```
 
 ## PR テンプレート
 
-```bash
-gh pr create \
-  --title "<変更内容>" \
-  --body "$(cat <<'EOF'
-## 関連イシュー
-Closes #<issue番号>
-
-## 変更内容
-- ...
-
-## テスト確認
-- [ ] pytest lambda/ -v → 全件 PASSED
-- [ ] npx tsc --noEmit → エラーなし
-- [ ] npm run build → 成功
-
-## レビュー観点
-- ...
-EOF
-)"
+PR 作成コマンド（gh pr create）:
+```
+--title "<変更内容>"
+--body に以下を含める:
+  ## 関連イシュー
+  Closes #<issue番号>
+  ## 変更内容
+  - ...
+  ## テスト確認
+  - [ ] pytest lambda/ -v → 全件 PASSED
+  - [ ] npx tsc --noEmit → エラーなし
+  - [ ] npm run build → 成功
+  ## レビュー観点
+  - ...
 ```
 
 ## Merge Strategy

@@ -38,7 +38,9 @@
       "Bash(aws s3 cp *)",
       "Bash(aws s3 mv *)",
       "Bash(aws s3 rm *)",
-      "Bash(aws s3 sync *)"
+      "Bash(aws s3 sync *)",
+      "Bash(docker compose * terraform apply*)",
+      "Bash(docker compose * terraform destroy*)"
     ]
   },
   "env": {
@@ -53,5 +55,31 @@
     "fetch",
     "mermaid",
     "drawio"
-  ]
+  ],
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/block-forbidden-dirs.py",
+            "description": "app/ と terraform/envs/dev/ への書き込みをブロック"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/run-tests-after-edit.py",
+            "description": "lambda/ 実装 .py 変更後に pytest を自動実行"
+          }
+        ]
+      }
+    ]
+  }
 }

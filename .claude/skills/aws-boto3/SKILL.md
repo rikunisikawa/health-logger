@@ -1,7 +1,7 @@
 ---
-skill: aws_boto3
-purpose: AWS SDK (boto3) を使った Lambda 関数内での AWS サービス操作パターン
-used_by: [lambda, data_engineering, analysis]
+name: aws-boto3
+description: AWS SDK boto3 の操作パターン集。Lambda 関数から Firehose・Athena・SSM を呼び出す実装をするとき、boto3 クライアント初期化・Athena ポーリング・エラーハンドリングが必要なときに自動適用する。
+user-invocable: false
 ---
 
 ## Purpose
@@ -110,7 +110,3 @@ def _json(status: int, body: dict) -> dict:
 - Athena ポーリングは最大 10 秒でタイムアウト設計
 - 環境変数は `os.environ["KEY"]` で参照（`.get()` で隠蔽しない）
 - `ClientError` を適切にキャッチしてユーザー向けエラーメッセージを返す
-
-## Output Format
-
-各操作の戻り値の型と例外パターンを明記したうえで実装する。

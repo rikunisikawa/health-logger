@@ -1,7 +1,7 @@
 ---
-skill: ci_cd
-purpose: GitHub Actions による CI/CD パイプライン設計・運用・トラブルシューティングパターン
-used_by: [devops, project_management]
+name: ci-cd
+description: GitHub Actions CI/CD パイプラインのパターン集。ci.yml・deploy.yml・terraform.yml の構造、OIDC 認証、GitHub Secrets 管理、トラブルシューティングコマンドを含む。CI が失敗したとき・ワークフローを追加・修正するときに自動適用する。
+user-invocable: false
 ---
 
 ## Purpose
