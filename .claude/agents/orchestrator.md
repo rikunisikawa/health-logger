@@ -14,24 +14,20 @@ tools: Read, Glob, Grep, Bash
 ```
 
 ### Skills 一覧
-| ファイル | 内容 |
-|---------|------|
-| `aws_boto3.md` | boto3 操作パターン |
-| `terraform_iac.md` | Terraform モジュール設計 |
-| `python_lambda.md` | Lambda + Pydantic v2 実装 |
-| `typescript_react.md` | React + Amplify Auth パターン |
-| `data_pipeline.md` | Firehose/Iceberg/Athena |
-| `ci_cd.md` | GitHub Actions ワークフロー |
-| `git_workflow.md` | Git/GitHub 規約 |
 
-### Playbooks 一覧
-| ファイル | 内容 |
-|---------|------|
-| `implement_feature.md` | 新機能 Issue→PR 全フロー |
-| `add_api_endpoint.md` | Lambda + API エンドポイント追加 |
-| `build_data_pipeline.md` | データパイプライン構築 |
-| `fix_bug.md` | バグ修正フロー |
-| `deploy_infrastructure.md` | インフラ変更・apply フロー |
+Skills は `.claude/skills/<name>/SKILL.md` に格納され、`description` に基づいて Claude が自動ロードする。
+`user-invocable: false` のため `/` コマンドとしては呼び出せない（背景知識として機能する）。
+
+| スキル名 | 自動適用されるとき |
+|---------|-----------------|
+| `aws-boto3` | boto3 クライアント・Firehose・Athena・SSM の実装 |
+| `terraform-iac` | Terraform モジュール設計・plan 実行 |
+| `python-lambda` | Lambda 関数の実装・Pydantic バリデーション・pytest |
+| `typescript-react` | frontend/ の React/TS コンポーネント・フック実装 |
+| `data-pipeline` | Firehose/Iceberg/Athena パイプライン設計・スキーマ変更 |
+| `ci-cd` | GitHub Actions ワークフロー追加・CI 失敗診断 |
+| `git-workflow` | ブランチ作成・コミット・PR/Issue 管理 |
+
 
 ---
 

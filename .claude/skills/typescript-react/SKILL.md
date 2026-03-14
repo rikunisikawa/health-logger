@@ -1,7 +1,7 @@
 ---
-skill: typescript_react
-purpose: React 18 + TypeScript 5 (strict) + Amplify Auth v6 による型安全なフロントエンド実装パターン
-used_by: [frontend, testing]
+name: typescript-react
+description: React 18 + TypeScript strict + Amplify Auth v6 のフロントエンド実装パターン集。コンポーネント・カスタムフック・API クライアント・オフラインキューの実装を含む。frontend/ ディレクトリを変更するときに自動適用する。
+user-invocable: false
 ---
 
 ## Purpose

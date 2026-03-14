@@ -1,7 +1,7 @@
 ---
-skill: terraform_iac
-purpose: Terraform でのAWS インフラ定義・モジュール設計・plan 実行パターン
-used_by: [devops, architecture]
+name: terraform-iac
+description: Terraform による AWS インフラ定義のパターン集。モジュール構造・variables.tf・outputs.tf の設計、terraform plan/validate の実行、IAM ポリシー定義など、Terraform コードを書く・修正するときに自動適用する。
+user-invocable: false
 ---
 
 ## Purpose

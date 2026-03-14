@@ -1,7 +1,7 @@
 ---
-skill: data_pipeline
-purpose: Firehose → S3 Tables (Iceberg) → Glue → Athena のデータパイプライン設計・操作パターン
-used_by: [data_engineering, lambda, analysis]
+name: data-pipeline
+description: Firehose → S3 Tables (Iceberg) → Glue → Athena データパイプラインのパターン集。Iceberg スキーマ変更手順・Athena DDL・Firehose JSON Lines フォーマットを含む。データパイプラインの設計・変更・スキーマ更新をするときに自動適用する。
+user-invocable: false
 ---
 
 ## Purpose

@@ -1,7 +1,7 @@
 ---
-skill: python_lambda
-purpose: Python 3.13 + Pydantic v2 による Lambda 関数実装・テストパターン
-used_by: [lambda, testing]
+name: python-lambda
+description: Python 3.13 + Pydantic v2 による Lambda 関数の実装パターン集。handler.py の構造、Pydantic モデル定義、pytest テストの書き方を含む。Lambda 関数を新規実装・修正・テストするときに自動適用する。
+user-invocable: false
 ---
 
 ## Purpose
