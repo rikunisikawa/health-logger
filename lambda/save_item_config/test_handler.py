@@ -53,6 +53,27 @@ def test_save_invalid_type(mock_table):
 
 
 @patch.object(handler, "table")
+def test_save_status_mode(mock_table):
+    mock_table.put_item.return_value = {}
+    configs = [{"item_id": "1", "label": "頭痛", "type": "checkbox", "mode": "status", "order": 0}]
+    result = handler.lambda_handler(_auth_event({"configs": configs}), None)
+    assert result["statusCode"] == 200
+
+
+@patch.object(handler, "table")
+def test_save_all_modes(mock_table):
+    """form / event / status の3モードがすべて保存できること"""
+    mock_table.put_item.return_value = {}
+    configs = [
+        {"item_id": "1", "label": "体重", "type": "number", "mode": "form", "order": 0},
+        {"item_id": "2", "label": "運動", "type": "checkbox", "mode": "event", "order": 1},
+        {"item_id": "3", "label": "頭痛", "type": "checkbox", "mode": "status", "order": 2},
+    ]
+    result = handler.lambda_handler(_auth_event({"configs": configs}), None)
+    assert result["statusCode"] == 200
+
+
+@patch.object(handler, "table")
 def test_save_invalid_mode(mock_table):
     bad = [{"item_id": "1", "label": "test", "type": "checkbox", "mode": "bad", "order": 0}]
     result = handler.lambda_handler(_auth_event({"configs": bad}), None)

@@ -146,7 +146,7 @@ export default function ItemConfigScreen({ configs, onSave, onClose }: Props) {
                 <small className="text-muted">
                   {TYPE_OPTIONS.find((t) => t.value === item.type)?.label}
                   {' · '}
-                  {item.mode === 'event' ? 'クイックイベント' : '日次フォーム'}
+                  {MODE_OPTIONS.find((m) => m.value === item.mode)?.label ?? item.mode}
                   {item.unit && ` · ${item.unit}`}
                 </small>
               </div>
@@ -302,7 +302,7 @@ export default function ItemConfigScreen({ configs, onSave, onClose }: Props) {
                   onClick={commitEdit}
                   disabled={!edit.label.trim()}
                 >
-                  追加
+                  {items.some((i) => i.item_id === edit.item_id) ? '更新' : '追加'}
                 </button>
                 <button className="btn btn-outline-secondary" onClick={() => setEdit(null)}>
                   キャンセル
