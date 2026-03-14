@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { createRecord } from '../api'
 import { useAuth } from '../hooks/useAuth'
 import { useOfflineQueue } from '../hooks/useOfflineQueue'
@@ -93,7 +93,21 @@ export default function HealthForm({ formItems, eventItems, statusItems, latestD
   const [eventSending, setEventSending] = useState<Record<string, boolean>>({})
 
   // Status toggle state: item_id → true(ON) / false(OFF)
-  const [activeStatuses, setActiveStatuses] = useState<Record<string, boolean>>({})
+  // localStorage で永続化し、リロード後も復元する
+  const [activeStatuses, setActiveStatuses] = useState<Record<string, boolean>>(() => {
+    try {
+      const stored = localStorage.getItem('health_logger_active_statuses')
+      return stored ? (JSON.parse(stored) as Record<string, boolean>) : {}
+    } catch {
+      return {}
+    }
+  })
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('health_logger_active_statuses', JSON.stringify(activeStatuses))
+    } catch {}
+  }, [activeStatuses])
 
   const [toast, setToast] = useState<ToastState>({ show: false, message: '', variant: 'success' })
 
