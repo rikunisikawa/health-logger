@@ -27,6 +27,17 @@ def test_valid_record():
     assert rec.custom_fields == []
 
 
+def test_status_record():
+    rec = HealthRecordInput(
+        record_type="status",
+        recorded_at="2024-01-01T10:30:00Z",
+        custom_fields=[{"item_id": "headache", "label": "頭痛", "type": "checkbox", "value": True}],
+    )
+    assert rec.record_type == "status"
+    assert rec.fatigue_score is None
+    assert rec.custom_fields[0].item_id == "headache"
+
+
 def test_event_record_no_scores():
     rec = HealthRecordInput(
         record_type="event",

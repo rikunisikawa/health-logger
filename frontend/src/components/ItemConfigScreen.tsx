@@ -18,8 +18,9 @@ const TYPE_OPTIONS: { value: ItemType; label: string }[] = [
 ]
 
 const MODE_OPTIONS: { value: ItemMode; label: string }[] = [
-  { value: 'event', label: 'クイックイベント（即時記録）' },
-  { value: 'form',  label: '日次フォームに追加' },
+  { value: 'status', label: 'ステータス（状態管理）' },
+  { value: 'event',  label: 'クイックイベント（即時記録）' },
+  { value: 'form',   label: '日次フォームに追加' },
 ]
 
 interface EditState {
