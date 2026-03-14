@@ -260,7 +260,19 @@ export default function HealthForm({ formItems, eventItems, statusItems, latestD
   return (
     <div className="container py-4" style={{ maxWidth: '540px' }}>
       {toast.show && (
-        <div className={`alert alert-${toast.variant}`} role="alert">
+        <div
+          className={`alert alert-${toast.variant} mb-0`}
+          role="alert"
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            zIndex: 2000,
+            borderRadius: 0,
+            textAlign: 'center',
+          }}
+        >
           {toast.message}
         </div>
       )}
