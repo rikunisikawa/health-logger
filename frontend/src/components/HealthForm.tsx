@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { createRecord } from '../api'
 import { useAuth } from '../hooks/useAuth'
 import { useOfflineQueue } from '../hooks/useOfflineQueue'
-import type { CustomFieldValue, HealthRecordInput, ItemConfig } from '../types'
+import type { CustomFieldValue, HealthRecordInput, ItemConfig, LatestRecord } from '../types'
 
 const API_ENDPOINT = import.meta.env.VITE_API_ENDPOINT as string
 
@@ -15,22 +15,44 @@ const FLAG_ITEMS = [
   { item_id: 'caffeine',    label: 'カフェイン', icon: '☕' },
 ] as const
 
+/** スライダー各項目の accent-color */
+const SLIDER_COLORS = {
+  fatigue:    '#dc3545', // 赤: 疲労が高い = 注意
+  mood:       '#fd7e14', // オレンジ: 気分
+  motivation: '#198754', // 緑: やる気
+} as const
+
 type ToastVariant = 'success' | 'danger' | 'warning'
 interface ToastState { show: boolean; message: string; variant: ToastVariant }
 
 interface Props {
   formItems:  ItemConfig[]
   eventItems: ItemConfig[]
+  latestDailyRecord?: LatestRecord
 }
 
-export default function HealthForm({ formItems, eventItems }: Props) {
+export default function HealthForm({ formItems, eventItems, latestDailyRecord }: Props) {
   const { token } = useAuth()
   const { enqueue, flush } = useOfflineQueue(API_ENDPOINT)
 
-  // Daily form state
-  const [fatigue, setFatigue]         = useState(50)
-  const [mood, setMood]               = useState(50)
-  const [motivation, setMotivation]   = useState(50)
+  // 前回値を初期値として設定
+  const prevFatigue    = useMemo(() => {
+    const v = parseFloat(latestDailyRecord?.fatigue_score ?? '')
+    return isNaN(v) ? 50 : v
+  }, [latestDailyRecord])
+  const prevMood       = useMemo(() => {
+    const v = parseFloat(latestDailyRecord?.mood_score ?? '')
+    return isNaN(v) ? 50 : v
+  }, [latestDailyRecord])
+  const prevMotivation = useMemo(() => {
+    const v = parseFloat(latestDailyRecord?.motivation_score ?? '')
+    return isNaN(v) ? 50 : v
+  }, [latestDailyRecord])
+
+  // Daily form state（前回値で初期化）
+  const [fatigue, setFatigue]         = useState(prevFatigue)
+  const [mood, setMood]               = useState(prevMood)
+  const [motivation, setMotivation]   = useState(prevMotivation)
   const [note, setNote]               = useState('')
   const [customValues, setCustomValues] = useState<Record<string, number | boolean | string>>({})
   const [submitting, setSubmitting]   = useState(false)
@@ -156,6 +178,9 @@ export default function HealthForm({ formItems, eventItems }: Props) {
     setEventSending((s) => ({ ...s, [item.item_id]: false }))
   }
 
+  // 前回値があるかどうか（ラベル表示用）
+  const hasPrev = latestDailyRecord != null
+
   return (
     <div className="container py-4" style={{ maxWidth: '540px' }}>
       {toast.show && (
@@ -167,7 +192,8 @@ export default function HealthForm({ formItems, eventItems }: Props) {
       {/* ── Quick Events (flags + custom event items) ──────────── */}
       <div className="mb-4">
         <h2 className="h6 text-muted mb-2">クイックイベント</h2>
-        <div className="d-flex flex-wrap gap-2 mb-2">
+        {/* フラグイベント + チェックボックス型カスタムイベントを横並びに */}
+        <div className="d-flex flex-wrap gap-2">
           {FLAG_ITEMS.map((item) => (
             <button
               key={item.item_id}
@@ -175,7 +201,14 @@ export default function HealthForm({ formItems, eventItems }: Props) {
               className="btn btn-outline-secondary"
               onClick={() => sendFlagEvent(item)}
               disabled={eventSending[item.item_id]}
-              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', padding: '8px 12px', minWidth: '64px' }}
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '2px',
+                padding: '8px 12px',
+                minWidth: '64px',
+              }}
             >
               {eventSending[item.item_id] ? (
                 <span className="spinner-border spinner-border-sm" role="status" />
@@ -187,49 +220,80 @@ export default function HealthForm({ formItems, eventItems }: Props) {
               )}
             </button>
           ))}
-        </div>
-        {eventItems.length > 0 && (
-          <div className="d-flex flex-column gap-2">
-            {eventItems.map((item) => (
-              <div key={item.item_id} className="d-flex align-items-center gap-2">
-                {(item.type === 'number' || item.type === 'slider') && (
-                  <input
-                    type="number"
-                    className="form-control"
-                    style={{ width: '100px' }}
-                    placeholder={item.unit ?? '値'}
-                    value={eventInputs[item.item_id] ?? ''}
-                    onChange={(e) =>
-                      setEventInputs((prev) => ({ ...prev, [item.item_id]: e.target.value }))
-                    }
-                  />
+
+          {/* カスタムイベント: checkbox は同じボタンスタイル */}
+          {eventItems
+            .filter((item) => item.type === 'checkbox')
+            .map((item) => (
+              <button
+                key={item.item_id}
+                type="button"
+                className="btn btn-outline-secondary"
+                onClick={() => handleQuickEvent(item)}
+                disabled={eventSending[item.item_id]}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '2px',
+                  padding: '8px 12px',
+                  minWidth: '64px',
+                }}
+              >
+                {eventSending[item.item_id] ? (
+                  <span className="spinner-border spinner-border-sm" role="status" />
+                ) : (
+                  <>
+                    <span style={{ fontSize: '1.4rem', lineHeight: 1 }}>{item.icon ?? '✓'}</span>
+                    <span style={{ fontSize: '0.7rem' }}>{item.label}</span>
+                  </>
                 )}
-                {item.type === 'text' && (
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder={item.label}
-                    value={eventInputs[item.item_id] ?? ''}
-                    onChange={(e) =>
-                      setEventInputs((prev) => ({ ...prev, [item.item_id]: e.target.value }))
-                    }
-                  />
-                )}
+              </button>
+            ))}
+
+          {/* カスタムイベント: number/slider/text は入力付きカード（横並び） */}
+          {eventItems
+            .filter((item) => item.type !== 'checkbox')
+            .map((item) => (
+              <div
+                key={item.item_id}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '4px',
+                  padding: '6px 10px',
+                  border: '1px solid #dee2e6',
+                  borderRadius: '6px',
+                  minWidth: '100px',
+                  maxWidth: '140px',
+                  backgroundColor: '#f8f9fa',
+                }}
+              >
+                <span style={{ fontSize: '0.72rem', color: '#6c757d', fontWeight: 500 }}>
+                  {item.icon ? `${item.icon} ` : ''}{item.label}
+                  {item.unit ? ` (${item.unit})` : ''}
+                </span>
+                <input
+                  type={item.type === 'text' ? 'text' : 'number'}
+                  className="form-control form-control-sm"
+                  placeholder={item.unit ?? '値'}
+                  value={eventInputs[item.item_id] ?? ''}
+                  onChange={(e) =>
+                    setEventInputs((prev) => ({ ...prev, [item.item_id]: e.target.value }))
+                  }
+                  style={{ fontSize: '0.8rem', padding: '2px 6px' }}
+                />
                 <button
-                  className="btn btn-outline-success"
+                  className="btn btn-outline-success btn-sm"
                   onClick={() => handleQuickEvent(item)}
                   disabled={eventSending[item.item_id]}
-                  style={{ whiteSpace: 'nowrap' }}
+                  style={{ fontSize: '0.72rem', padding: '2px 6px' }}
                 >
-                  {eventSending[item.item_id]
-                    ? '…'
-                    : <>{item.icon ? item.icon : '✓'} {item.label}{item.unit ? ` (${item.unit})` : ''}</>
-                  }
+                  {eventSending[item.item_id] ? '…' : '記録'}
                 </button>
               </div>
             ))}
-          </div>
-        )}
+        </div>
       </div>
 
       {/* ── Daily Form ────────────────────────────────────────── */}
@@ -238,15 +302,35 @@ export default function HealthForm({ formItems, eventItems }: Props) {
         {/* Sliders */}
         {(
           [
-            { label: '疲労感', value: fatigue,    setter: setFatigue },
-            { label: '気分',   value: mood,       setter: setMood },
-            { label: 'やる気', value: motivation, setter: setMotivation },
+            { label: '疲労感', value: fatigue,    setter: setFatigue,    colorKey: 'fatigue'    as const, prev: prevFatigue    },
+            { label: '気分',   value: mood,       setter: setMood,       colorKey: 'mood'       as const, prev: prevMood       },
+            { label: 'やる気', value: motivation, setter: setMotivation, colorKey: 'motivation' as const, prev: prevMotivation },
           ] as const
-        ).map(({ label, value, setter }) => (
+        ).map(({ label, value, setter, colorKey, prev }) => (
           <div className="mb-3" key={label}>
-            <label className="form-label d-flex justify-content-between">
+            <label className="form-label d-flex justify-content-between align-items-center">
               <span>{label}</span>
-              <span className="badge bg-secondary">{value}</span>
+              <span className="d-flex align-items-center gap-2">
+                {hasPrev && (
+                  <span
+                    className="text-muted"
+                    style={{ fontSize: '0.75rem' }}
+                    title="前回の記録値"
+                  >
+                    前回: {prev}
+                  </span>
+                )}
+                <span
+                  className="badge"
+                  style={{
+                    backgroundColor: SLIDER_COLORS[colorKey],
+                    color: '#fff',
+                    minWidth: '2.5rem',
+                  }}
+                >
+                  {value}
+                </span>
+              </span>
             </label>
             <input
               type="range"
@@ -255,6 +339,7 @@ export default function HealthForm({ formItems, eventItems }: Props) {
               max={100}
               value={value}
               onChange={(e) => setter(Number(e.target.value))}
+              style={{ accentColor: SLIDER_COLORS[colorKey] }}
             />
           </div>
         ))}
