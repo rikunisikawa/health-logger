@@ -24,6 +24,27 @@ frontend/dist/
 __pycache__/
 *.pyc
 *.pyo
+*.so
+
+# Lambda: pip install -t でインストールされたパッケージ
+lambda/*/*.dist-info/
+lambda/*/bin/
+lambda/*/boto3/
+lambda/*/botocore/
+lambda/*/s3transfer/
+lambda/*/jmespath/
+lambda/*/dateutil/
+lambda/*/pydantic/
+lambda/*/pydantic_core/
+lambda/*/requests/
+lambda/*/urllib3/
+lambda/*/certifi/
+lambda/*/charset_normalizer/
+lambda/*/idna/
+lambda/*/annotated_types/
+lambda/*/typing_inspection/
+lambda/*/six.py
+lambda/*/typing_extensions.py
 
 # Terraform
 *.tfstate
