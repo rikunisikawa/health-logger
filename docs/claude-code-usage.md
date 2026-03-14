@@ -286,6 +286,59 @@ Claude Code は Git コマンドを直接実行できます。
 
 ---
 
+## マルチエージェント（Agent Teams）
+
+複数の専門エージェントが並列で協調しながら作業する機能です。
+このプロジェクトでは `.claude/agents/` に10種のエージェントが定義されています。
+
+### orchestrator を使う
+
+```bash
+# 通常の起動に --agent orchestrator を追加するだけ
+claude --dangerously-skip-permissions --agent orchestrator
+```
+
+`--dangerously-skip-permissions` はそのまま残してよいです。
+orchestrator がタスクを分析し、適切な専門エージェント（frontend / lambda / devops 等）に並列委譲します。
+
+### 専門エージェントを直接指定する
+
+特定の作業に絞りたい場合は直接起動できます。
+
+```bash
+# フロントエンドの作業のみ
+claude --dangerously-skip-permissions --agent frontend
+
+# Lambda の実装・テストのみ
+claude --dangerously-skip-permissions --agent lambda
+
+# Terraform の計画・確認のみ
+claude --dangerously-skip-permissions --agent devops
+```
+
+### エージェント一覧
+
+| エージェント | 用途 |
+|------------|------|
+| `orchestrator` | タスク分解・各エージェントへの委譲（起点として使う） |
+| `frontend` | React/TypeScript コンポーネント・フック・ビルド |
+| `lambda` | Python Lambda 実装・Pydantic モデル・pytest |
+| `devops` | Terraform plan・GitHub Actions・デプロイ |
+| `data_engineering` | Firehose/Iceberg/Athena パイプライン・DDL |
+| `analysis` | Athena SQL で健康・環境データ分析 |
+| `testing` | テスト戦略・セキュリティレビュー |
+| `architecture` | 設計判断・AWS サービス選定・トレードオフ評価 |
+| `documentation` | README・CLAUDE.md・仕様書の作成・更新 |
+| `project_management` | Issue・PR・ブランチ・マージ管理 |
+
+### 注意事項
+
+- Agent Teams は実験機能（Claude Code v2.1.32 以上が必要）
+- `/resume` でセッションを再開するとチームメンバーは復元されない
+  → 大きなタスクは一気に完了まで走らせるのが安全
+
+---
+
 ## Tips
 
 ### コンテキストが長くなったら
