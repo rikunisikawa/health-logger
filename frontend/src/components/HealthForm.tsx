@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { createRecord } from '../api'
 import { useAuth } from '../hooks/useAuth'
 import { useOfflineQueue } from '../hooks/useOfflineQueue'
@@ -92,6 +92,23 @@ export default function HealthForm({ formItems, eventItems, statusItems, latestD
   const [eventInputs, setEventInputs] = useState<Record<string, string>>({})
   const [eventSending, setEventSending] = useState<Record<string, boolean>>({})
 
+  // Status toggle state: item_id → true(ON) / false(OFF)
+  // localStorage で永続化し、リロード後も復元する
+  const [activeStatuses, setActiveStatuses] = useState<Record<string, boolean>>(() => {
+    try {
+      const stored = localStorage.getItem('health_logger_active_statuses')
+      return stored ? (JSON.parse(stored) as Record<string, boolean>) : {}
+    } catch {
+      return {}
+    }
+  })
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('health_logger_active_statuses', JSON.stringify(activeStatuses))
+    } catch {}
+  }, [activeStatuses])
+
   const [toast, setToast] = useState<ToastState>({ show: false, message: '', variant: 'success' })
 
   const showToast = (message: string, variant: ToastVariant) => {
@@ -179,9 +196,11 @@ export default function HealthForm({ formItems, eventItems, statusItems, latestD
     setEventSending((s) => ({ ...s, [item.item_id]: false }))
   }
 
-  const sendStatusEvent = async (item: typeof STATUS_ITEMS[number]) => {
+  const toggleStatus = async (itemId: string, label: string) => {
     if (!token) return
-    setEventSending((s) => ({ ...s, [item.item_id]: true }))
+    const nextActive = !activeStatuses[itemId]
+    setActiveStatuses((s) => ({ ...s, [itemId]: nextActive }))
+    setEventSending((s) => ({ ...s, [itemId]: true }))
     const record: HealthRecordInput = {
       record_type:   'status',
       flags:         0,
@@ -190,14 +209,17 @@ export default function HealthForm({ formItems, eventItems, statusItems, latestD
       timezone:      Intl.DateTimeFormat().resolvedOptions().timeZone,
       device_id:     navigator.userAgent.slice(0, 100),
       app_version:   '1.0.0',
-      custom_fields: [{ item_id: item.item_id, label: item.label, type: 'checkbox', value: true }],
+      custom_fields: [{ item_id: itemId, label, type: 'checkbox', value: nextActive }],
     }
     const ok = await submitRecord(record)
     if (ok) {
-      showToast(`${item.label} を記録しました`, 'success')
+      showToast(`${label} を${nextActive ? 'ON' : 'OFF'}にしました`, 'success')
       flush(token).catch(() => {})
+    } else {
+      // 失敗時は状態を元に戻す
+      setActiveStatuses((s) => ({ ...s, [itemId]: !nextActive }))
     }
-    setEventSending((s) => ({ ...s, [item.item_id]: false }))
+    setEventSending((s) => ({ ...s, [itemId]: false }))
   }
 
   const handleQuickEvent = async (item: ItemConfig, recordType: 'event' | 'status' = 'event') => {
@@ -290,42 +312,14 @@ export default function HealthForm({ formItems, eventItems, statusItems, latestD
       <div className="mb-4">
         <h2 className="h6 text-muted mb-2">ステータス</h2>
         <div className="d-flex flex-wrap gap-2">
-          {STATUS_ITEMS.map((item) => (
-            <button
-              key={item.item_id}
-              type="button"
-              className="btn btn-outline-warning"
-              onClick={() => sendStatusEvent(item)}
-              disabled={eventSending[item.item_id]}
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: '2px',
-                padding: '8px 12px',
-                minWidth: '64px',
-              }}
-            >
-              {eventSending[item.item_id] ? (
-                <span className="spinner-border spinner-border-sm" role="status" />
-              ) : (
-                <>
-                  <span style={{ fontSize: '1.4rem', lineHeight: 1 }}>{item.icon}</span>
-                  <span style={{ fontSize: '0.7rem' }}>{item.label}</span>
-                </>
-              )}
-            </button>
-          ))}
-
-          {/* カスタムステータス項目 */}
-          {statusItems
-            .filter((item) => item.type === 'checkbox')
-            .map((item) => (
+          {[...STATUS_ITEMS, ...statusItems].map((item) => {
+            const isOn = activeStatuses[item.item_id] ?? false
+            return (
               <button
                 key={item.item_id}
                 type="button"
-                className="btn btn-outline-warning"
-                onClick={() => handleQuickEvent(item, 'status')}
+                className={isOn ? 'btn btn-warning' : 'btn btn-outline-warning'}
+                onClick={() => toggleStatus(item.item_id, item.label)}
                 disabled={eventSending[item.item_id]}
                 style={{
                   display: 'flex',
@@ -340,12 +334,18 @@ export default function HealthForm({ formItems, eventItems, statusItems, latestD
                   <span className="spinner-border spinner-border-sm" role="status" />
                 ) : (
                   <>
-                    <span style={{ fontSize: '1.4rem', lineHeight: 1 }}>{item.icon ?? '●'}</span>
+                    <span style={{ fontSize: '1.4rem', lineHeight: 1 }}>
+                      {'icon' in item ? item.icon : (item.icon ?? '●')}
+                    </span>
                     <span style={{ fontSize: '0.7rem' }}>{item.label}</span>
+                    {isOn && (
+                      <span style={{ fontSize: '0.6rem', opacity: 0.8 }}>ON</span>
+                    )}
                   </>
                 )}
               </button>
-            ))}
+            )
+          })}
         </div>
       </div>
 
