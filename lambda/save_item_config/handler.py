@@ -7,7 +7,7 @@ dynamodb = boto3.resource("dynamodb")
 table = dynamodb.Table(os.environ["ITEM_CONFIGS_TABLE"])
 
 ALLOWED_TYPES = {"slider", "checkbox", "number", "text"}
-ALLOWED_MODES = {"form", "event"}
+ALLOWED_MODES = {"form", "event", "status"}
 
 
 def lambda_handler(event, context):
