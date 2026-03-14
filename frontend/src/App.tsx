@@ -55,7 +55,10 @@ function AppContent() {
     <div>
       <nav className="navbar navbar-expand navbar-light bg-light border-bottom">
         <div className="container">
-          <span className="navbar-brand fw-bold text-success">Health Logger</span>
+          <span className="navbar-brand fw-bold text-success d-flex align-items-center gap-2">
+            <img src="/icon-192.png" alt="Health Logger" width={28} height={28} style={{ borderRadius: '6px' }} />
+            Health Logger
+          </span>
           <div className="d-flex gap-2">
             <button
               className="btn btn-sm btn-outline-secondary"
