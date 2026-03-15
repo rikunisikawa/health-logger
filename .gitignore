@@ -52,5 +52,12 @@ lambda/*/typing_extensions.py
 .terraform/
 .terraform.lock.hcl
 
+# dbt
+data/dbt/.env
+data/dbt/profiles/profiles.yml
+data/dbt/target/
+data/dbt/dbt_packages/
+data/dbt/logs/
+
 # OS
 .DS_Store

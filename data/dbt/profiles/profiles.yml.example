@@ -1,0 +1,68 @@
+# =============================================================================
+# dbt profiles.yml サンプル
+#
+# 使い方:
+#   cp data/dbt/profiles/profiles.yml.example data/dbt/profiles/profiles.yml
+#   # profiles.yml を編集して実際の接続情報を設定
+#
+# ⚠️ profiles.yml は .gitignore に含まれています。認証情報をコミットしないでください。
+#
+# コンテナ内のパス: /root/.dbt/profiles.yml
+#   → DBT_PROFILES_DIR=/root/.dbt で参照される
+# =============================================================================
+
+health_logger:
+  target: dev
+  outputs:
+
+    # =========================================================================
+    # Athena（このプロジェクトのデフォルト）
+    # =========================================================================
+    dev:
+      type: athena
+      # Glue データベース名 = dbt の schema として扱われる
+      database: health_logger_env_prod
+      schema: health_logger_env_prod
+      # Athena クエリ結果の出力先 S3 パス
+      s3_staging_dir: s3://health-logger-prod-env-data/athena-results/
+      region_name: ap-northeast-1
+      work_group: primary
+      # 認証方法:
+      #   aws_profile: ローカル開発向け（AWS CLI の設定を使う）
+      #   デフォルト（未指定）: 環境変数 AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY
+      # aws_profile: default
+
+    # =========================================================================
+    # DuckDB（ローカル完結・AWS 不要・開発・テスト向け）
+    # アダプター差し替え: DBT_ADAPTER=dbt-duckdb
+    # =========================================================================
+    # duckdb_local:
+    #   type: duckdb
+    #   path: /workspace/dev.duckdb   # コンテナ内のパス（ホスト側から見えるように volume 上に置く）
+    #   schema: main
+
+    # =========================================================================
+    # PostgreSQL（Docker Compose に postgres サービスを追加する場合）
+    # アダプター差し替え: DBT_ADAPTER=dbt-postgres
+    # =========================================================================
+    # postgres_local:
+    #   type: postgres
+    #   host: postgres          # docker-compose の service 名で解決できる
+    #   port: 5432
+    #   user: dbt
+    #   password: dbt
+    #   dbname: health_logger
+    #   schema: public
+    #   threads: 4
+
+    # =========================================================================
+    # BigQuery（GCP 環境向け）
+    # アダプター差し替え: DBT_ADAPTER=dbt-bigquery
+    # =========================================================================
+    # bigquery:
+    #   type: bigquery
+    #   method: oauth           # ローカル: oauth, CI: service-account
+    #   project: your-gcp-project-id
+    #   dataset: health_logger_dev
+    #   location: asia-northeast1
+    #   threads: 4
