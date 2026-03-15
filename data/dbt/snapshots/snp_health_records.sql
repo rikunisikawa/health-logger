@@ -5,7 +5,7 @@
 
 {{
   config(
-    target_schema = 'health_logger_snapshots',
+    target_schema = 'health_logger_prod_health_logs',
     unique_key    = 'record_id',
     strategy      = 'check',
     check_cols    = ['fatigue_score', 'mood_score', 'motivation_score', 'flags', 'note'],
@@ -22,7 +22,7 @@ select
     flags,
     note,
     recorded_at,
-    created_at
+    written_at
 from {{ source('health_logs', 'health_records') }}
 
 {% endsnapshot %}

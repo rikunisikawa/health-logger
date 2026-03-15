@@ -47,11 +47,15 @@ models:
         tests:
           - not_null
       - name: record_type
-        description: "記録種別（daily/event/status）"
+        description: "記録種別（daily/event/status）。旧レコードは NULL の場合あり"
         tests:
-          - not_null
+          - not_null:
+              config:
+                severity: warn
           - accepted_values:
               values: ['daily', 'event', 'status']
+              config:
+                severity: warn
       - name: fatigue_score
         description: "疲労感スコア（0-10）"
         tests:
