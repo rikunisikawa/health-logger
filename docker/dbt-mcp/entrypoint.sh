@@ -48,4 +48,15 @@ fi
 # MCP_TRANSPORT 環境変数は dbt-mcp が内部で参照する
 # streamable-http / sse / stdio のいずれかを指定
 echo "[dbt-mcp] Launching dbt-mcp server..."
+
+# dbt-mcp は内部で 127.0.0.1:8000 に bind する（FastMCP のデフォルト）。
+# コンテナ外（ホスト）から接続するために socat で 0.0.0.0:${MCP_PORT} → 127.0.0.1:8000 へフォワード。
+INTERNAL_PORT=8000
+EXTERNAL_PORT=${MCP_PORT:-8811}
+echo "[dbt-mcp] Forwarding 0.0.0.0:${EXTERNAL_PORT} -> 127.0.0.1:${INTERNAL_PORT} via socat"
+socat TCP-LISTEN:${EXTERNAL_PORT},fork,reuseaddr TCP:127.0.0.1:${INTERNAL_PORT} &
+SOCAT_PID=$!
+
+# dbt-mcp をフォアグラウンドで起動（終了時 socat も停止）
+trap "kill ${SOCAT_PID} 2>/dev/null" EXIT
 exec dbt-mcp

@@ -43,6 +43,7 @@ services:
       - ./data/dbt:/workspace                  # dbt プロジェクト全体
       - ./data/dbt/profiles:/root/.dbt         # profiles.yml（認証情報）
       - dbt-target:/workspace/target           # コンパイル成果物（dbt-mcp と共有）
+      - ~/.aws:/root/.aws:ro                    # ホストの AWS 認証情報（読み取り専用）
     working_dir: /workspace
     environment:
       DBT_PROJECT_DIR: /workspace
@@ -58,7 +59,7 @@ services:
       - dbt-net
     # dbt debug でプロジェクト接続確認
     healthcheck:
-      test: ["CMD", "dbt", "--version"]
+      test: ["CMD", "python", "--version"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -92,6 +93,7 @@ services:
       - ./data/dbt:/workspace
       - ./data/dbt/profiles:/root/.dbt
       - dbt-target:/workspace/target   # dbt コンテナが書いた成果物を読める
+      - ~/.aws:/root/.aws:ro             # ホストの AWS 認証情報
     working_dir: /workspace
     environment:
       # --- dbt 設定 ---
@@ -105,16 +107,17 @@ services:
       # sse:             Server-Sent Events。古めのクライアント向け
       # stdio:           ローカルプロセスとして Claude Desktop などが直接起動する場合
       MCP_TRANSPORT: ${MCP_TRANSPORT:-streamable-http}
-      MCP_HOST: ${MCP_HOST:-0.0.0.0}   # コンテナ外から接続するため 0.0.0.0
-      MCP_PORT: ${MCP_PORT:-8811}
+      # FastMCP は FASTMCP_ プレフィックスで host/port を読む
+      FASTMCP_HOST: ${MCP_HOST:-0.0.0.0}   # コンテナ外から接続するため 0.0.0.0
+      FASTMCP_PORT: ${MCP_PORT:-8811}
 
       # --- dbt-mcp ツール有効化フラグ ---
       # CLI ツール（dbt run / test / compile など）を有効化
       DBT_MCP_ENABLE_DBT_CLI: "true"
       # dbt Cloud の Semantic Layer / Admin API / Discovery API は今は不要
-      DBT_MCP_ENABLE_SEMANTIC_LAYER: ""
-      DBT_MCP_ENABLE_ADMIN_API: ""
-      DBT_MCP_ENABLE_DISCOVERY: ""
+      DBT_MCP_ENABLE_SEMANTIC_LAYER: "false"
+      DBT_MCP_ENABLE_ADMIN_API: "false"
+      DBT_MCP_ENABLE_DISCOVERY: "false"
 
       # AWS 認証（dbt-mcp が内部で dbt を呼ぶため必要）
       AWS_REGION: ${AWS_REGION:-ap-northeast-1}
@@ -134,7 +137,7 @@ services:
       # streamable-http の場合 /health エンドポイントがあれば使う
       # なければ TCP ポートの疎通確認で代替
       test: ["CMD", "python", "-c",
-             "import urllib.request; urllib.request.urlopen('http://localhost:${MCP_PORT:-8811}/health', timeout=5)"]
+             "import urllib.request; urllib.request.urlopen('http://localhost:${MCP_PORT:-8811}/mcp', timeout=5)"]
       interval: 30s
       timeout: 10s
       retries: 5
