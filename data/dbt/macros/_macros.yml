@@ -1,0 +1,35 @@
+version: 2
+
+macros:
+  - name: decode_flag
+    description: "FLAGS ビットマスクから特定フラグを真偽値としてデコードする"
+    arguments:
+      - name: column
+        type: string
+        description: "フラグカラム名"
+      - name: bit_value
+        type: int
+        description: "確認するビット値（poor_sleep=1, headache=2, stomachache=4, exercise=8, alcohol=16, caffeine=32）"
+
+  - name: safe_cast
+    description: "try_castを使った安全な型変換。変換失敗時はNULLまたはdefault値を返す"
+    arguments:
+      - name: column
+        type: string
+        description: "変換対象カラム名"
+      - name: type
+        type: string
+        description: "変換先の型"
+      - name: default
+        type: string
+        description: "変換失敗時のデフォルト値（省略時はNULL）"
+
+  - name: pressure_lag_feature
+    description: "気圧の時間差分フィーチャーを計算するウィンドウ関数"
+    arguments:
+      - name: column
+        type: string
+        description: "気圧カラム名"
+      - name: hours
+        type: int
+        description: "何時間前との差分か"

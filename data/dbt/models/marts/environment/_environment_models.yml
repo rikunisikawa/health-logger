@@ -1,0 +1,31 @@
+version: 2
+
+models:
+  - name: fct_environment_hourly
+    description: "時間粒度の環境ファクトテーブル（気象・花粉・大気質・気圧フィーチャー・天気コード日本語）"
+    columns:
+      - name: observation_datetime_jst
+        description: "観測日時（JST）"
+        tests:
+          - not_null
+      - name: location_id
+        description: "観測地点ID"
+        tests:
+          - not_null
+      - name: pressure_hpa
+        description: "気圧（hPa）"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 900
+              max_value: 1100
+
+  - name: fct_environment_daily
+    description: "日次集約の環境ファクトテーブル"
+    columns:
+      - name: observation_date
+        tests: [not_null]
+      - name: location_id
+        tests: [not_null]
+      - name: avg_pressure_hpa
+        tests: [not_null]
