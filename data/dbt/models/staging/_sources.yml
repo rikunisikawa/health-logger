@@ -2,12 +2,13 @@ version: 2
 
 sources:
   - name: raw_env
-    database: health_logger_env_prod
+    database: AwsDataCatalog
     schema: health_logger_env_prod
-    freshness:
-      warn_after: {count: 2, period: hour}
-      error_after: {count: 6, period: hour}
-    loaded_at_field: raw_ingested_at
+    config:
+      freshness:
+        warn_after: {count: 2, period: hour}
+        error_after: {count: 6, period: hour}
+      loaded_at_field: raw_ingested_at
     tables:
       - name: ext_environment_raw
         description: "Open-Meteo から取得した生の環境データ（気象・花粉・大気質）"
@@ -60,13 +61,14 @@ sources:
             description: "レコード作成日時（UTC）"
 
   - name: health_logs
-    database: health_logger_prod_health_logs
+    database: AwsDataCatalog
     schema: health_logger_prod_health_logs
     description: "Lambda → Firehose → S3 Tables (Iceberg) の体調記録"
-    freshness:
-      warn_after: {count: 25, period: hour}
-      error_after: {count: 49, period: hour}
-    loaded_at_field: created_at
+    config:
+      freshness:
+        warn_after: {count: 25, period: hour}
+        error_after: {count: 49, period: hour}
+      loaded_at_field: written_at
     tables:
       - name: health_records
         description: "体調記録（daily/event/status）"

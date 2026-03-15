@@ -29,7 +29,7 @@ select
     max_aqi,
     dominant_weather_code,
     record_count
-from {{ ref('int_env__daily_agg') }}
+from {{ ref('int_env_daily_agg') }}
 
 {% if is_incremental() %}
 where observation_date >= date_add('day', -3, current_date)

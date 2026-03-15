@@ -18,7 +18,7 @@ with stg as (
 ),
 
 pressure as (
-    select * from {{ ref('int_env__pressure_features') }}
+    select * from {{ ref('int_env_pressure_features') }}
     {% if is_incremental() %}
     where observation_date >= date_add('day', -3, current_date)
     {% endif %}

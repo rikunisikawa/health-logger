@@ -1,7 +1,7 @@
 version: 2
 
 models:
-  - name: int_env__daily_agg
+  - name: int_env_daily_agg
     description: "環境データの日次集約（気温・気圧・湿度・花粉・大気質）"
     columns:
       - name: observation_date
@@ -11,7 +11,7 @@ models:
       - name: avg_pressure_hpa
         tests: [not_null]
 
-  - name: int_env__pressure_features
+  - name: int_env_pressure_features
     description: "気圧フィーチャー（3時間差分・24時間移動平均・前日差分）"
     columns:
       - name: observation_datetime_jst
