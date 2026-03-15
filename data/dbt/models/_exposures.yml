@@ -1,0 +1,29 @@
+version: 2
+
+exposures:
+  - name: health_logger_app
+    type: application
+    maturity: high
+    url: https://main.d24eyg8x5429ma.amplifyapp.com
+    description: |
+      フロントエンド PWA（React+TypeScript）。
+      get_latest Lambda が Athena 経由で health_records を直接クエリする。
+    depends_on:
+      - source('health_logs', 'health_records')
+    owner:
+      name: Riku Nishikawa
+      email: riku@example.com
+
+  - name: health_environment_analysis
+    type: analysis
+    maturity: medium
+    description: |
+      体調×環境データの相関分析。
+      気圧変化と頭痛の相関、花粉と体調の関係を Athena で分析。
+      fct_health_env_joined_hourly がメインテーブル。
+    depends_on:
+      - ref('fct_health_env_joined_hourly')
+      - ref('fct_environment_daily')
+    owner:
+      name: Riku Nishikawa
+      email: riku@example.com

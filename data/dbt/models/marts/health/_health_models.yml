@@ -1,0 +1,29 @@
+version: 2
+
+models:
+  - name: fct_health_env_joined_hourly
+    description: "体調記録と環境データの結合ファクトテーブル（分析のメインテーブル）"
+    columns:
+      - name: record_id
+        description: "体調記録ID（UUID）"
+        tests:
+          - not_null
+          - unique
+      - name: user_id
+        description: "ユーザーID"
+        tests:
+          - not_null
+      - name: fatigue_score
+        description: "疲労感スコア（0-10）"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 10
+              config:
+                severity: warn
+      - name: flags
+        description: "体調フラグ ビットマスク"
+        tests:
+          - not_null
+      - name: pressure_hpa
+        description: "記録時刻の気圧（hPa）- 左結合のためNULL許容"

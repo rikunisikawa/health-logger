@@ -5,7 +5,7 @@
 -- - pressure_prev_day_avg_delta: 前日平均気圧との差
 
 with stg as (
-    select * from {{ ref('stg_ext_environment_hourly') }}
+    select * from {{ ref('stg_env__hourly') }}
 ),
 
 -- 3時間前との気圧差

@@ -2,7 +2,7 @@
 -- 日次集約モデル
 
 with stg as (
-    select * from {{ ref('stg_ext_environment_hourly') }}
+    select * from {{ ref('stg_env__hourly') }}
 )
 
 select

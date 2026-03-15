@@ -1,0 +1,28 @@
+version: 2
+
+models:
+  - name: int_env__daily_agg
+    description: "環境データの日次集約（気温・気圧・湿度・花粉・大気質）"
+    columns:
+      - name: observation_date
+        tests: [not_null]
+      - name: location_id
+        tests: [not_null]
+      - name: avg_pressure_hpa
+        tests: [not_null]
+
+  - name: int_env__pressure_features
+    description: "気圧フィーチャー（3時間差分・24時間移動平均・前日差分）"
+    columns:
+      - name: observation_datetime_jst
+        tests: [not_null]
+      - name: location_id
+        tests: [not_null]
+
+  - name: int_health__daily_scores
+    description: "ユーザー×日次の体調スコア集約 + FLAGSデコード"
+    columns:
+      - name: user_id
+        tests: [not_null]
+      - name: recorded_date
+        tests: [not_null]

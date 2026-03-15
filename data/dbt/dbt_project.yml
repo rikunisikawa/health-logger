@@ -5,6 +5,10 @@ profile: health_logger
 model-paths: ["models"]
 test-paths: ["tests"]
 macro-paths: ["macros"]
+seed-paths: ["seeds"]
+snapshot-paths: ["snapshots"]
+analysis-paths: ["analyses"]
+docs-paths: ["docs"]
 target-path: "target"
 clean-targets: ["target", "dbt_packages"]
 
@@ -12,7 +16,23 @@ models:
   health_logger:
     staging:
       +materialized: view
+      +docs:
+        node_color: "#6c757d"
     intermediate:
       +materialized: view
+      +docs:
+        node_color: "#fd7e14"
     marts:
       +materialized: table
+      +docs:
+        node_color: "#0d9488"
+
+seeds:
+  health_logger:
+    weather_codes:
+      +column_types:
+        weather_code: bigint
+    location_master:
+      +column_types:
+        latitude: double
+        longitude: double
