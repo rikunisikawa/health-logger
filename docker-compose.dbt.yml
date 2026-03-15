@@ -1,0 +1,164 @@
+# =============================================================================
+# dbt + dbt-mcp sidecar 構成
+#
+# 使い方:
+#   推奨構成（dbt + dbt-mcp）:
+#     docker compose -f docker-compose.dbt.yml up -d
+#
+#   最小構成（dbt CLI のみ）:
+#     docker compose -f docker-compose.dbt.yml up -d dbt
+#
+#   dbt コマンド実行:
+#     docker compose -f docker-compose.dbt.yml exec dbt dbt run
+#     docker compose -f docker-compose.dbt.yml exec dbt dbt test
+#
+# 前提:
+#   - data/dbt/profiles/profiles.yml が存在すること（.gitignore済み）
+#   - data/dbt/.env が存在すること（.env.example からコピー）
+# =============================================================================
+
+services:
+
+  # ---------------------------------------------------------------------------
+  # dbt コンテナ
+  # 役割: dbt CLI の実行環境。sleep infinity で常駐し、
+  #       docker exec または docker compose exec で dbt コマンドを打つ。
+  # ---------------------------------------------------------------------------
+  dbt:
+    build:
+      context: .
+      dockerfile: docker/dbt/Dockerfile
+      args:
+        # アダプターを差し替えるだけで DWH を切り替えられる
+        # 例: dbt-postgres, dbt-bigquery, dbt-snowflake, dbt-athena-community
+        DBT_ADAPTER: ${DBT_ADAPTER:-dbt-athena-community}
+        DBT_ADAPTER_VERSION: ${DBT_ADAPTER_VERSION:-1.9.4}
+        DBT_CORE_VERSION: ${DBT_CORE_VERSION:-1.10.5}
+    container_name: health-logger-dbt
+    restart: "no"
+    # プロジェクトディレクトリを /workspace に統一
+    # → AIエージェント・devcontainer・CI すべてで同じパスで参照できる
+    volumes:
+      - ./data/dbt:/workspace                  # dbt プロジェクト全体
+      - ./data/dbt/profiles:/root/.dbt         # profiles.yml（認証情報）
+      - dbt-target:/workspace/target           # コンパイル成果物（dbt-mcp と共有）
+    working_dir: /workspace
+    environment:
+      DBT_PROJECT_DIR: /workspace
+      DBT_PROFILES_DIR: /root/.dbt
+      # AWS 認証は .env から注入（compose ファイルに直書きしない）
+      AWS_REGION: ${AWS_REGION:-ap-northeast-1}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      AWS_SESSION_TOKEN: ${AWS_SESSION_TOKEN:-}
+    # sleep infinity で常駐。必要時に docker exec で dbt コマンドを実行する
+    command: sleep infinity
+    networks:
+      - dbt-net
+    # dbt debug でプロジェクト接続確認
+    healthcheck:
+      test: ["CMD", "dbt", "--version"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    env_file:
+      - path: ./data/dbt/.env
+        required: false   # .env がなくても起動できるようにする
+
+  # ---------------------------------------------------------------------------
+  # dbt-mcp コンテナ
+  # 役割: dbt MCP サーバー。Claude Code / Cursor / VS Code から HTTP で接続し、
+  #       dbt run / dbt test / dbt compile などを自然言語で実行できるようにする。
+  #
+  # 接続先: http://localhost:8811/mcp  (streamable-http)
+  #         http://localhost:8811/sse  (SSE の場合)
+  # ---------------------------------------------------------------------------
+  dbt-mcp:
+    build:
+      context: .
+      dockerfile: docker/dbt-mcp/Dockerfile
+      args:
+        DBT_ADAPTER: ${DBT_ADAPTER:-dbt-athena-community}
+        DBT_ADAPTER_VERSION: ${DBT_ADAPTER_VERSION:-1.9.4}
+        DBT_CORE_VERSION: ${DBT_CORE_VERSION:-1.10.5}
+        DBT_MCP_VERSION: ${DBT_MCP_VERSION:-1.10.0}
+    container_name: health-logger-dbt-mcp
+    restart: unless-stopped
+    volumes:
+      # dbt コンテナと完全に同じパスでマウント
+      # → manifest.json / catalog.json のパスがずれない
+      - ./data/dbt:/workspace
+      - ./data/dbt/profiles:/root/.dbt
+      - dbt-target:/workspace/target   # dbt コンテナが書いた成果物を読める
+    working_dir: /workspace
+    environment:
+      # --- dbt 設定 ---
+      DBT_PROJECT_DIR: /workspace
+      DBT_PROFILES_DIR: /root/.dbt
+      # dbt-mcp が内部で呼び出す dbt の実行パス
+      DBT_PATH: /usr/local/bin/dbt
+
+      # --- MCP トランスポート設定 ---
+      # streamable-http: MCP 最新仕様。Claude Code から接続する場合はこれ
+      # sse:             Server-Sent Events。古めのクライアント向け
+      # stdio:           ローカルプロセスとして Claude Desktop などが直接起動する場合
+      MCP_TRANSPORT: ${MCP_TRANSPORT:-streamable-http}
+      MCP_HOST: ${MCP_HOST:-0.0.0.0}   # コンテナ外から接続するため 0.0.0.0
+      MCP_PORT: ${MCP_PORT:-8811}
+
+      # --- dbt-mcp ツール有効化フラグ ---
+      # CLI ツール（dbt run / test / compile など）を有効化
+      DBT_MCP_ENABLE_DBT_CLI: "true"
+      # dbt Cloud の Semantic Layer / Admin API / Discovery API は今は不要
+      DBT_MCP_ENABLE_SEMANTIC_LAYER: ""
+      DBT_MCP_ENABLE_ADMIN_API: ""
+      DBT_MCP_ENABLE_DISCOVERY: ""
+
+      # AWS 認証（dbt-mcp が内部で dbt を呼ぶため必要）
+      AWS_REGION: ${AWS_REGION:-ap-northeast-1}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      AWS_SESSION_TOKEN: ${AWS_SESSION_TOKEN:-}
+
+    # ホスト側のポートを公開。Claude Code の MCP 設定でこのポートに接続する
+    ports:
+      - "${MCP_PORT:-8811}:${MCP_PORT:-8811}"
+    depends_on:
+      dbt:
+        condition: service_healthy
+    networks:
+      - dbt-net
+    healthcheck:
+      # streamable-http の場合 /health エンドポイントがあれば使う
+      # なければ TCP ポートの疎通確認で代替
+      test: ["CMD", "python", "-c",
+             "import urllib.request; urllib.request.urlopen('http://localhost:${MCP_PORT:-8811}/health', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 15s
+    env_file:
+      - path: ./data/dbt/.env
+        required: false
+
+# -----------------------------------------------------------------------------
+# ボリューム
+# dbt-target: dbt run / compile の成果物（manifest.json / catalog.json など）
+#             を dbt コンテナと dbt-mcp コンテナで共有するための named volume。
+#             ホストのファイルシステムには直接現れないが、
+#             docker compose exec dbt cat /workspace/target/manifest.json で確認可能。
+# -----------------------------------------------------------------------------
+volumes:
+  dbt-target:
+    name: health-logger-dbt-target
+
+# -----------------------------------------------------------------------------
+# ネットワーク
+# dbt-net: dbt と dbt-mcp が同一ネットワークに属することで、
+#          将来 dbt-mcp から dbt コンテナに直接リクエストを送る構成にも対応できる。
+# -----------------------------------------------------------------------------
+networks:
+  dbt-net:
+    name: health-logger-dbt-net
+    driver: bridge
