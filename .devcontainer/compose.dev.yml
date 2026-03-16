@@ -1,0 +1,80 @@
+# =============================================================================
+# Dev Container 用 Docker Compose
+#
+# VS Code Dev Container がこのファイルを使用する。
+#   devcontainer: 開発コンテナ本体 (Python + Terraform + AWS CLI + dbt + Node)
+#   dbt-mcp:      dbt MCP サーバー (Claude Code / dbt Power User から接続)
+#
+# 起動: VS Code "Reopen in Container" または
+#        devcontainer CLI: devcontainer up --workspace-folder .
+# =============================================================================
+
+services:
+
+  # ---------------------------------------------------------------------------
+  # devcontainer: 開発環境本体
+  # VS Code Server がここに接続する
+  # ---------------------------------------------------------------------------
+  devcontainer:
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+    volumes:
+      - ..:/workspace:cached
+      - ~/.aws:/root/.aws:ro
+      # Docker ソケットをマウントすると devcontainer 内から docker コマンドも使える
+      # 不要であればコメントアウト
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      AWS_REGION: ap-northeast-1
+    command: sleep infinity
+    networks:
+      - dev-net
+
+  # ---------------------------------------------------------------------------
+  # dbt-mcp: dbt MCP サーバー (サイドカー)
+  # Claude Code / dbt Power User から http://localhost:8811/mcp で接続
+  # docker-compose.dbt.yml の dbt-mcp サービスと同等の設定
+  # ---------------------------------------------------------------------------
+  dbt-mcp:
+    build:
+      context: ..
+      dockerfile: docker/dbt-mcp/Dockerfile
+      args:
+        DBT_ADAPTER: dbt-athena-community
+        DBT_ADAPTER_VERSION: "1.9.4"
+        DBT_CORE_VERSION: "1.10.5"
+        DBT_MCP_VERSION: "1.10.0"
+    volumes:
+      - ../data/dbt:/workspace
+      - ../data/dbt/profiles:/root/.dbt
+      - dbt-target:/workspace/target
+      - ~/.aws:/root/.aws:ro
+    environment:
+      DBT_PROJECT_DIR: /workspace
+      DBT_PROFILES_DIR: /root/.dbt
+      DBT_PATH: /usr/local/bin/dbt
+      MCP_TRANSPORT: streamable-http
+      FASTMCP_HOST: "0.0.0.0"
+      FASTMCP_PORT: "8811"
+      DBT_MCP_ENABLE_DBT_CLI: "true"
+      DBT_MCP_ENABLE_SEMANTIC_LAYER: "false"
+      DBT_MCP_ENABLE_ADMIN_API: "false"
+      DBT_MCP_ENABLE_DISCOVERY: "false"
+      AWS_REGION: ap-northeast-1
+    ports:
+      - "8811:8811"
+    networks:
+      - dev-net
+    env_file:
+      - path: ../data/dbt/.env
+        required: false
+
+volumes:
+  dbt-target:
+    name: health-logger-dbt-target
+
+networks:
+  dev-net:
+    name: health-logger-dev-net
+    driver: bridge

@@ -28,6 +28,7 @@ services:
     build:
       context: .
       dockerfile: docker/dbt/Dockerfile
+      target: dev  # multi-stage: dev ステージを使用 (sleep infinity / volume mount)
       args:
         # アダプターを差し替えるだけで DWH を切り替えられる
         # 例: dbt-postgres, dbt-bigquery, dbt-snowflake, dbt-athena-community
