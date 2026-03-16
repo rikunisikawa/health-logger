@@ -1,7 +1,7 @@
 -- models/staging/stg_health__records.sql
 -- 責務: health_records 生データの型変換・正規化のみ
 -- 実テーブルのカラム: id, user_id, fatigue_score(int), mood_score(int),
---   motivation_score(int), flags(int), note, recorded_at(timestamp),
+--   motivation_score(int), concentration_score(int), flags(int), note, recorded_at(timestamp),
 --   timezone, device_id, app_version, written_at(timestamp),
 --   record_type, custom_fields
 
@@ -15,10 +15,11 @@ renamed as (
         cast(user_id          as varchar)   as user_id,
         cast(record_type      as varchar)   as record_type,
 
-        -- スコア（0〜10 の int）
-        cast(fatigue_score    as double)    as fatigue_score,
-        cast(mood_score       as double)    as mood_score,
-        cast(motivation_score as double)    as motivation_score,
+        -- スコア（0〜100 の int）
+        cast(fatigue_score       as double)  as fatigue_score,
+        cast(mood_score          as double)  as mood_score,
+        cast(motivation_score    as double)  as motivation_score,
+        cast(concentration_score as double)  as concentration_score,
 
         -- フラグ（ビットマスク: poor_sleep=1, headache=2, stomachache=4, exercise=8, alcohol=16, caffeine=32）
         coalesce(cast(flags as bigint), 0)  as flags,

@@ -82,6 +82,10 @@ resource "aws_glue_catalog_table" "health_records" {
       type = "int"
     }
     columns {
+      name = "concentration_score"
+      type = "int"
+    }
+    columns {
       name = "flags"
       type = "int"
     }
