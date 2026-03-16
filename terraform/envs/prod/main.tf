@@ -265,8 +265,42 @@ resource "aws_iam_role_policy" "github_actions" {
         Action   = ["dynamodb:DescribeTable", "dynamodb:DescribeTimeToLive", "dynamodb:ListTagsOfResource", "dynamodb:CreateTable", "dynamodb:DeleteTable", "dynamodb:UpdateTable", "dynamodb:TagResource", "dynamodb:UntagResource", "dynamodb:DescribeContinuousBackups"]
         Resource = ["*"]
       },
+      # Athena migration script: execute DDL + poll results
+      {
+        Effect = "Allow"
+        Action = [
+          "athena:StartQueryExecution",
+          "athena:GetQueryExecution",
+          "athena:GetQueryResults",
+          "athena:StopQueryExecution",
+        ]
+        Resource = ["*"]
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["s3:PutObject", "s3:GetObject", "s3:GetBucketLocation"]
+        Resource = ["arn:aws:s3:::health-logger-prod/athena-migrations/*", "arn:aws:s3:::health-logger-prod"]
+      },
+      # Migration tracking DynamoDB table
+      {
+        Effect   = "Allow"
+        Action   = ["dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:Scan"]
+        Resource = aws_dynamodb_table.athena_migrations.arn
+      },
     ]
   })
+}
+
+# ── Athena migration tracking (DynamoDB) ─────────────────────────────────────
+resource "aws_dynamodb_table" "athena_migrations" {
+  name         = "${local.name}-athena-migrations"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "migration_name"
+
+  attribute {
+    name = "migration_name"
+    type = "S"
+  }
 }
 
 # ── External environment data ingest (weather/air quality) ────────────────────
