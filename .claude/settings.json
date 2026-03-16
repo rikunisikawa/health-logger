@@ -67,6 +67,16 @@
             "description": "app/ と terraform/envs/dev/ への書き込みをブロック"
           }
         ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/git-push-reminder.py",
+            "description": "git push 前にシークレット漏洩・CI 確認を促す"
+          }
+        ]
       }
     ],
     "PostToolUse": [
