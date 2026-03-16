@@ -47,3 +47,43 @@ def test_get_existing_config(mock_table):
 def test_missing_auth():
     result = handler.lambda_handler({}, None)
     assert result["statusCode"] == 401
+
+
+# --- 追加テストケース ---
+
+VALID_USER = "12345678-1234-1234-1234-123456789abc"
+
+
+def _event(user_id=VALID_USER):
+    return {"requestContext": {"authorizer": {"jwt": {"claims": {"sub": user_id}}}}}
+
+
+@patch.object(handler, "table")
+def test_get_success(mock_table):
+    configs_data = [
+        {"item_id": "item1", "label": "疲労度", "type": "slider", "mode": "form"},
+        {"item_id": "item2", "label": "頭痛", "type": "checkbox", "mode": "event"},
+    ]
+    mock_table.get_item.return_value = {
+        "Item": {"user_id": VALID_USER, "configs": json.dumps(configs_data)}
+    }
+    resp = handler.lambda_handler(_event(), None)
+    assert resp["statusCode"] == 200
+    body = json.loads(resp["body"])
+    assert body["configs"] == configs_data
+
+
+@patch.object(handler, "table")
+def test_get_empty(mock_table):
+    mock_table.get_item.return_value = {}
+    resp = handler.lambda_handler(_event(), None)
+    assert resp["statusCode"] == 200
+    body = json.loads(resp["body"])
+    assert body["configs"] == []
+
+
+def test_unauthorized():
+    resp = handler.lambda_handler({}, None)
+    assert resp["statusCode"] == 401
+    body = json.loads(resp["body"])
+    assert "Unauthorized" in body["error"]
