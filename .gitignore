@@ -55,9 +55,15 @@ lambda/*/typing_extensions.py
 # dbt
 data/dbt/.env
 data/dbt/profiles/profiles.yml
+data/dbt/profiles/.user.yml
+data/dbt/models/**/profiles.yml
+data/dbt/models/**/.user.yml
 data/dbt/target/
 data/dbt/dbt_packages/
 data/dbt/logs/
+
+# Playwright MCP logs
+.playwright-mcp/
 
 # OS
 .DS_Store
