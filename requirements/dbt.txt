@@ -1,0 +1,6 @@
+# dbt 依存関係
+# docker/dbt/Dockerfile と .devcontainer/Dockerfile で共用する
+# バージョンを変更する場合はここだけ修正すれば両環境に反映される
+
+dbt-core==1.10.5
+dbt-athena-community==1.9.4

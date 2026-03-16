@@ -1,0 +1,53 @@
+{
+  "name": "health-logger",
+
+  // compose.dev.yml で複数サービスを起動し、devcontainer サービスに接続
+  "dockerComposeFile": "compose.dev.yml",
+  "service": "devcontainer",
+  "workspaceFolder": "/workspace",
+
+  // コンテナ停止時に compose 全体を止める
+  "shutdownAction": "stopCompose",
+
+  // -------------------------------------------------------------------------
+  // VS Code 拡張機能 (devcontainer 内にインストール)
+  // -------------------------------------------------------------------------
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        // dbt
+        "innoverio.vscode-dbt-power-user",
+        // Terraform
+        "hashicorp.terraform",
+        // Python
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-python.black-formatter",
+        // AWS
+        "amazonwebservices.aws-toolkit-vscode",
+        // その他
+        "redhat.vscode-yaml",
+        "ms-azuretools.vscode-docker"
+      ],
+
+      // devcontainer 内専用の設定
+      // .vscode/settings.json に dbtPowerUser.dbtPath を書かないことで、
+      // ここの設定が有効になり native dbt が直接呼ばれる。
+      "settings": {
+        // native dbt を直接呼び出す (Docker ラッパーを経由しない)
+        "dbtPowerUser.dbtPath": "/usr/local/bin/dbt",
+        "dbtPowerUser.projectDir": "/workspace/data/dbt",
+        "dbtPowerUser.profilesDir": "/workspace/data/dbt/profiles",
+        "dbtPowerUser.queryResultsLimit": 200,
+
+        // Python インタープリター
+        "python.defaultInterpreterPath": "/usr/local/bin/python"
+      }
+    }
+  },
+
+  // -------------------------------------------------------------------------
+  // コンテナ起動後の初期化
+  // -------------------------------------------------------------------------
+  "postCreateCommand": "cd /workspace/data/dbt && dbt deps --profiles-dir profiles 2>/dev/null || true"
+}

@@ -1,0 +1,35 @@
+{
+  // ==========================================================================
+  // dbt Power User (innoverio.vscode-dbt-power-user) 設定
+  //
+  // 【開発環境別の dbt パス設定】
+  //
+  // Dev Container (推奨):
+  //   devcontainer.json の customizations.vscode.settings で
+  //   "dbtPowerUser.dbtPath": "/usr/local/bin/dbt" が適用される。
+  //   ここには dbtPowerUser.dbtPath を書かないことで devcontainer.json が有効になる。
+  //
+  // Dev Container 外でローカル開発する場合:
+  //   pip install -r requirements/dbt.txt でインストール後、
+  //   ローカルの user settings に dbtPowerUser.dbtPath を設定する。
+  //   例: "dbtPowerUser.dbtPath": "/usr/local/bin/dbt"
+  //
+  // Docker 経由で手動実行する場合 (dbt Power User 不使用):
+  //   scripts/dbt.sh を使う。
+  //   例: ./scripts/dbt.sh run --select staging
+  // ==========================================================================
+
+  // dbt プロジェクトのルートディレクトリ
+  "dbtPowerUser.projectDir": "${workspaceFolder}/data/dbt",
+
+  // profiles.yml のディレクトリ
+  "dbtPowerUser.profilesDir": "${workspaceFolder}/data/dbt/profiles",
+
+  "dbtPowerUser.altimateAiKey": "",
+
+  // ファイル保存時に自動で dbt compile を実行する
+  "dbtPowerUser.runModelOnChange": false,
+
+  // Query Results の表示
+  "dbtPowerUser.queryResultsLimit": 200
+}

@@ -1,0 +1,9 @@
+{
+  "recommendations": [
+    "innoverio.vscode-dbt-power-user",
+    "hashicorp.terraform",
+    "ms-python.python",
+    "ms-python.vscode-pylance",
+    "amazonwebservices.aws-toolkit-vscode"
+  ]
+}

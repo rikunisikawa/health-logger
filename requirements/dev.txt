@@ -1,0 +1,16 @@
+# 開発環境依存関係
+# devcontainer 内でインストールされる。本番イメージには含まない。
+
+# dbt (共通)
+-r dbt.txt
+
+# Lambda テスト
+pytest>=8.0
+pytest-mock>=3.12
+pydantic>=2.0,<3
+boto3>=1.35
+requests>=2.32
+
+# コード品質
+black>=24.0
+ruff>=0.4
