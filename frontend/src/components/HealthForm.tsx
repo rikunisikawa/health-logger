@@ -43,17 +43,17 @@ function datetimeLocalToISO(value: string): string {
   return new Date(value).toISOString()
 }
 
-type ToastVariant = 'success' | 'danger' | 'warning'
-interface ToastState { show: boolean; message: string; variant: ToastVariant }
+export type ToastVariant = 'success' | 'danger' | 'warning'
 
 interface Props {
   formItems:    ItemConfig[]
   eventItems:   ItemConfig[]
   statusItems:  ItemConfig[]
   latestDailyRecord?: LatestRecord
+  onToast: (message: string, variant: ToastVariant) => void
 }
 
-export default function HealthForm({ formItems, eventItems, statusItems, latestDailyRecord }: Props) {
+export default function HealthForm({ formItems, eventItems, statusItems, latestDailyRecord, onToast }: Props) {
   const { token } = useAuth()
   const { enqueue, flush } = useOfflineQueue(API_ENDPOINT)
 
@@ -115,13 +115,6 @@ export default function HealthForm({ formItems, eventItems, statusItems, latestD
     } catch {}
   }, [activeStatuses])
 
-  const [toast, setToast] = useState<ToastState>({ show: false, message: '', variant: 'success' })
-
-  const showToast = (message: string, variant: ToastVariant) => {
-    setToast({ show: true, message, variant })
-    setTimeout(() => setToast((t) => ({ ...t, show: false })), 3000)
-  }
-
   const setCustomValue = (itemId: string, value: number | boolean | string) =>
     setCustomValues((prev) => ({ ...prev, [itemId]: value }))
 
@@ -143,9 +136,9 @@ export default function HealthForm({ formItems, eventItems, statusItems, latestD
     } catch {
       if (!navigator.onLine) {
         await enqueue(record, token!).catch(() => {})
-        showToast('オフラインのためキューに保存しました', 'warning')
+        onToast('オフラインのためキューに保存しました', 'warning')
       } else {
-        showToast('送信に失敗しました', 'danger')
+        onToast('送信に失敗しました', 'danger')
       }
       return false
     }
@@ -171,7 +164,7 @@ export default function HealthForm({ formItems, eventItems, statusItems, latestD
     }
     const ok = await submitRecord(record)
     if (ok) {
-      showToast('記録しました！', 'success')
+      onToast('記録しました！', 'success')
       setNote('')
       setCustomValues({})
       flush(token).catch(() => {})
@@ -197,7 +190,7 @@ export default function HealthForm({ formItems, eventItems, statusItems, latestD
     }
     const ok = await submitRecord(record)
     if (ok) {
-      showToast(`${item.label} を記録しました`, 'success')
+      onToast(`${item.label} を記録しました`, 'success')
       flush(token).catch(() => {})
     }
     setEventSending((s) => ({ ...s, [item.item_id]: false }))
@@ -220,7 +213,7 @@ export default function HealthForm({ formItems, eventItems, statusItems, latestD
     }
     const ok = await submitRecord(record)
     if (ok) {
-      showToast(`${label} を${nextActive ? 'ON' : 'OFF'}にしました`, 'success')
+      onToast(`${label} を${nextActive ? 'ON' : 'OFF'}にしました`, 'success')
       flush(token).catch(() => {})
     } else {
       // 失敗時は状態を元に戻す
@@ -255,7 +248,7 @@ export default function HealthForm({ formItems, eventItems, statusItems, latestD
     }
     const ok = await submitRecord(record)
     if (ok) {
-      showToast(`${item.label} を記録しました`, 'success')
+      onToast(`${item.label} を記録しました`, 'success')
       setEventInputs((prev) => ({ ...prev, [item.item_id]: '' }))
       flush(token).catch(() => {})
     }
@@ -266,24 +259,6 @@ export default function HealthForm({ formItems, eventItems, statusItems, latestD
 
   return (
     <div className="container py-4" style={{ maxWidth: '540px' }}>
-      {toast.show && (
-        <div
-          className={`alert alert-${toast.variant} mb-0`}
-          role="alert"
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            zIndex: 2000,
-            borderRadius: 0,
-            textAlign: 'center',
-          }}
-        >
-          {toast.message}
-        </div>
-      )}
-
       {/* ── 記録日時ピッカー（全体共通）──────────────────────── */}
       <div
         className="mb-4 p-3 rounded"
