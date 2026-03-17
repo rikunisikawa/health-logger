@@ -151,37 +151,6 @@ function AppContent() {
         </div>
       </div>
 
-      {/* Page dots */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          gap: '8px',
-          padding: '12px 0',
-          position: 'fixed',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          backgroundColor: 'rgba(255,255,255,0.9)',
-          zIndex: 100,
-        }}
-      >
-        {[0, 1, 2].map(i => (
-          <div
-            key={i}
-            onClick={() => setPage(i)}
-            style={{
-              width: page === i ? '20px' : '8px',
-              height: '8px',
-              borderRadius: '4px',
-              backgroundColor: page === i ? '#198754' : '#dee2e6',
-              transition: 'all 0.3s ease',
-              cursor: 'pointer',
-            }}
-          />
-        ))}
-      </div>
-
       {/* Settings modal */}
       {showSettings && (
         <ItemConfigScreen
