@@ -22,6 +22,13 @@
 
 | ファイル | 内容 | 主な読者 |
 |---------|------|---------|
+| `API_REFERENCE.md` | 全 API エンドポイント仕様（8 エンドポイント） | 開発者 |
+| `DATABASE_SCHEMA.md` | S3 Tables (Iceberg) / DynamoDB のスキーマ定義 | 開発者・データエンジニア |
+| `DEPLOYMENT_GUIDE.md` | 初回デプロイ・継続的デプロイ・ロールバック手順 | 開発者・運用担当者 |
+| `LAMBDA_DEVELOPMENT.md` | Lambda の実装パターン・テスト・新規追加手順 | 開発者 |
+| `FRONTEND_DEVELOPMENT.md` | React/TS 開発・Amplify Auth・PWA 構成 | 開発者 |
+| `DBT_OPERATIONS.md` | dbt 実行方法・モデル構成・スキーマ変更手順 | 開発者・データエンジニア |
+| `TROUBLESHOOTING.md` | よくあるエラーと対処集 | 開発者・運用担当者 |
 | `claude-code-usage.md` | Claude Code の使い方・Agent Teams の起動方法 | 開発者（AI コーディング） |
 | `github-tokens.md` | GitHub トークンの管理方法 | 開発者 |
 | `infrastructure.drawio` | インフラ構成図（draw.io 形式） | 開発者・アーキテクト |
@@ -90,8 +97,17 @@ AI コーディング時も意識して指示する必要がある:
 ## よくある質問（FAQ）
 
 ### Q: ローカルで動作確認できる？
-→ `docs/claude-code-usage.md` の「ローカル確認方法」を参照。  
+→ `FRONTEND_DEVELOPMENT.md` の「ローカルでの Cognito 設定」を参照。
 Cognito callback URL に localhost を追加する設定変更が必要。
+
+### Q: API の仕様を確認したい
+→ `API_REFERENCE.md` を参照。リクエスト・レスポンスの JSON スキーマがまとまっている。
+
+### Q: Lambda を新しく追加したい
+→ `LAMBDA_DEVELOPMENT.md` の「新規 Lambda 関数の追加手順」を参照。
+
+### Q: 本番デプロイの手順を確認したい
+→ `DEPLOYMENT_GUIDE.md` を参照。初回デプロイから Amplify 接続まで手順が記載されている。
 
 ### Q: データが消えた場合の対応は？
 → 現状 S3 Iceberg のバックアップ未設定。`non-functional-requirements.md` のバックアップセクション参照。
@@ -100,4 +116,12 @@ Cognito callback URL に localhost を追加する設定変更が必要。
 → AWS Cost Explorer で原因サービスを特定。`cost-management.md` のリスクシナリオを参照。
 
 ### Q: 新しい記録項目を追加したい場合は？
-→ Iceberg スキーマ変更が必要。`data-lineage.md` のスキーマ変更手順と CLAUDE.md の「Iceberg スキーマ変更の注意事項」を参照。
+→ Iceberg スキーマ変更が必要。`DATABASE_SCHEMA.md` の「Iceberg スキーマ変更の注意事項」と
+`DEPLOYMENT_GUIDE.md` の「Iceberg スキーマ変更後の ALTER TABLE 手順」を参照。
+
+### Q: エラーが発生した場合は？
+→ `TROUBLESHOOTING.md` を参照。COLUMN_NOT_FOUND・クエリタイムアウト・認証ループなどの
+対処法がまとまっている。
+
+### Q: dbt を実行したい
+→ `DBT_OPERATIONS.md` を参照。Docker Compose での実行方法とコマンドリファレンスが記載されている。

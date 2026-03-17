@@ -62,3 +62,14 @@ def test_delete_query_failed(mock_athena):
     }
     resp = handler.lambda_handler(_event(), None)
     assert resp["statusCode"] == 500
+
+
+@patch.object(handler, "athena")
+def test_delete_timeout(mock_athena):
+    mock_athena.start_query_execution.return_value = {"QueryExecutionId": "qid"}
+    mock_athena.get_query_execution.return_value = {
+        "QueryExecution": {"Status": {"State": "RUNNING"}}
+    }
+    with patch("time.sleep"):  # sleep を skip
+        resp = handler.lambda_handler(_event(), None)
+    assert resp["statusCode"] == 504
