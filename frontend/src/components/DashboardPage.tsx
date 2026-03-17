@@ -17,27 +17,7 @@ import {
 import { getEnvData, getLatest } from '../api'
 import { useAuth } from '../hooks/useAuth'
 import type { EnvDataRecord, LatestRecord } from '../types'
-
-/** Athena returns timestamps without timezone (UTC); append 'Z' to parse correctly */
-function parseUtc(isoStr: string): Date {
-  const s = isoStr.includes('T') ? isoStr : isoStr.replace(' ', 'T')
-  return new Date(s.endsWith('Z') ? s : `${s}Z`)
-}
-
-/** Returns YYYY-MM-DD in local timezone */
-function toLocalDateStr(d: Date): string {
-  return d.toLocaleDateString('sv-SE')
-}
-
-/** Returns HH:MM in local timezone */
-function toLocalTimeStr(d: Date): string {
-  return d.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })
-}
-
-/** Minutes since midnight in local timezone */
-function toLocalMinutes(d: Date): number {
-  return d.getHours() * 60 + d.getMinutes()
-}
+import { parseUtc, toLocalDateStr, toLocalTimeStr, toLocalMinutes } from '../utils/time'
 
 type Tab = 'trend' | 'intraday' | 'events' | 'env'
 type EventsView = 'timeline' | 'trend'
@@ -47,6 +27,7 @@ interface DailyAvg {
   fatigue: number | null
   mood: number | null
   motivation: number | null
+  concentration: number | null
 }
 
 interface IntradayPoint {
@@ -55,6 +36,7 @@ interface IntradayPoint {
   fatigue: number | null
   mood: number | null
   motivation: number | null
+  concentration: number | null
 }
 
 interface EventPoint {
@@ -120,24 +102,26 @@ export default function DashboardPage({ onBack }: Props) {
     const cutoff = new Date()
     cutoff.setDate(cutoff.getDate() - trendDays)
 
-    const byDate: Record<string, { fatigue: number[]; mood: number[]; motivation: number[] }> = {}
+    const byDate: Record<string, { fatigue: number[]; mood: number[]; motivation: number[]; concentration: number[] }> = {}
     for (const r of records) {
       if (r.record_type !== 'daily') continue
       const d = parseUtc(r.recorded_at)
       if (d < cutoff) continue
       const key = toLocalDateStr(d)
-      if (!byDate[key]) byDate[key] = { fatigue: [], mood: [], motivation: [] }
+      if (!byDate[key]) byDate[key] = { fatigue: [], mood: [], motivation: [], concentration: [] }
       const f = parseFloat(r.fatigue_score)
       const m = parseFloat(r.mood_score)
       const mv = parseFloat(r.motivation_score)
+      const c = parseFloat(r.concentration_score)
       if (!isNaN(f)) byDate[key].fatigue.push(f)
       if (!isNaN(m)) byDate[key].mood.push(m)
       if (!isNaN(mv)) byDate[key].motivation.push(mv)
+      if (!isNaN(c)) byDate[key].concentration.push(c)
     }
 
     return Object.entries(byDate)
       .sort(([a], [b]) => a.localeCompare(b))
-      .map(([date, { fatigue, mood, motivation }]) => {
+      .map(([date, { fatigue, mood, motivation, concentration }]) => {
         const avg = (arr: number[]) =>
           arr.length ? Math.round(arr.reduce((a, b) => a + b, 0) / arr.length) : null
         return {
@@ -145,6 +129,7 @@ export default function DashboardPage({ onBack }: Props) {
           fatigue: avg(fatigue),
           mood: avg(mood),
           motivation: avg(motivation),
+          concentration: avg(concentration),
         }
       })
   }, [records, trendDays])
@@ -158,12 +143,14 @@ export default function DashboardPage({ onBack }: Props) {
         const f = parseFloat(r.fatigue_score)
         const m = parseFloat(r.mood_score)
         const mv = parseFloat(r.motivation_score)
+        const c = parseFloat(r.concentration_score)
         return {
           time: toLocalTimeStr(d),
           minutes: toLocalMinutes(d),
           fatigue: isNaN(f) ? null : f,
           mood: isNaN(m) ? null : m,
           motivation: isNaN(mv) ? null : mv,
+          concentration: isNaN(c) ? null : c,
         }
       })
       .sort((a, b) => a.minutes - b.minutes)
@@ -204,19 +191,21 @@ export default function DashboardPage({ onBack }: Props) {
     cutoff.setDate(cutoff.getDate() - eventTrendDays)
 
     // 日次ヘルス平均
-    const healthByDate: Record<string, { fatigue: number[]; mood: number[]; motivation: number[] }> = {}
+    const healthByDate: Record<string, { fatigue: number[]; mood: number[]; motivation: number[]; concentration: number[] }> = {}
     for (const r of records) {
       if (r.record_type !== 'daily') continue
       const d = parseUtc(r.recorded_at)
       if (d < cutoff) continue
       const key = toLocalDateStr(d)
-      if (!healthByDate[key]) healthByDate[key] = { fatigue: [], mood: [], motivation: [] }
+      if (!healthByDate[key]) healthByDate[key] = { fatigue: [], mood: [], motivation: [], concentration: [] }
       const f = parseFloat(r.fatigue_score)
       const m = parseFloat(r.mood_score)
       const mv = parseFloat(r.motivation_score)
+      const c = parseFloat(r.concentration_score)
       if (!isNaN(f)) healthByDate[key].fatigue.push(f)
       if (!isNaN(m)) healthByDate[key].mood.push(m)
       if (!isNaN(mv)) healthByDate[key].motivation.push(mv)
+      if (!isNaN(c)) healthByDate[key].concentration.push(c)
     }
 
     // 日次イベントカウント
@@ -254,6 +243,7 @@ export default function DashboardPage({ onBack }: Props) {
           fatigue: h ? avg(h.fatigue) : null,
           mood: h ? avg(h.mood) : null,
           motivation: h ? avg(h.motivation) : null,
+          concentration: h ? avg(h.concentration) : null,
           ...counts,
         }
       })
@@ -263,17 +253,19 @@ export default function DashboardPage({ onBack }: Props) {
 
   // ── 環境データ × ヘルスデータ結合 ───────────────────────────────────
   const envChartData = useMemo(() => {
-    const healthByDate: Record<string, { fatigue: number[]; mood: number[]; motivation: number[] }> = {}
+    const healthByDate: Record<string, { fatigue: number[]; mood: number[]; motivation: number[]; concentration: number[] }> = {}
     for (const r of records) {
       if (r.record_type !== 'daily') continue
       const key = toLocalDateStr(parseUtc(r.recorded_at))
-      if (!healthByDate[key]) healthByDate[key] = { fatigue: [], mood: [], motivation: [] }
+      if (!healthByDate[key]) healthByDate[key] = { fatigue: [], mood: [], motivation: [], concentration: [] }
       const f = parseFloat(r.fatigue_score)
       const m = parseFloat(r.mood_score)
       const mv = parseFloat(r.motivation_score)
+      const c = parseFloat(r.concentration_score)
       if (!isNaN(f)) healthByDate[key].fatigue.push(f)
       if (!isNaN(m)) healthByDate[key].mood.push(m)
       if (!isNaN(mv)) healthByDate[key].motivation.push(mv)
+      if (!isNaN(c)) healthByDate[key].concentration.push(c)
     }
     const avg = (arr: number[]) =>
       arr.length ? Math.round(arr.reduce((a, b) => a + b, 0) / arr.length) : null
@@ -287,6 +279,7 @@ export default function DashboardPage({ onBack }: Props) {
         fatigue: h ? avg(h.fatigue) : null,
         mood: h ? avg(h.mood) : null,
         motivation: h ? avg(h.motivation) : null,
+        concentration: h ? avg(h.concentration) : null,
       }
     })
   }, [envRecords, records])
@@ -386,6 +379,14 @@ export default function DashboardPage({ onBack }: Props) {
                     dot={false}
                     connectNulls
                   />
+                  <Line
+                    type="monotone"
+                    dataKey="concentration"
+                    name="集中力"
+                    stroke="#0d6efd"
+                    dot={false}
+                    connectNulls
+                  />
                 </LineChart>
               </ResponsiveContainer>
             )}
@@ -418,8 +419,9 @@ export default function DashboardPage({ onBack }: Props) {
                   <Tooltip />
                   <Legend />
                   <Line type="monotone" dataKey="fatigue" name="疲労度" stroke="#dc3545" dot />
-                  <Line type="monotone" dataKey="mood" name="気分" stroke="#0d6efd" dot />
+                  <Line type="monotone" dataKey="mood" name="気分" stroke="#fd7e14" dot />
                   <Line type="monotone" dataKey="motivation" name="やる気" stroke="#198754" dot />
+                  <Line type="monotone" dataKey="concentration" name="集中力" stroke="#0d6efd" dot />
                 </LineChart>
               </ResponsiveContainer>
             )}
@@ -523,8 +525,9 @@ export default function DashboardPage({ onBack }: Props) {
                         <Tooltip />
                         <Legend wrapperStyle={{ fontSize: 11 }} />
                         <Line type="monotone" dataKey="fatigue" name="疲労度" stroke="#dc3545" dot={false} connectNulls />
-                        <Line type="monotone" dataKey="mood" name="気分" stroke="#0d6efd" dot={false} connectNulls />
+                        <Line type="monotone" dataKey="mood" name="気分" stroke="#fd7e14" dot={false} connectNulls />
                         <Line type="monotone" dataKey="motivation" name="やる気" stroke="#198754" dot={false} connectNulls />
+                        <Line type="monotone" dataKey="concentration" name="集中力" stroke="#0d6efd" dot={false} connectNulls />
                       </LineChart>
                     </ResponsiveContainer>
 
@@ -589,8 +592,9 @@ export default function DashboardPage({ onBack }: Props) {
                     <Tooltip />
                     <Legend wrapperStyle={{ fontSize: 11 }} />
                     <Line type="monotone" dataKey="fatigue" name="疲労度" stroke="#dc3545" dot={false} connectNulls />
-                    <Line type="monotone" dataKey="mood" name="気分" stroke="#0d6efd" dot={false} connectNulls />
+                    <Line type="monotone" dataKey="mood" name="気分" stroke="#fd7e14" dot={false} connectNulls />
                     <Line type="monotone" dataKey="motivation" name="やる気" stroke="#198754" dot={false} connectNulls />
+                    <Line type="monotone" dataKey="concentration" name="集中力" stroke="#0d6efd" dot={false} connectNulls />
                   </LineChart>
                 </ResponsiveContainer>
 

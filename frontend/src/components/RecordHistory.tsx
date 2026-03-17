@@ -2,39 +2,19 @@ import { useState } from 'react'
 import { deleteRecord } from '../api'
 import { useAuth } from '../hooks/useAuth'
 import type { LatestRecord } from '../types'
+import { formatTime } from '../utils/time'
+import { buildSummaryParts } from '../utils/recordSummary'
 
 interface Props {
   records: LatestRecord[]
   onDeleted: (id: string) => void
 }
 
-function formatTime(isoStr: string): string {
-  try {
-    // Athena returns timestamps without timezone (UTC); append 'Z' to parse as UTC
-    const utcStr = isoStr.includes('T') ? isoStr : isoStr.replace(' ', 'T') + 'Z'
-    return new Date(utcStr).toLocaleString('ja-JP', {
-      month: 'numeric', day: 'numeric',
-      hour: '2-digit', minute: '2-digit',
-    })
-  } catch {
-    return isoStr
-  }
-}
-
 function RecordSummary({ record }: { record: LatestRecord }) {
-  if (record.record_type === 'event') {
-    try {
-      const fields = JSON.parse(record.custom_fields || '[]') as { label: string; value: unknown }[]
-      const summary = fields.map((f) => `${f.label}: ${f.value}`).join(' / ')
-      return <span className="text-muted small">{summary || 'イベント'}</span>
-    } catch {
-      return <span className="text-muted small">イベント</span>
-    }
+  const parts = buildSummaryParts(record)
+  if (record.record_type === 'event' || record.record_type === 'status') {
+    return <span className="text-muted small">{parts.join(' / ') || record.record_type}</span>
   }
-  const parts: string[] = []
-  if (record.fatigue_score)    parts.push(`疲労:${record.fatigue_score}`)
-  if (record.mood_score)       parts.push(`気分:${record.mood_score}`)
-  if (record.motivation_score) parts.push(`やる気:${record.motivation_score}`)
   return <span className="text-muted small">{parts.join(' ')}</span>
 }
 
