@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import AuthGuard from './components/AuthGuard'
 import DashboardPage from './components/DashboardPage'
 import HealthForm from './components/HealthForm'
+import type { ToastVariant } from './components/HealthForm'
 import ItemConfigScreen from './components/ItemConfigScreen'
 import RecordHistory from './components/RecordHistory'
 import { getLatest } from './api'
@@ -21,6 +22,14 @@ function AppContent() {
   const [showSettings, setShowSettings] = useState(false)
   const [page, setPage] = useState(0)
   const [records, setRecords] = useState<LatestRecord[]>([])
+  const [toast, setToast] = useState<{ show: boolean; message: string; variant: ToastVariant }>({ show: false, message: '', variant: 'success' })
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const showToast = (message: string, variant: ToastVariant) => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
+    setToast({ show: true, message, variant })
+    toastTimerRef.current = setTimeout(() => setToast((t) => ({ ...t, show: false })), 3000)
+  }
 
   const touchStartX = useRef(0)
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -60,6 +69,25 @@ function AppContent() {
 
   return (
     <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      {/* Toast (rendered outside transform container to avoid position:fixed containment) */}
+      {toast.show && (
+        <div
+          className={`alert alert-${toast.variant} mb-0`}
+          role="alert"
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            zIndex: 2000,
+            borderRadius: 0,
+            textAlign: 'center',
+          }}
+        >
+          {toast.message}
+        </div>
+      )}
+
       {/* Navbar */}
       <nav className="navbar navbar-expand navbar-light bg-light border-bottom" style={{ flexShrink: 0 }}>
         <div className="container">
@@ -134,6 +162,7 @@ function AppContent() {
               eventItems={eventItems}
               statusItems={statusItems}
               latestDailyRecord={latestDailyRecord}
+              onToast={showToast}
             />
           </div>
 
