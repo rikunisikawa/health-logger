@@ -1,4 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
+import BottomNavigation from '@mui/material/BottomNavigation'
+import BottomNavigationAction from '@mui/material/BottomNavigationAction'
+import Fab from '@mui/material/Fab'
 import AuthGuard from './components/AuthGuard'
 import DashboardPage from './components/DashboardPage'
 import HealthForm from './components/HealthForm'
@@ -117,29 +120,6 @@ function AppContent() {
         </div>
       </nav>
 
-      {/* Tab bar */}
-      <div style={{ display: 'flex', borderBottom: '1px solid #dee2e6', backgroundColor: '#fff', flexShrink: 0 }}>
-        {['📝 記録', '📋 履歴', '📊 分析'].map((label, i) => (
-          <button
-            key={i}
-            onClick={() => setPage(i)}
-            style={{
-              flex: 1,
-              padding: '10px',
-              border: 'none',
-              borderBottom: page === i ? '2px solid #198754' : '2px solid transparent',
-              backgroundColor: 'transparent',
-              fontWeight: page === i ? 600 : 400,
-              color: page === i ? '#198754' : '#6c757d',
-              fontSize: '0.85rem',
-              cursor: 'pointer',
-            }}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-
       {/* Swipeable pages */}
       <div
         style={{ flex: 1, overflow: 'hidden', position: 'relative' }}
@@ -156,7 +136,7 @@ function AppContent() {
           }}
         >
           {/* Page 0: 記録フォーム */}
-          <div style={{ width: '33.333%', height: '100%', overflowY: 'auto' }}>
+          <div style={{ width: '33.333%', height: '100%', overflowY: 'auto', paddingBottom: '72px' }}>
             <HealthForm
               formItems={formItems}
               eventItems={eventItems}
@@ -167,18 +147,77 @@ function AppContent() {
           </div>
 
           {/* Page 1: 履歴 */}
-          <div style={{ width: '33.333%', height: '100%', overflowY: 'auto' }}>
+          <div style={{ width: '33.333%', height: '100%', overflowY: 'auto', paddingBottom: '72px' }}>
             <div className="container py-3" style={{ maxWidth: '540px' }}>
               <RecordHistory records={records} onDeleted={handleRecordDeleted} />
             </div>
           </div>
 
           {/* Page 2: 分析 */}
-          <div style={{ width: '33.333%', height: '100%', overflowY: 'auto' }}>
+          <div style={{ width: '33.333%', height: '100%', overflowY: 'auto', paddingBottom: '72px' }}>
             <DashboardPage onBack={() => setPage(0)} />
           </div>
         </div>
       </div>
+
+      {/* FAB: 履歴・分析ページにいるときのみ表示 */}
+      {page !== 0 && (
+        <Fab
+          color="success"
+          aria-label="体調を記録する"
+          onClick={() => setPage(0)}
+          sx={{
+            position: 'fixed',
+            bottom: 80,
+            right: 16,
+            zIndex: 1200,
+            bgcolor: '#198754',
+            '&:hover': { bgcolor: '#146c43' },
+          }}
+        >
+          <span style={{ fontSize: '1.4rem', lineHeight: 1 }}>📝</span>
+        </Fab>
+      )}
+
+      {/* Bottom Navigation */}
+      <BottomNavigation
+        value={page}
+        onChange={(_, newValue: number) => setPage(newValue)}
+        showLabels
+        sx={{
+          flexShrink: 0,
+          borderTop: '1px solid #dee2e6',
+          bgcolor: '#fff',
+          height: '64px',
+          '& .MuiBottomNavigationAction-root': {
+            color: '#6c757d',
+            minWidth: 0,
+            fontSize: '0.75rem',
+          },
+          '& .MuiBottomNavigationAction-root.Mui-selected': {
+            color: '#198754',
+          },
+          '& .MuiBottomNavigationAction-label': {
+            fontSize: '0.75rem',
+          },
+          '& .MuiBottomNavigationAction-label.Mui-selected': {
+            fontSize: '0.75rem',
+          },
+        }}
+      >
+        <BottomNavigationAction
+          label="記録"
+          icon={<span style={{ fontSize: '1.4rem', lineHeight: 1 }}>📝</span>}
+        />
+        <BottomNavigationAction
+          label="履歴"
+          icon={<span style={{ fontSize: '1.4rem', lineHeight: 1 }}>📋</span>}
+        />
+        <BottomNavigationAction
+          label="分析"
+          icon={<span style={{ fontSize: '1.4rem', lineHeight: 1 }}>📊</span>}
+        />
+      </BottomNavigation>
 
       {/* Settings modal */}
       {showSettings && (
