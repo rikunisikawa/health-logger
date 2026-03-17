@@ -6,11 +6,6 @@ on:
     paths:
       - "terraform/**"
       - "migrations/athena/**"
-  push:
-    branches: [main]
-    paths:
-      - "terraform/**"
-      - "migrations/athena/**"
 
 env:
   TF_VERSION: "1.7.5"

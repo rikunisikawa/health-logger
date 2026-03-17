@@ -21,6 +21,7 @@ jobs:
     outputs:
       lambda:    ${{ steps.filter.outputs.lambda }}
       terraform: ${{ steps.filter.outputs.terraform }}
+      migrations: ${{ steps.filter.outputs.migrations }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -31,13 +32,15 @@ jobs:
               - 'lambda/**'
             terraform:
               - 'terraform/**'
+            migrations:
+              - 'migrations/athena/**'
 
   # ── 1. Build Lambda ZIPs and upload to S3 artifacts ───────────────────────
   build-lambda:
     name: Build Lambda ZIPs
     runs-on: ubuntu-latest
     needs: detect-changes
-    if: needs.detect-changes.outputs.lambda == 'true' || needs.detect-changes.outputs.terraform == 'true'
+    if: needs.detect-changes.outputs.lambda == 'true' || needs.detect-changes.outputs.terraform == 'true' || needs.detect-changes.outputs.migrations == 'true'
     outputs:
       create_record_key:    ${{ steps.upload.outputs.create_record_key }}
       get_latest_key:       ${{ steps.upload.outputs.get_latest_key }}
@@ -156,7 +159,7 @@ jobs:
     name: Terraform Apply
     runs-on: ubuntu-latest
     needs: [detect-changes, build-lambda]
-    if: needs.detect-changes.outputs.lambda == 'true' || needs.detect-changes.outputs.terraform == 'true'
+    if: needs.detect-changes.outputs.lambda == 'true' || needs.detect-changes.outputs.terraform == 'true' || needs.detect-changes.outputs.migrations == 'true'
     environment: prod
     defaults:
       run:
@@ -184,6 +187,16 @@ jobs:
             -var='lambda_s3_keys={"create_record":"${{ needs.build-lambda.outputs.create_record_key }}","get_latest":"${{ needs.build-lambda.outputs.get_latest_key }}","push_subscribe":"${{ needs.build-lambda.outputs.push_subscribe_key }}","push_notify":"${{ needs.build-lambda.outputs.push_notify_key }}","get_item_config":"${{ needs.build-lambda.outputs.get_item_config_key }}","save_item_config":"${{ needs.build-lambda.outputs.save_item_config_key }}","delete_record":"${{ needs.build-lambda.outputs.delete_record_key }}","get_env_data":"${{ needs.build-lambda.outputs.get_env_data_key }}","get_env_data_latest":"${{ needs.build-lambda.outputs.get_env_data_latest_key }}"}'
         env:
           TF_VAR_vapid_private_key: ${{ secrets.VAPID_PRIVATE_KEY_PROD }}
+
+      - name: Run Athena schema migrations
+        working-directory: ${{ github.workspace }}
+        run: |
+          pip install boto3 --quiet
+          python3 scripts/athena-migrate.py
+        env:
+          ATHENA_DATABASE: health_logger_prod_health_logs
+          ATHENA_OUTPUT_BUCKET: health-logger-prod
+          MIGRATION_TRACKING_TABLE: health-logger-prod-athena-migrations
 
       - name: Deployment summary
         run: |
