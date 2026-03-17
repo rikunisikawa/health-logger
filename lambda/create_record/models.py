@@ -12,9 +12,10 @@ class CustomFieldValue(BaseModel):
 
 class HealthRecordInput(BaseModel):
     record_type:      Literal["daily", "event", "status"] = Field("daily")
-    fatigue_score:    Optional[int] = Field(None, ge=0, le=100)
-    mood_score:       Optional[int] = Field(None, ge=0, le=100)
-    motivation_score: Optional[int] = Field(None, ge=0, le=100)
+    fatigue_score:       Optional[int] = Field(None, ge=0, le=100)
+    mood_score:          Optional[int] = Field(None, ge=0, le=100)
+    motivation_score:    Optional[int] = Field(None, ge=0, le=100)
+    concentration_score: Optional[int] = Field(None, ge=0, le=100)
     flags:            int  = Field(0,  ge=0, le=63)
     note:             str  = Field("", max_length=280)
     recorded_at:      str  = Field(...)

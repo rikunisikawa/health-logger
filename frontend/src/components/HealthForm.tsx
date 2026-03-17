@@ -22,9 +22,10 @@ const STATUS_ITEMS = [
 
 /** スライダー各項目の accent-color */
 const SLIDER_COLORS = {
-  fatigue:    '#dc3545', // 赤: 疲労が高い = 注意
-  mood:       '#fd7e14', // オレンジ: 気分
-  motivation: '#198754', // 緑: やる気
+  fatigue:       '#dc3545', // 赤: 疲労が高い = 注意
+  mood:          '#fd7e14', // オレンジ: 気分
+  motivation:    '#198754', // 緑: やる気
+  concentration: '#0d6efd', // 青: 集中力
 } as const
 
 /** Date → datetime-local input の値形式 "YYYY-MM-DDTHH:MM" (ローカル時刻) */
@@ -69,6 +70,10 @@ export default function HealthForm({ formItems, eventItems, statusItems, latestD
     const v = parseFloat(latestDailyRecord?.motivation_score ?? '')
     return isNaN(v) ? 50 : v
   }, [latestDailyRecord])
+  const prevConcentration = useMemo(() => {
+    const v = parseFloat(latestDailyRecord?.concentration_score ?? '')
+    return isNaN(v) ? 50 : v
+  }, [latestDailyRecord])
 
   // 記録日時（フォーム全体で共通。デフォルト = 現在時刻）
   const [recordedAt, setRecordedAt] = useState(() => toDatetimeLocal(new Date()))
@@ -81,9 +86,10 @@ export default function HealthForm({ formItems, eventItems, statusItems, latestD
   const resetToNow = () => setRecordedAt(toDatetimeLocal(new Date()))
 
   // Daily form state（前回値で初期化）
-  const [fatigue, setFatigue]         = useState(prevFatigue)
-  const [mood, setMood]               = useState(prevMood)
-  const [motivation, setMotivation]   = useState(prevMotivation)
+  const [fatigue, setFatigue]             = useState(prevFatigue)
+  const [mood, setMood]                   = useState(prevMood)
+  const [motivation, setMotivation]       = useState(prevMotivation)
+  const [concentration, setConcentration] = useState(prevConcentration)
   const [note, setNote]               = useState('')
   const [customValues, setCustomValues] = useState<Record<string, number | boolean | string>>({})
   const [submitting, setSubmitting]   = useState(false)
@@ -150,11 +156,12 @@ export default function HealthForm({ formItems, eventItems, statusItems, latestD
     if (!token) return
     setSubmitting(true)
     const record: HealthRecordInput = {
-      record_type:      'daily',
-      fatigue_score:    fatigue,
-      mood_score:       mood,
-      motivation_score: motivation,
-      flags:            0,
+      record_type:          'daily',
+      fatigue_score:        fatigue,
+      mood_score:           mood,
+      motivation_score:     motivation,
+      concentration_score:  concentration,
+      flags:                0,
       note:             note.slice(0, 280),
       recorded_at:      getRecordedAtISO(),   // ← 選択日時を使用
       timezone:         Intl.DateTimeFormat().resolvedOptions().timeZone,
@@ -473,9 +480,10 @@ export default function HealthForm({ formItems, eventItems, statusItems, latestD
         {/* Sliders */}
         {(
           [
-            { label: '疲労感', value: fatigue,    setter: setFatigue,    colorKey: 'fatigue'    as const, prev: prevFatigue    },
-            { label: '気分',   value: mood,       setter: setMood,       colorKey: 'mood'       as const, prev: prevMood       },
-            { label: 'やる気', value: motivation, setter: setMotivation, colorKey: 'motivation' as const, prev: prevMotivation },
+            { label: '疲労感', value: fatigue,       setter: setFatigue,       colorKey: 'fatigue'       as const, prev: prevFatigue       },
+            { label: '気分',   value: mood,          setter: setMood,          colorKey: 'mood'          as const, prev: prevMood          },
+            { label: 'やる気', value: motivation,    setter: setMotivation,    colorKey: 'motivation'    as const, prev: prevMotivation    },
+            { label: '集中力', value: concentration, setter: setConcentration, colorKey: 'concentration' as const, prev: prevConcentration },
           ] as const
         ).map(({ label, value, setter, colorKey, prev }) => (
           <div className="mb-3" key={label}>

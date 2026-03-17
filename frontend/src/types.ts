@@ -21,11 +21,12 @@ export interface CustomFieldValue {
 }
 
 export interface HealthRecordInput {
-  record_type:      'daily' | 'event' | 'status'
-  fatigue_score?:   number
-  mood_score?:      number
-  motivation_score?: number
-  flags:            number
+  record_type:          'daily' | 'event' | 'status'
+  fatigue_score?:       number
+  mood_score?:          number
+  motivation_score?:    number
+  concentration_score?: number
+  flags:                number
   note:             string
   recorded_at:      string
   timezone:         string
@@ -45,8 +46,9 @@ export interface LatestRecord {
   record_type:      string
   fatigue_score:    string
   mood_score:       string
-  motivation_score: string
-  flags:            string
+  motivation_score:    string
+  concentration_score: string
+  flags:               string
   note:             string
   recorded_at:      string
   timezone:         string
