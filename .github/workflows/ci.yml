@@ -19,7 +19,9 @@ jobs:
           python-version: '3.13'
 
       - name: Install dependencies
-        run: pip install pytest pydantic boto3 requests
+        run: |
+          pip install pytest
+          find lambda -name requirements.txt | xargs -I{} pip install -r {} --quiet
 
       - name: Run Lambda tests
         run: pytest lambda/ -v
