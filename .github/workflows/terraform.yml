@@ -5,10 +5,12 @@ on:
     branches: [main]
     paths:
       - "terraform/**"
+      - "migrations/athena/**"
   push:
     branches: [main]
     paths:
       - "terraform/**"
+      - "migrations/athena/**"
 
 env:
   TF_VERSION: "1.7.5"
@@ -89,3 +91,14 @@ jobs:
       - name: Terraform Apply (main branch only)
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         run: terraform apply -auto-approve tfplan
+
+      - name: Run Athena schema migrations (main branch only)
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        working-directory: ${{ github.workspace }}
+        run: |
+          pip install boto3 --quiet
+          python3 scripts/athena-migrate.py
+        env:
+          ATHENA_DATABASE: health_logger_prod_health_logs
+          ATHENA_OUTPUT_BUCKET: health-logger-prod
+          MIGRATION_TRACKING_TABLE: health-logger-prod-athena-migrations
