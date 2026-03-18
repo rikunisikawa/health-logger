@@ -8,6 +8,10 @@ import { createRecord } from '../api'
 import { useAuth } from '../hooks/useAuth'
 import { useOfflineQueue } from '../hooks/useOfflineQueue'
 import type { CustomFieldValue, HealthRecordInput, ItemConfig, LatestRecord } from '../types'
+import VoiceInputButton from './VoiceInputButton'
+import VoiceConfirmModal from './VoiceConfirmModal'
+import { parseVoiceInput } from '../utils/voiceParser'
+import type { ParsedVoiceItem, VoiceParseResult } from '../utils/voiceParser'
 
 const API_ENDPOINT = import.meta.env.VITE_API_ENDPOINT as string
 
@@ -55,9 +59,10 @@ interface Props {
   statusItems:  ItemConfig[]
   latestDailyRecord?: LatestRecord
   onToast: (message: string, variant: ToastVariant) => void
+  onRecordsSubmitted?: () => void
 }
 
-export default function HealthForm({ formItems, eventItems, statusItems, latestDailyRecord, onToast }: Props) {
+export default function HealthForm({ formItems, eventItems, statusItems, latestDailyRecord, onToast, onRecordsSubmitted }: Props) {
   const { token } = useAuth()
   const { enqueue, flush } = useOfflineQueue(API_ENDPOINT)
 
@@ -94,6 +99,11 @@ export default function HealthForm({ formItems, eventItems, statusItems, latestD
   const [customValues, setCustomValues] = useState<Record<string, number | boolean | string>>({})
   const [submitting, setSubmitting]   = useState(false)
 
+  // Voice input state
+  const [voiceResult, setVoiceResult]       = useState<VoiceParseResult | null>(null)
+  const [voiceSubmitting, setVoiceSubmitting] = useState(false)
+
+  // Quick event state
   const [eventInputs, setEventInputs] = useState<Record<string, string>>({})
   const [eventSending, setEventSending] = useState<Record<string, boolean>>({})
 
@@ -111,6 +121,75 @@ export default function HealthForm({ formItems, eventItems, statusItems, latestD
       localStorage.setItem('health_logger_active_statuses', JSON.stringify(activeStatuses))
     } catch {}
   }, [activeStatuses])
+
+
+  const handleVoiceTranscript = (text: string) => {
+    const customLabels = [
+      ...eventItems.map((e) => e.label),
+      ...statusItems.map((s) => s.label),
+    ]
+    const parsed = parseVoiceInput(text, customLabels)
+    setVoiceResult(parsed)
+  }
+
+  const handleVoiceConfirm = async (items: ParsedVoiceItem[]) => {
+    if (!token) return
+    setVoiceSubmitting(true)
+    let successCount = 0
+    for (const item of items) {
+      const base = {
+        flags: 0,
+        note: '',
+        recorded_at: item.recordedAt.toISOString(),
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        device_id: navigator.userAgent.slice(0, 100),
+        app_version: '1.0.0',
+      }
+      let record: HealthRecordInput
+      if (item.type === 'daily') {
+        record = {
+          ...base,
+          record_type: 'daily',
+          fatigue_score:        item.fatigue,
+          mood_score:           item.mood,
+          motivation_score:     item.motivation,
+          concentration_score:  item.concentration,
+          custom_fields: [],
+        }
+      } else {
+        record = {
+          ...base,
+          record_type: 'event',
+          custom_fields: [
+            {
+              item_id: item.eventLabel,
+              label:   item.eventLabel,
+              type:    'checkbox',
+              value:   true,
+            },
+          ],
+        }
+      }
+      try {
+        await createRecord(record, token)
+        successCount++
+      } catch {
+        if (!navigator.onLine) {
+          await enqueue(record, token).catch(() => {})
+        }
+      }
+    }
+    setVoiceSubmitting(false)
+    setVoiceResult(null)
+    if (successCount > 0) {
+      onToast(`${successCount}件を記録しました`, 'success')
+      flush(token).catch(() => {})
+      onRecordsSubmitted?.()
+    } else {
+      onToast('送信に失敗しました', 'danger')
+    }
+  }
+
 
   const setCustomValue = (itemId: string, value: number | boolean | string) =>
     setCustomValues((prev) => ({ ...prev, [itemId]: value }))
@@ -345,8 +424,13 @@ export default function HealthForm({ formItems, eventItems, statusItems, latestD
       {/* ── Quick Events (flags + custom event items) ──────────── */}
       <Card variant="outlined" sx={{ mb: 2, borderRadius: 2 }}>
         <CardContent sx={{ pb: '12px !important', pt: 1.5, px: 2 }}>
-          <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1.5, fontWeight: 600 }}>
+          <Typography
+            variant="subtitle2"
+            color="text.secondary"
+            sx={{ mb: 1.5, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 1 }}
+          >
             クイックイベント
+            <VoiceInputButton onTranscript={handleVoiceTranscript} size="sm" />
           </Typography>
           <div className="d-flex flex-wrap gap-2">
             {FLAG_ITEMS.map((item) => (
@@ -376,6 +460,7 @@ export default function HealthForm({ formItems, eventItems, statusItems, latestD
               </button>
             ))}
 
+            {/* カスタムイベント: checkbox は同じボタンスタイル */}
             {eventItems
               .filter((item) => item.type === 'checkbox')
               .map((item) => (
@@ -453,8 +538,13 @@ export default function HealthForm({ formItems, eventItems, statusItems, latestD
       {/* ── Daily Form ────────────────────────────────────────── */}
       <Card variant="outlined" sx={{ mb: 2, borderRadius: 2 }}>
         <CardContent sx={{ pt: 1.5, px: 2 }}>
-          <Typography variant="h6" color="success.main" sx={{ mb: 2, fontWeight: 700 }}>
+          <Typography
+            variant="h6"
+            color="success.main"
+            sx={{ mb: 2, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}
+          >
             体調記録
+            <VoiceInputButton onTranscript={handleVoiceTranscript} />
           </Typography>
           <form onSubmit={handleSubmit}>
             {/* MUI Sliders */}
@@ -522,7 +612,7 @@ export default function HealthForm({ formItems, eventItems, statusItems, latestD
                         </label>
                       </div>
                     )}
-                    {(item.type === 'slider') && (
+                    {item.type === 'slider' && (
                       <div>
                         <label className="form-label d-flex justify-content-between">
                           <span>{item.icon && <span className="me-1">{item.icon}</span>}{item.label}</span>
@@ -613,6 +703,16 @@ export default function HealthForm({ formItems, eventItems, statusItems, latestD
           </form>
         </CardContent>
       </Card>
+
+      {/* ── Voice Confirm Modal ──────────────────────────────── */}
+      {voiceResult && (
+        <VoiceConfirmModal
+          result={voiceResult}
+          onConfirm={handleVoiceConfirm}
+          onCancel={() => setVoiceResult(null)}
+          submitting={voiceSubmitting}
+        />
+      )}
     </div>
   )
 }
