@@ -302,6 +302,12 @@ resource "aws_iam_role_policy" "github_actions" {
           "s3:PutBucketWebsite", "s3:GetBucketWebsite",
           "s3:PutBucketPolicy", "s3:GetBucketPolicy",
           "s3:PutBucketPublicAccessBlock", "s3:GetBucketPublicAccessBlock",
+          "s3:GetBucketLocation", "s3:GetBucketTagging", "s3:PutBucketTagging",
+          "s3:GetBucketRequestPayment", "s3:GetBucketObjectLockConfiguration",
+          "s3:GetEncryptionConfiguration", "s3:GetLifecycleConfiguration",
+          "s3:GetReplicationConfiguration", "s3:GetBucketCORS",
+          "s3:GetBucketLogging", "s3:GetAccelerateConfiguration",
+          "s3:GetBucketNotification",
         ]
         Resource = [
           aws_s3_bucket.dbt_docs.arn,
