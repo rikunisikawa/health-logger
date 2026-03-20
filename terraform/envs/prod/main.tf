@@ -287,6 +287,33 @@ resource "aws_iam_role_policy" "github_actions" {
         Action   = ["dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:Scan"]
         Resource = aws_dynamodb_table.athena_migrations.arn
       },
+      # dbt docs: Athena introspection (catalog.json 生成用)
+      {
+        Effect = "Allow"
+        Action = [
+          "athena:StartQueryExecution",
+          "athena:GetQueryExecution",
+          "athena:GetQueryResults",
+          "glue:GetDatabase", "glue:GetDatabases",
+          "glue:GetTable", "glue:GetTables",
+        ]
+        Resource = ["*"]
+      },
+      # dbt docs: S3 アップロード（dbt-docs バケットへの書き込み）
+      {
+        Effect = "Allow"
+        Action = ["s3:PutObject", "s3:DeleteObject", "s3:ListBucket"]
+        Resource = [
+          aws_s3_bucket.dbt_docs.arn,
+          "${aws_s3_bucket.dbt_docs.arn}/*",
+        ]
+      },
+      # dbt docs generate: Athena クエリ結果の S3 書き込み先
+      {
+        Effect   = "Allow"
+        Action   = ["s3:PutObject", "s3:GetObject", "s3:GetBucketLocation"]
+        Resource = ["arn:aws:s3:::health-logger-prod-health-export/dbt-docs-athena-results/*"]
+      },
     ]
   })
 }
@@ -301,6 +328,46 @@ resource "aws_dynamodb_table" "athena_migrations" {
     name = "migration_name"
     type = "S"
   }
+}
+
+# ── dbt docs 静的ホスティング用 S3 バケット ───────────────────────────────────
+resource "aws_s3_bucket" "dbt_docs" {
+  bucket        = "${local.name}-dbt-docs"
+  force_destroy = true
+  tags          = { Name = "${local.name}-dbt-docs" }
+}
+
+resource "aws_s3_bucket_public_access_block" "dbt_docs" {
+  bucket                  = aws_s3_bucket.dbt_docs.id
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
+}
+
+resource "aws_s3_bucket_website_configuration" "dbt_docs" {
+  bucket = aws_s3_bucket.dbt_docs.id
+  index_document { suffix = "index.html" }
+  error_document { key = "index.html" }
+}
+
+resource "aws_s3_bucket_policy" "dbt_docs_public_read" {
+  bucket     = aws_s3_bucket.dbt_docs.id
+  depends_on = [aws_s3_bucket_public_access_block.dbt_docs]
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Sid       = "PublicReadGetObject"
+      Effect    = "Allow"
+      Principal = "*"
+      Action    = "s3:GetObject"
+      Resource  = "${aws_s3_bucket.dbt_docs.arn}/*"
+    }]
+  })
+}
+
+output "dbt_docs_url" {
+  value = "http://${aws_s3_bucket.dbt_docs.bucket}.s3-website-${var.aws_region}.amazonaws.com"
 }
 
 # ── External environment data ingest (weather/air quality) ────────────────────

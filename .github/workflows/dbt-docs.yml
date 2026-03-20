@@ -1,0 +1,81 @@
+name: dbt Docs
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "data/dbt/**"
+  workflow_dispatch:  # 手動実行も可能
+
+env:
+  AWS_REGION: ap-northeast-1
+  DBT_DOCS_BUCKET: health-logger-prod-dbt-docs
+  # dbt が Athena クエリ結果を置く S3 パス
+  DBT_STAGING_DIR: s3://health-logger-prod-health-export/dbt-docs-athena-results/
+
+jobs:
+  generate-and-deploy:
+    name: Generate dbt docs and deploy to S3
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN_PROD }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dbt
+        run: |
+          pip install \
+            "dbt-core==1.10.5" \
+            "dbt-athena-community==1.9.4" \
+            --quiet
+
+      - name: Configure dbt profiles
+        run: |
+          mkdir -p ~/.dbt
+          cat > ~/.dbt/profiles.yml <<EOF
+          health_logger:
+            target: prod
+            outputs:
+              prod:
+                type: athena
+                database: AwsDataCatalog
+                schema: health_logger_prod_health_logs
+                s3_staging_dir: ${{ env.DBT_STAGING_DIR }}
+                region_name: ${{ env.AWS_REGION }}
+                work_group: primary
+                threads: 4
+          EOF
+
+      - name: Install dbt packages
+        working-directory: data/dbt
+        run: dbt deps
+
+      - name: Generate dbt docs
+        working-directory: data/dbt
+        run: dbt docs generate --profiles-dir ~/.dbt
+
+      - name: Deploy to S3
+        working-directory: data/dbt
+        run: |
+          aws s3 sync target/ s3://${{ env.DBT_DOCS_BUCKET }}/ \
+            --exclude "*.log" \
+            --exclude "run_results.json" \
+            --delete
+
+      - name: Output docs URL
+        run: |
+          echo "📚 dbt docs: http://${{ env.DBT_DOCS_BUCKET }}.s3-website-ap-northeast-1.amazonaws.com"
