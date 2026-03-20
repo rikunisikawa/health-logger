@@ -7,6 +7,7 @@ import {
   Legend,
   Line,
   LineChart,
+  ReferenceArea,
   ReferenceLine,
   ResponsiveContainer,
   Scatter,
@@ -57,6 +58,12 @@ interface EventPoint {
   label: string
   timeStr: string
   valueStr: string
+}
+
+interface StatusPeriod {
+  label: string
+  startMinutes: number
+  endMinutes: number
 }
 
 interface EventTooltipProps {
@@ -132,8 +139,12 @@ function interpretCorrelation(r: number): string {
 }
 
 const EVENT_COLORS = ['#6f42c1', '#fd7e14', '#20c997', '#ffc107', '#0dcaf0', '#d63384', '#6610f2', '#0d6efd']
+const STATUS_COLORS = ['#ffd700', '#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#dda0dd']
 
 const WEEKDAY_LABELS = ['月', '火', '水', '木', '金', '土', '日']
+
+const minuteTick = (v: number) =>
+  `${Math.floor(v / 60).toString().padStart(2, '0')}:${(v % 60).toString().padStart(2, '0')}`
 
 interface MetricSelectorProps {
   visibleMetrics: Set<MetricKey>
@@ -349,6 +360,51 @@ export default function DashboardPage({ onBack }: Props) {
         }
       })
       .sort((a, b) => a.minutes - b.minutes)
+  }, [records, selectedDate])
+
+  // ── ステータス期間（日内変動用）───────────────────────────────────────
+  const { intradayStatusPeriods, intradayStatusLabels } = useMemo((): {
+    intradayStatusPeriods: StatusPeriod[]
+    intradayStatusLabels: string[]
+  } => {
+    const dayRecords = records
+      .filter((r) => r.record_type === 'status' && toLocalDateStr(parseUtc(r.recorded_at)) === selectedDate)
+      .sort((a, b) => parseUtc(a.recorded_at).getTime() - parseUtc(b.recorded_at).getTime())
+
+    const statusByLabel: Record<string, { minutes: number; isStart: boolean }[]> = {}
+    for (const r of dayRecords) {
+      const minutes = toLocalMinutes(parseUtc(r.recorded_at))
+      try {
+        const fields = JSON.parse(r.custom_fields || '[]') as { label: string; type: string; value: unknown }[]
+        for (const f of fields) {
+          if (f.type !== 'checkbox' || typeof f.value !== 'boolean') continue
+          if (!statusByLabel[f.label]) statusByLabel[f.label] = []
+          statusByLabel[f.label].push({ minutes, isStart: f.value as boolean })
+        }
+      } catch {
+        // skip malformed
+      }
+    }
+
+    const periods: StatusPeriod[] = []
+    const labels: string[] = []
+    for (const label of Object.keys(statusByLabel)) {
+      labels.push(label)
+      let start: number | null = null
+      for (const ev of statusByLabel[label]) {
+        if (ev.isStart && start === null) {
+          start = ev.minutes
+        } else if (!ev.isStart && start !== null) {
+          periods.push({ label, startMinutes: start, endMinutes: ev.minutes })
+          start = null
+        }
+      }
+      if (start !== null) {
+        periods.push({ label, startMinutes: start, endMinutes: 1440 })
+      }
+    }
+
+    return { intradayStatusPeriods: periods, intradayStatusLabels: labels }
   }, [records, selectedDate])
 
   // ── イベントタイムライン ──────────────────────────────────────────────
@@ -614,9 +670,6 @@ export default function DashboardPage({ onBack }: Props) {
     return Array.from(dates).sort().reverse()
   }, [records])
 
-  const minuteTick = (v: number) =>
-    `${Math.floor(v / 60).toString().padStart(2, '0')}:${(v % 60).toString().padStart(2, '0')}`
-
   // ── Render ───────────────────────────────────────────────────────────
   return (
     <div>
@@ -784,28 +837,121 @@ export default function DashboardPage({ onBack }: Props) {
             {/* 指標フィルタ */}
             <MetricSelector visibleMetrics={visibleMetrics} onChange={setVisibleMetrics} />
 
-            {intradayData.length === 0 ? (
-              <p className="text-muted small">この日の日次記録がありません。</p>
+            {intradayData.length === 0 && eventPoints.length === 0 && intradayStatusPeriods.length === 0 ? (
+              <p className="text-muted small">この日の記録がありません。</p>
             ) : (
-              <ResponsiveContainer width="100%" height={280}>
-                <LineChart data={intradayData} margin={{ top: 4, right: 8, left: -20, bottom: 4 }}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="time" tick={{ fontSize: 11 }} />
-                  <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} />
-                  <Tooltip />
-                  <Legend />
-                  {ALL_METRICS.filter((k) => visibleMetrics.has(k)).map((key) => (
-                    <Line
-                      key={key}
-                      type="monotone"
-                      dataKey={key}
-                      name={METRIC_CONFIG[key].name}
-                      stroke={METRIC_CONFIG[key].stroke}
-                      dot
-                    />
-                  ))}
-                </LineChart>
-              </ResponsiveContainer>
+              <>
+                {/* 体調スコア + ステータス期間 */}
+                {(intradayData.length > 0 || intradayStatusPeriods.length > 0) && (
+                  <ResponsiveContainer width="100%" height={280}>
+                    <ComposedChart data={intradayData} margin={{ top: 4, right: 8, left: -20, bottom: 4 }}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis
+                        type="number"
+                        dataKey="minutes"
+                        domain={[0, 1440]}
+                        ticks={[0, 360, 720, 1080, 1440]}
+                        tickFormatter={minuteTick}
+                        tick={{ fontSize: 11 }}
+                      />
+                      <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} />
+                      <Tooltip labelFormatter={(v) => minuteTick(v as number)} />
+                      <Legend />
+
+                      {/* ステータス期間バンド */}
+                      {intradayStatusPeriods.map((p, i) => {
+                        const colorIdx = intradayStatusLabels.indexOf(p.label)
+                        return (
+                          <ReferenceArea
+                            key={`sp-${i}`}
+                            x1={p.startMinutes}
+                            x2={p.endMinutes}
+                            fill={STATUS_COLORS[colorIdx % STATUS_COLORS.length]}
+                            fillOpacity={0.22}
+                            ifOverflow="hidden"
+                          />
+                        )
+                      })}
+
+                      {/* 体調スコア折れ線 */}
+                      {ALL_METRICS.filter((k) => visibleMetrics.has(k)).map((key) => (
+                        <Line
+                          key={key}
+                          type="monotone"
+                          dataKey={key}
+                          name={METRIC_CONFIG[key].name}
+                          stroke={METRIC_CONFIG[key].stroke}
+                          dot={{ r: 3 }}
+                          connectNulls
+                        />
+                      ))}
+                    </ComposedChart>
+                  </ResponsiveContainer>
+                )}
+
+                {/* ステータス凡例 */}
+                {intradayStatusPeriods.length > 0 && (
+                  <div className="d-flex flex-wrap gap-1 mt-1 mb-3">
+                    <span className="text-muted small fw-semibold me-1">期間:</span>
+                    {intradayStatusLabels.map((label, i) => (
+                      <span
+                        key={label}
+                        className="badge border"
+                        style={{
+                          background: STATUS_COLORS[i % STATUS_COLORS.length] + '33',
+                          color: '#333',
+                          fontSize: 11,
+                          borderColor: STATUS_COLORS[i % STATUS_COLORS.length],
+                        }}
+                      >
+                        {label}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {/* イベント散布図 */}
+                {eventPoints.length > 0 && (
+                  <>
+                    <p className="mb-1 small text-muted fw-semibold">イベント</p>
+                    <ResponsiveContainer
+                      width="100%"
+                      height={Math.max(120, eventCategories.length * 50 + 60)}
+                    >
+                      <ScatterChart margin={{ top: 4, right: 16, left: 4, bottom: 16 }}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis
+                          type="number"
+                          dataKey="x"
+                          domain={[0, 1440]}
+                          ticks={[0, 360, 720, 1080, 1440]}
+                          tickFormatter={minuteTick}
+                          tick={{ fontSize: 11 }}
+                          label={{ value: '時刻', position: 'insideBottomRight', offset: -4, fontSize: 11 }}
+                        />
+                        <YAxis
+                          type="number"
+                          dataKey="y"
+                          domain={[-0.5, Math.max(eventCategories.length - 0.5, 0.5)]}
+                          ticks={eventCategories.map((_, i) => i)}
+                          tickFormatter={(v: number) => eventCategories[v] ?? ''}
+                          tick={{ fontSize: 11 }}
+                          width={80}
+                        />
+                        <Tooltip content={<EventTooltip />} />
+                        {eventCategories.map((cat, i) => (
+                          <Scatter
+                            key={cat}
+                            name={cat}
+                            data={eventPoints.filter((p) => p.y === i)}
+                            fill={EVENT_COLORS[i % EVENT_COLORS.length]}
+                          />
+                        ))}
+                      </ScatterChart>
+                    </ResponsiveContainer>
+                  </>
+                )}
+              </>
             )}
           </div>
         )}
