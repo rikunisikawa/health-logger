@@ -107,5 +107,5 @@ jobs:
           python3 scripts/athena-migrate.py
         env:
           ATHENA_DATABASE: health_logger_prod_health_logs
-          ATHENA_OUTPUT_BUCKET: health-logger-prod
+          ATHENA_OUTPUT_BUCKET: health-logger-prod-health-export
           MIGRATION_TRACKING_TABLE: health-logger-prod-athena-migrations

@@ -11,7 +11,7 @@ permissions:
 
 env:
   AWS_REGION: ap-northeast-1
-  TF_VERSION: "1.7.5"
+  TF_VERSION: "1.12.0"
 
 jobs:
   # ── 0. Detect changed paths ────────────────────────────────────────────────
@@ -195,7 +195,7 @@ jobs:
           python3 scripts/athena-migrate.py
         env:
           ATHENA_DATABASE: health_logger_prod_health_logs
-          ATHENA_OUTPUT_BUCKET: health-logger-prod
+          ATHENA_OUTPUT_BUCKET: health-logger-prod-health-export
           MIGRATION_TRACKING_TABLE: health-logger-prod-athena-migrations
 
       - name: Deployment summary
