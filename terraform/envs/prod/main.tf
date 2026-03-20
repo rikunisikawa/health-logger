@@ -294,10 +294,15 @@ resource "aws_iam_role_policy" "github_actions" {
         ]
         Resource = ["*"]
       },
-      # dbt docs: S3 アップロード（dbt-docs バケットへの書き込み）
+      # dbt docs: S3 バケット管理 + アップロード（terraform apply + dbt-docs CI 用）
       {
         Effect = "Allow"
-        Action = ["s3:PutObject", "s3:DeleteObject", "s3:ListBucket"]
+        Action = [
+          "s3:PutObject", "s3:GetObject", "s3:DeleteObject", "s3:ListBucket",
+          "s3:PutBucketWebsite", "s3:GetBucketWebsite",
+          "s3:PutBucketPolicy", "s3:GetBucketPolicy",
+          "s3:PutBucketPublicAccessBlock", "s3:GetBucketPublicAccessBlock",
+        ]
         Resource = [
           aws_s3_bucket.dbt_docs.arn,
           "${aws_s3_bucket.dbt_docs.arn}/*",
