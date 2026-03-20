@@ -1,5 +1,5 @@
 terraform {
-  required_version = ">= 1.6"
+  required_version = ">= 1.10"
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -7,11 +7,11 @@ terraform {
     }
   }
   backend "s3" {
-    bucket         = "health-logger-tfstate-prod"
-    key            = "prod/terraform.tfstate"
-    region         = "ap-northeast-1"
-    dynamodb_table = "health-logger-tflock-prod"
-    encrypt        = true
+    bucket       = "health-logger-tfstate-prod"
+    key          = "prod/terraform.tfstate"
+    region       = "ap-northeast-1"
+    encrypt      = true
+    use_lockfile = true # S3 ネイティブロック（Terraform 1.10+）。DynamoDB 不要。
   }
 }
 
