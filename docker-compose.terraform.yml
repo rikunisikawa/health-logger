@@ -1,6 +1,6 @@
 services:
   terraform:
-    image: hashicorp/terraform:1.7.5
+    image: hashicorp/terraform:1.12.0
     working_dir: /workspace/terraform/envs/prod
     volumes:
       - .:/workspace

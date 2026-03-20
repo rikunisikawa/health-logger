@@ -169,16 +169,11 @@ resource "aws_iam_role_policy" "github_actions" {
       },
       {
         Effect = "Allow"
-        Action = ["s3:GetObject", "s3:PutObject", "s3:ListBucket", "s3:GetBucketVersioning"]
+        Action = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject", "s3:ListBucket", "s3:GetBucketVersioning"]
         Resource = [
           "arn:aws:s3:::health-logger-tfstate-prod",
           "arn:aws:s3:::health-logger-tfstate-prod/*",
         ]
-      },
-      {
-        Effect   = "Allow"
-        Action   = ["dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:DeleteItem"]
-        Resource = "arn:aws:dynamodb:${var.aws_region}:${data.aws_caller_identity.current.account_id}:table/health-logger-tflock-prod"
       },
       # Terraform plan: read access to all managed resources
       {
