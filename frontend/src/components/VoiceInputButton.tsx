@@ -28,58 +28,91 @@ export default function VoiceInputButton({ onTranscript, disabled, size = 'md' }
 
   const isRecording = state === 'recording'
   const isProcessing = state === 'processing'
+  const sm = size === 'sm'
 
-  const btnSize = size === 'sm' ? 28 : 36
-  const fontSize = size === 'sm' ? '0.9rem' : '1.1rem'
+  if (isRecording) {
+    return (
+      <>
+        <style>{pulseKeyframes}</style>
+        <button
+          type="button"
+          onClick={stopRecording}
+          disabled={disabled}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '4px',
+            padding: sm ? '2px 8px' : '4px 12px',
+            borderRadius: '999px',
+            border: '2px solid #dc3545',
+            backgroundColor: '#dc3545',
+            color: '#fff',
+            fontSize: sm ? '0.72rem' : '0.82rem',
+            fontWeight: 600,
+            cursor: 'pointer',
+            flexShrink: 0,
+            animation: 'voicePulse 1.2s ease-in-out infinite',
+            whiteSpace: 'nowrap',
+          }}
+          aria-label="録音停止"
+          aria-pressed={true}
+        >
+          <span style={{ fontSize: sm ? '0.8rem' : '0.95rem' }}>⏹</span>
+          停止
+        </button>
+      </>
+    )
+  }
 
-  const handleClick = () => {
-    if (disabled || isProcessing) return
-    if (isRecording) {
-      stopRecording()
-    } else {
-      startRecording()
-    }
+  if (isProcessing) {
+    return (
+      <span
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '4px',
+          padding: sm ? '2px 8px' : '4px 12px',
+          fontSize: sm ? '0.72rem' : '0.82rem',
+          color: '#6c757d',
+          flexShrink: 0,
+        }}
+      >
+        <span
+          className="spinner-border"
+          role="status"
+          style={{ width: '0.9em', height: '0.9em', borderWidth: '0.15em' }}
+        />
+        処理中
+      </span>
+    )
   }
 
   return (
-    <>
-      <style>{pulseKeyframes}</style>
-      <button
-        type="button"
-        title={isRecording ? '録音停止' : '音声入力'}
-        onClick={handleClick}
-        disabled={disabled || isProcessing}
-        style={{
-          width: btnSize,
-          height: btnSize,
-          borderRadius: '50%',
-          border: 'none',
-          cursor: disabled || isProcessing ? 'not-allowed' : 'pointer',
-          backgroundColor: isRecording ? '#dc3545' : '#6c757d',
-          color: '#fff',
-          display: 'inline-flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize,
-          padding: 0,
-          flexShrink: 0,
-          animation: isRecording ? 'voicePulse 1.2s ease-in-out infinite' : 'none',
-          opacity: disabled || isProcessing ? 0.6 : 1,
-          transition: 'background-color 0.2s',
-        }}
-        aria-label={isRecording ? '録音停止' : '音声入力'}
-        aria-pressed={isRecording}
-      >
-        {isProcessing ? (
-          <span
-            className="spinner-border"
-            role="status"
-            style={{ width: '1em', height: '1em', borderWidth: '0.15em' }}
-          />
-        ) : (
-          <span role="img" aria-hidden="true">🎤</span>
-        )}
-      </button>
-    </>
+    <button
+      type="button"
+      onClick={startRecording}
+      disabled={disabled}
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '4px',
+        padding: sm ? '2px 8px' : '4px 12px',
+        borderRadius: '999px',
+        border: '2px solid #6c757d',
+        backgroundColor: 'transparent',
+        color: '#6c757d',
+        fontSize: sm ? '0.72rem' : '0.82rem',
+        fontWeight: 600,
+        cursor: 'pointer',
+        flexShrink: 0,
+        whiteSpace: 'nowrap',
+        transition: 'background-color 0.2s, color 0.2s',
+      }}
+      aria-label="音声入力"
+      aria-pressed={false}
+    >
+      <span style={{ fontSize: sm ? '0.8rem' : '0.95rem' }}>🎤</span>
+      音声入力
+    </button>
   )
 }

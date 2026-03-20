@@ -56,6 +56,8 @@ export function useVoiceInput(): UseVoiceInputReturn {
   const [error, setError] = useState<string | null>(null)
 
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null)
+  // continuous モードで蓄積されるテキストを ref で保持（stale closure を避けるため）
+  const accumulatedRef = useRef('')
 
   useEffect(() => {
     return () => {
@@ -78,16 +80,20 @@ export function useVoiceInput(): UseVoiceInputReturn {
 
     const recognition = new SpeechRecognitionCtor()
     recognition.lang = 'ja-JP'
-    recognition.continuous = false
+    recognition.continuous = true   // ポーズで自動停止しない
     recognition.interimResults = false
 
+    accumulatedRef.current = ''
+
     recognition.onresult = (ev: SpeechRecognitionEvent) => {
-      const result = ev.results[ev.results.length - 1]
-      if (result) {
-        const text = result[0].transcript
-        setTranscript(text)
+      // 確定済み結果をすべて結合（continuous モードで複数フレーズを蓄積）
+      let text = ''
+      for (let i = 0; i < ev.results.length; i++) {
+        if (ev.results[i].isFinal) {
+          text += ev.results[i][0].transcript
+        }
       }
-      setState('idle')
+      accumulatedRef.current = text
     }
 
     recognition.onerror = (ev: SpeechRecognitionErrorEvent) => {
@@ -96,7 +102,13 @@ export function useVoiceInput(): UseVoiceInputReturn {
     }
 
     recognition.onend = () => {
-      setState((prev) => (prev === 'recording' ? 'processing' : prev))
+      // stop() 呼び出し後にのみ transcript を確定させる
+      const finalText = accumulatedRef.current
+      accumulatedRef.current = ''
+      if (finalText) {
+        setTranscript(finalText)
+      }
+      setState('idle')
     }
 
     recognitionRef.current = recognition
@@ -114,7 +126,6 @@ export function useVoiceInput(): UseVoiceInputReturn {
 
   const stopRecording = useCallback(() => {
     if (recognitionRef.current) {
-      setState('processing')
       recognitionRef.current.stop()
     }
   }, [])
