@@ -298,16 +298,27 @@ resource "aws_iam_role_policy" "github_actions" {
       {
         Effect = "Allow"
         Action = [
+          # オブジェクト操作
           "s3:PutObject", "s3:GetObject", "s3:DeleteObject", "s3:ListBucket",
-          "s3:PutBucketWebsite", "s3:GetBucketWebsite",
-          "s3:PutBucketPolicy", "s3:GetBucketPolicy",
-          "s3:PutBucketPublicAccessBlock", "s3:GetBucketPublicAccessBlock",
-          "s3:GetBucketLocation", "s3:GetBucketTagging", "s3:PutBucketTagging",
+          # バケット作成・削除
+          "s3:CreateBucket", "s3:DeleteBucket",
+          # Website ホスティング
+          "s3:GetBucketWebsite", "s3:PutBucketWebsite", "s3:DeleteBucketWebsite",
+          # バケットポリシー
+          "s3:GetBucketPolicy", "s3:PutBucketPolicy", "s3:DeleteBucketPolicy",
+          # パブリックアクセスブロック
+          "s3:GetBucketPublicAccessBlock", "s3:PutBucketPublicAccessBlock",
+          # Terraform が state refresh で必要な Read 系
+          "s3:GetBucketLocation", "s3:GetBucketVersioning", "s3:PutBucketVersioning",
+          "s3:GetBucketTagging", "s3:PutBucketTagging",
           "s3:GetBucketRequestPayment", "s3:GetBucketObjectLockConfiguration",
-          "s3:GetEncryptionConfiguration", "s3:GetLifecycleConfiguration",
-          "s3:GetReplicationConfiguration", "s3:GetBucketCORS",
-          "s3:GetBucketLogging", "s3:GetAccelerateConfiguration",
-          "s3:GetBucketNotification",
+          "s3:GetEncryptionConfiguration", "s3:PutEncryptionConfiguration",
+          "s3:GetLifecycleConfiguration", "s3:PutLifecycleConfiguration",
+          "s3:GetReplicationConfiguration",
+          "s3:GetBucketCORS", "s3:PutBucketCORS",
+          "s3:GetBucketLogging", "s3:PutBucketLogging",
+          "s3:GetAccelerateConfiguration",
+          "s3:GetBucketNotification", "s3:PutBucketNotification",
         ]
         Resource = [
           aws_s3_bucket.dbt_docs.arn,
