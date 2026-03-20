@@ -36,3 +36,6 @@ seeds:
       +column_types:
         latitude: double
         longitude: double
+    flags_master:
+      +column_types:
+        flag_bit: bigint

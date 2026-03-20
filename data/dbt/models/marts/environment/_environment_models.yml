@@ -2,14 +2,21 @@ version: 2
 
 models:
   - name: fct_environment_hourly
-    description: "時間粒度の環境ファクトテーブル（気象・花粉・大気質・気圧フィーチャー・天気コード日本語）"
+    description: |
+      時間粒度の環境ファクトテーブル（気象・花粉・大気質・気圧フィーチャー・天気コード日本語）。
+      int_env_pressure_features と stg_env__hourly を統合し、weather_codes seed で天気コードを日本語化。
+    meta:
+      owner: riku_nishikawa
+      sensitivity: public
+      domain: environment
+      sla: 25h
     columns:
       - name: observation_datetime_jst
         description: "観測日時（JST）"
         tests:
           - not_null
       - name: location_id
-        description: "観測地点ID"
+        description: "観測地点ID（seeds/location_master.csv 参照）"
         tests:
           - not_null
       - name: pressure_hpa
@@ -19,13 +26,55 @@ models:
           - dbt_utils.accepted_range:
               min_value: 900
               max_value: 1100
+      - name: temperature_c
+        description: "気温（摂氏）"
+      - name: humidity_pct
+        description: "相対湿度（%）"
+      - name: weather_code
+        description: "WMO 天気コード"
+      - name: weather_description_ja
+        description: "天気コードの日本語説明（seeds/weather_codes.csv 参照）"
+      - name: pressure_diff_3h
+        description: "3時間気圧差分（hPa）"
+      - name: pressure_ma24h
+        description: "24時間移動平均気圧（hPa）"
+      - name: birch_pollen
+        description: "白樺花粉（grains/m³）"
+      - name: grass_pollen
+        description: "イネ科花粉（grains/m³）"
+      - name: weed_pollen
+        description: "雑草花粉（grains/m³）"
+      - name: aqi
+        description: "大気質指数"
+      - name: pm25
+        description: "PM2.5（μg/m³）"
 
   - name: fct_environment_daily
-    description: "日次集約の環境ファクトテーブル"
+    description: "日次集約の環境ファクトテーブル（日次分析・トレンド可視化用）"
+    meta:
+      owner: riku_nishikawa
+      sensitivity: public
+      domain: environment
+      sla: 25h
     columns:
       - name: observation_date
+        description: "観測日付（YYYY-MM-DD）"
         tests: [not_null]
       - name: location_id
+        description: "観測地点ID"
         tests: [not_null]
       - name: avg_pressure_hpa
+        description: "日次平均気圧（hPa）"
         tests: [not_null]
+      - name: min_pressure_hpa
+        description: "日次最低気圧（hPa）"
+      - name: max_pressure_hpa
+        description: "日次最高気圧（hPa）"
+      - name: avg_temperature_c
+        description: "日次平均気温（摂氏）"
+      - name: max_birch_pollen
+        description: "日次最大白樺花粉（grains/m³）"
+      - name: max_grass_pollen
+        description: "日次最大イネ科花粉（grains/m³）"
+      - name: avg_aqi
+        description: "日次平均大気質指数"

@@ -3,26 +3,97 @@ version: 2
 models:
   - name: int_env_daily_agg
     description: "環境データの日次集約（気温・気圧・湿度・花粉・大気質）"
+    meta:
+      owner: riku_nishikawa
+      sensitivity: public
+      domain: environment
+      depends_on_sla: 25h  # raw_env freshness
     columns:
       - name: observation_date
+        description: "観測日付（YYYY-MM-DD）"
         tests: [not_null]
       - name: location_id
+        description: "観測地点ID"
         tests: [not_null]
       - name: avg_pressure_hpa
+        description: "日次平均気圧（hPa）"
         tests: [not_null]
+      - name: min_pressure_hpa
+        description: "日次最低気圧（hPa）"
+      - name: max_pressure_hpa
+        description: "日次最高気圧（hPa）"
+      - name: avg_temperature_c
+        description: "日次平均気温（摂氏）"
+      - name: avg_humidity_pct
+        description: "日次平均湿度（%）"
+      - name: total_precipitation_mm
+        description: "日次降水量合計（mm）"
+      - name: max_birch_pollen
+        description: "日次最大白樺花粉（grains/m³）"
+      - name: max_grass_pollen
+        description: "日次最大イネ科花粉（grains/m³）"
+      - name: max_weed_pollen
+        description: "日次最大雑草花粉（grains/m³）"
+      - name: avg_aqi
+        description: "日次平均大気質指数"
+      - name: avg_pm25
+        description: "日次平均PM2.5（μg/m³）"
 
   - name: int_env_pressure_features
-    description: "気圧フィーチャー（3時間差分・24時間移動平均・前日差分）"
+    description: "気圧フィーチャー（3時間差分・24時間移動平均・前日差分）。頭痛との相関分析用"
+    meta:
+      owner: riku_nishikawa
+      sensitivity: public
+      domain: environment
+      depends_on_sla: 25h
     columns:
       - name: observation_datetime_jst
+        description: "観測日時（JST）"
         tests: [not_null]
       - name: location_id
+        description: "観測地点ID"
         tests: [not_null]
+      - name: pressure_hpa
+        description: "気圧（hPa）"
+      - name: pressure_diff_3h
+        description: "3時間前との気圧差分（hPa）。急激な変化が頭痛と相関"
+      - name: pressure_ma24h
+        description: "24時間移動平均気圧（hPa）"
+      - name: pressure_diff_day
+        description: "前日同時刻との気圧差分（hPa）"
 
   - name: int_health__daily_scores
-    description: "ユーザー×日次の体調スコア集約 + FLAGSデコード"
+    description: "ユーザー×日次の体調スコア集約 + FLAGSデコード。flags_master.csv が FLAGS の正規定義"
+    meta:
+      owner: riku_nishikawa
+      sensitivity: personal
+      domain: health
+      pii_fields: [user_id]
+      depends_on_sla: 1h
     columns:
       - name: user_id
+        description: "ユーザーID（Cognito sub クレーム、仮名識別子）"
         tests: [not_null]
       - name: recorded_date
+        description: "記録日付（JST）"
         tests: [not_null]
+      - name: avg_fatigue
+        description: "日次平均疲労感スコア（0-100）"
+      - name: avg_mood
+        description: "日次平均気分スコア（0-100）"
+      - name: avg_motivation
+        description: "日次平均やる気スコア（0-100）"
+      - name: had_headache_today
+        description: "その日に頭痛フラグが立った記録があるか（FLAGS bit=2）"
+      - name: had_poor_sleep_today
+        description: "その日に睡眠不足フラグが立った記録があるか（FLAGS bit=1）"
+      - name: had_stomachache_today
+        description: "その日に腹痛フラグが立った記録があるか（FLAGS bit=4）"
+      - name: did_exercise_today
+        description: "その日に運動フラグが立った記録があるか（FLAGS bit=8）"
+      - name: had_alcohol_today
+        description: "その日に飲酒フラグが立った記録があるか（FLAGS bit=16）"
+      - name: had_caffeine_today
+        description: "その日にカフェイン過多フラグが立った記録があるか（FLAGS bit=32）"
+      - name: record_count
+        description: "その日の記録件数"
