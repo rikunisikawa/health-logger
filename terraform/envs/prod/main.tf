@@ -279,7 +279,7 @@ resource "aws_iam_role_policy" "github_actions" {
       {
         Effect   = "Allow"
         Action   = ["s3:PutObject", "s3:GetObject", "s3:GetBucketLocation"]
-        Resource = ["arn:aws:s3:::health-logger-prod/athena-migrations/*", "arn:aws:s3:::health-logger-prod"]
+        Resource = ["arn:aws:s3:::health-logger-prod-health-export/athena-migrations/*", "arn:aws:s3:::health-logger-prod-health-export"]
       },
       # Migration tracking DynamoDB table
       {

@@ -205,7 +205,7 @@ Glue テーブルにカラムを追加した後は、Athena で DDL を手動実
 aws athena start-query-execution \
   --query-string "ALTER TABLE health_records ADD COLUMNS (new_column_name string)" \
   --query-execution-context Database=health_logger_prod_health_logs \
-  --result-configuration OutputLocation=s3://health-logger-prod/athena-results/ \
+  --result-configuration OutputLocation=s3://health-logger-prod-health-export/athena-results/ \
   --region ap-northeast-1
 ```
 
