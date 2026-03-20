@@ -6,6 +6,18 @@ on:
     paths:
       - "terraform/**"
       - "migrations/athena/**"
+  push:
+    branches: [main]
+    paths:
+      - "terraform/**"
+      - "migrations/athena/**"
+
+# 同一ブランチでの並行実行を防ぎ state lock 競合を回避する
+# cancel-in-progress: PR は新しい push で古いランをキャンセル
+# main への push は直列化（キャンセルしない）
+concurrency:
+  group: terraform-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   TF_VERSION: "1.7.5"
