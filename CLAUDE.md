@@ -88,3 +88,66 @@ $BASE plan -var='lambda_s3_keys={"create_record":"placeholder","get_latest":"pla
 - `terraform.tfvars` にシークレット値（PAT など）を直接コミットしない
 - `lambda_s3_keys` のプレースホルダ値でデプロイしない（Lambda が起動しなくなる）
 - `cors_allow_origins = ["*"]` のまま本番運用しない（Amplify URL に制限すること）
+
+## 開発環境レビューの定期実行
+
+Claude Code の設定（settings.json / hooks / MCP / agents）を定期的にレビューし、改善案を自動生成する仕組み。  
+**Claude.ai Pro サブスクリプションの範囲内で動作**（API 別途課金不要）。
+
+### 実行方法
+
+#### A. インタラクティブ実行（Claude Code セッション内）
+
+```
+/dev-env-review
+```
+
+#### B. 非インタラクティブ実行（CLI から直接）
+
+```bash
+bash scripts/run-dev-env-review.sh              # デフォルト（sonnet）
+bash scripts/run-dev-env-review.sh --model haiku  # 高速・低コスト版
+bash scripts/run-dev-env-review.sh --dry-run      # 動作確認のみ
+```
+
+### 定期実行セットアップ（Windows / WSL）
+
+詳細は `scripts/setup-schedule.md` を参照。
+
+**WSL の cron を使う場合（推奨）:**
+
+```bash
+# cron を起動
+sudo service cron start
+
+# crontab を編集（毎月1日 AM 9:00）
+crontab -e
+# 以下を追記:
+# 0 9 1 * * bash ~/dev/health-logger/health-logger/scripts/run-dev-env-review.sh --model haiku >> /tmp/dev-env-review.log 2>&1
+```
+
+**Windows タスクスケジューラを使う場合:**
+
+```powershell
+# PowerShell で登録（scripts/setup-schedule.md に詳細手順あり）
+$action = New-ScheduledTaskAction -Execute "wsl.exe" `
+  -Argument "-e bash -c `"cd ~/dev/health-logger/health-logger && bash scripts/run-dev-env-review.sh --model haiku`""
+$trigger = New-ScheduledTaskTrigger -Weekly -WeeksInterval 4 -DaysOfWeek Monday -At "09:00"
+Register-ScheduledTask -TaskName "health-logger: Claude Code Dev Env Review" -Action $action -Trigger $trigger
+```
+
+### 成果物
+
+| ファイル | 内容 |
+|---------|------|
+| `docs/claude-code-dev-env-review.md` | 改善レポート（自動上書き） |
+
+### 関連ファイル
+
+| ファイル | 役割 |
+|---------|------|
+| `.claude/skills/dev-env-review/SKILL.md` | レビュー知識ベース・チェックリスト |
+| `.claude/commands/dev-env-review.md` | `/dev-env-review` スラッシュコマンド定義 |
+| `.claude/prompts/dev-env-review.md` | 非インタラクティブ実行用プロンプト |
+| `scripts/run-dev-env-review.sh` | 実行スクリプト（cron/launchd から呼び出す） |
+| `scripts/setup-schedule.md` | Windows/WSL 定期実行セットアップ手順 |

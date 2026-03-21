@@ -250,6 +250,64 @@ Claude Code は Git コマンドを直接実行できます。
 
 ---
 
+## 並列実行と worktree
+
+複数のターミナルで Claude Code を同時に動かすと、**ブランチの切り替えやファイルの変更が互いに干渉**することがあります。
+`--worktree` オプションを使うと、セッションごとに独立した作業ディレクトリを作成できます。
+
+### 問題：並列実行時の干渉
+
+```
+ターミナル A                        ターミナル B
+feat/120 ブランチで作業中         →  git switch fix/126 を実行
+         ↑
+         A の未コミット変更が消える可能性がある
+```
+
+### 解決策：`--worktree` オプション
+
+`-w` / `--worktree` を付けて起動すると、Claude Code が自動で git worktree を作成し、
+**メインの作業ツリーとは独立したディレクトリ**でセッションを開始します。
+
+```bash
+# 名前を自動生成して worktree を作成
+claude -w
+
+# 名前を指定して worktree を作成
+claude -w fix-login-bug
+```
+
+起動すると以下が自動で行われます：
+
+1. `git worktree add` で新しい作業ディレクトリを作成
+2. そのディレクトリで Claude Code セッションを開始
+3. セッション終了後に worktree を自動削除
+
+### worktree での並列実行イメージ
+
+```
+~/dev/health-logger/health-logger/       ← メイン（ターミナル A）
+  └── .git/
+
+/tmp/claude-worktrees/fix-login-bug/    ← worktree（ターミナル B）
+  └── .git → メインの .git を参照
+```
+
+ブランチとファイルが完全に分離されるため、互いの操作が干渉しません。
+
+### 注意事項
+
+- worktree 内のブランチはメインと**同じリポジトリの別ブランチ**である必要があります
+  （同じブランチを2つの worktree で同時に開くことはできません）
+- `--tmux` と組み合わせると、worktree ごとに tmux ペインを自動作成できます（WSL では要 tmux インストール）
+
+```bash
+# tmux ペインを自動作成（tmux が必要）
+claude -w --tmux
+```
+
+---
+
 ## よく使う指示パターン
 
 ### コードを理解する
