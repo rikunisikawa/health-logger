@@ -56,6 +56,7 @@ health-logger プロジェクトにおける全エージェントのコーディ
 | Issue/PR/ブランチ/マージ | `project_management` |
 | アーキテクチャ設計・技術選定 | `architecture` |
 | データ分析・Athena クエリ調査 | `analysis` |
+| 機能優先度・ロードマップ・KPI・ユーザーストーリー | `product_manager` |
 | ドキュメント作成・更新 | `documentation` |
 
 ## Workflows
