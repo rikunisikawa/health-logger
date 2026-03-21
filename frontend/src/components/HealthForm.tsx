@@ -10,6 +10,7 @@ import { useOfflineQueue } from '../hooks/useOfflineQueue'
 import type { CustomFieldValue, HealthRecordInput, ItemConfig, LatestRecord } from '../types'
 import VoiceInputButton from './VoiceInputButton'
 import VoiceConfirmModal from './VoiceConfirmModal'
+import LastRecordIndicator from './LastRecordIndicator'
 import { parseVoiceInput } from '../utils/voiceParser'
 import type { ParsedVoiceItem, VoiceParseResult } from '../utils/voiceParser'
 
@@ -58,11 +59,12 @@ interface Props {
   eventItems:   ItemConfig[]
   statusItems:  ItemConfig[]
   latestDailyRecord?: LatestRecord
+  records?: LatestRecord[]
   onToast: (message: string, variant: ToastVariant) => void
   onRecordsSubmitted?: () => void
 }
 
-export default function HealthForm({ formItems, eventItems, statusItems, latestDailyRecord, onToast, onRecordsSubmitted }: Props) {
+export default function HealthForm({ formItems, eventItems, statusItems, latestDailyRecord, records, onToast, onRecordsSubmitted }: Props) {
   const { token } = useAuth()
   const { enqueue, flush } = useOfflineQueue(API_ENDPOINT)
 
@@ -333,6 +335,9 @@ export default function HealthForm({ formItems, eventItems, statusItems, latestD
 
   return (
     <div className="container py-3" style={{ maxWidth: '540px' }}>
+      {/* ── 最終記録経過表示インジケーター ──────── */}
+      <LastRecordIndicator latestDailyRecord={latestDailyRecord} records={records} />
+
       {/* ── 記録日時ピッカー ──────────────────────── */}
       <div
         className="mb-3 p-3 rounded"

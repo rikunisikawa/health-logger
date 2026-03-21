@@ -1,0 +1,43 @@
+constraints:
+- 既存の HealthForm の主要機能（スライダー・フラグ）を変更しない
+- 表示は控えめに。記録の邪魔をしない
+- モバイルファースト
+created_at: '2026-03-21'
+definition_of_done:
+- '[ ] インジケーターのレイアウトと表示パターンが定義されている'
+- '[ ] 3つの表示パターン（当日・昨日・X日前）の文言が決まっている'
+- '[ ] 使用するデータ（props）が明示されている'
+dependencies: []
+goal: HealthForm 上部に「最終記録からの経過」を示すインジケーターの画面設計書を作成する
+inputs:
+- path: frontend/src/components/HealthForm.tsx
+  type: file
+- path: frontend/src/types.ts
+  type: file
+- content: 'HealthForm の上部に、ユーザーが最後に記録してから何日経ったかを示す小さなインジケーターを追加したい。
+
+    - 今日すでに記録している場合: 「今日 N回目の記録」
+
+    - 昨日記録した場合: 「昨日ぶりの記録 👋」
+
+    - 2日以上経過: 「X日ぶりの記録です」（やや強調）
+
+    - 記録が1件もない場合: 表示しない
+
+    latestDailyRecord に recorded_at (ISO 8601) が含まれており、これを使用できる。
+
+    records (LatestRecord[]) も App.tsx から渡せる可能性がある。
+
+    '
+  type: description
+notes: ''
+outputs:
+- path: docs/design/last-record-indicator.md
+  type: file
+priority: high
+retry_count: 0
+role: designer
+status: done
+task_id: task-20260321-001
+title: 最終記録経過表示コンポーネントの画面設計
+updated_at: '2026-03-21'
