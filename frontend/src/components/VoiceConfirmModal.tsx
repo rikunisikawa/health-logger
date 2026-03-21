@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import type { ParsedVoiceItem, VoiceParseResult } from '../utils/voiceParser'
 
 interface Props {
@@ -27,7 +28,10 @@ export default function VoiceConfirmModal({ result, onConfirm, onCancel, submitt
     setItems((prev) => prev.filter((item) => item.id !== id))
   }
 
-  return (
+  // createPortal で document.body 直下に描画することで、
+  // App.tsx の transform: translateX() による position: fixed の
+  // 座標系ずれを防ぐ（CSS "transformed ancestor" ルールの回避）
+  return createPortal(
     <div
       className="modal d-block"
       tabIndex={-1}
@@ -151,6 +155,7 @@ export default function VoiceConfirmModal({ result, onConfirm, onCancel, submitt
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
