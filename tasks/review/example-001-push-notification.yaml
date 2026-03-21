@@ -1,0 +1,26 @@
+constraints:
+- 既存の HealthForm コンポーネントを大きく変えない
+- 通知設定は 1 ページ以内に収める
+created_at: '2026-03-21'
+definition_of_done:
+- '[ ] 通知設定画面のレイアウトが定義されている'
+- '[ ] 通知をタップした後の UX フローが記述されている'
+- '[ ] 文言・ラベルが決まっている'
+dependencies: []
+goal: 毎日の記録を促すプッシュ通知機能の UI/UX を設計する
+inputs:
+- path: frontend/src/components/HealthForm.tsx
+  type: file
+- content: 毎日決まった時間にプッシュ通知を送り、タップするとアプリが開いて即座に記録できるようにしたい
+  type: description
+notes: サンプルタスク。dry-run 動作確認用
+outputs:
+- path: docs/design/push-notification.md
+  type: file
+priority: medium
+retry_count: 0
+role: designer
+status: review
+task_id: example-001
+title: 記録リマインダー機能の画面設計
+updated_at: '2026-03-21'

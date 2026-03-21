@@ -29,7 +29,9 @@
 | `FRONTEND_DEVELOPMENT.md` | React/TS 開発・Amplify Auth・PWA 構成 | 開発者 |
 | `DBT_OPERATIONS.md` | dbt 実行方法・モデル構成・スキーマ変更手順 | 開発者・データエンジニア |
 | `TROUBLESHOOTING.md` | よくあるエラーと対処集 | 開発者・運用担当者 |
-| `claude-code-usage.md` | Claude Code の使い方・Agent Teams の起動方法 | 開発者（AI コーディング） |
+| `claude-code-usage.md` | Claude Code の使い方・Agent Teams・worktree・並列実行 | 開発者（AI コーディング） |
+| `claude-code-setup.md` | Claude Code の設定構成・agents/skills/hooks の設計方針 | 開発者（AI コーディング） |
+| `dev-cycle.md` | 自動開発サイクルの構成・実行方法・cron 設定・タスク管理 | 開発者（AI コーディング） |
 | `github-tokens.md` | GitHub トークンの管理方法 | 開発者 |
 | `infrastructure.drawio` | インフラ構成図（draw.io 形式） | 開発者・アーキテクト |
 

@@ -1,0 +1,36 @@
+# サンプルタスク: プッシュ通知機能の設計
+# このファイルは動作確認用のサンプルです
+
+task_id: example-001
+title: "記録リマインダー機能の画面設計"
+goal: "毎日の記録を促すプッシュ通知機能の UI/UX を設計する"
+
+role: designer
+priority: medium
+status: ready
+
+dependencies: []
+
+inputs:
+  - type: file
+    path: "frontend/src/components/HealthForm.tsx"
+  - type: description
+    content: "毎日決まった時間にプッシュ通知を送り、タップするとアプリが開いて即座に記録できるようにしたい"
+
+constraints:
+  - "既存の HealthForm コンポーネントを大きく変えない"
+  - "通知設定は 1 ページ以内に収める"
+
+definition_of_done:
+  - "[ ] 通知設定画面のレイアウトが定義されている"
+  - "[ ] 通知をタップした後の UX フローが記述されている"
+  - "[ ] 文言・ラベルが決まっている"
+
+outputs:
+  - type: file
+    path: "docs/design/push-notification.md"
+
+created_at: "2026-03-21"
+updated_at: "2026-03-21"
+notes: "サンプルタスク。dry-run 動作確認用"
+retry_count: 0
