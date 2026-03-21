@@ -113,7 +113,6 @@ def test_handler_success_default_event(mock_get, mock_s3):
             "european_aqi": [25.0],
             "birch_pollen": [1.0],
             "grass_pollen": [0.5],
-            "weed_pollen": [0.2],
         }
     }
     mock_response.json.side_effect = [archive_payload, aq_payload]
@@ -157,7 +156,6 @@ def test_handler_backfill(mock_get, mock_s3):
             "european_aqi": [20.0, 25.0],
             "birch_pollen": [0.5, 1.0],
             "grass_pollen": [0.3, 0.5],
-            "weed_pollen": [0.1, 0.2],
         }
     }
     mock_response.json.side_effect = [archive_payload, aq_payload]

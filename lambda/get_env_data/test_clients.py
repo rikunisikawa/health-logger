@@ -42,7 +42,6 @@ def _make_aq_response():
             "european_aqi": [30.0, 32.0],
             "birch_pollen": [2.0, 2.5],
             "grass_pollen": [1.0, 1.2],
-            "weed_pollen": [0.5, 0.6],
         }
     }
 
@@ -98,7 +97,6 @@ def test_fetch_hourly_merges_aq_data(mock_get):
     assert r.pm25 == 13.0
     assert r.aqi == 32.0
     assert r.grass_pollen == 1.2
-    assert r.weed_pollen == 0.6
 
 
 @patch("clients.open_meteo.requests.get")
@@ -112,7 +110,6 @@ def test_fetch_hourly_missing_aq_time(mock_get):
             "european_aqi": [30.0],
             "birch_pollen": [2.0],
             "grass_pollen": [1.0],
-            "weed_pollen": [0.5],
         }
     }
     mock_response = MagicMock()
