@@ -71,12 +71,11 @@ if [[ "$DRY_RUN" == "true" ]]; then
   exit 0
 fi
 
-claude \
+cat "$PROMPT_FILE" | claude \
   --print \
   --model "$MODEL" \
   --permission-mode bypassPermissions \
-  --allowedTools "Read,Write,Glob,Grep,Bash(git add *),Bash(git commit *),Bash(git status),Bash(git diff *),Bash(git log *),Bash(ls *),Bash(find *),Bash(date *),Bash(echo *)" \
-  "$(cat "$PROMPT_FILE")"
+  --allowedTools "Read,Write,Glob,Grep,Bash(git add *),Bash(git commit *),Bash(git status),Bash(git diff *),Bash(git log *),Bash(ls *),Bash(find *),Bash(date *),Bash(echo *)"
 
 # ── 完了確認 ─────────────────────────────────────────────────
 if [[ -f "$OUTPUT_FILE" ]]; then
