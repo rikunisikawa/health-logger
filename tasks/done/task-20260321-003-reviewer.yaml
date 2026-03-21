@@ -1,0 +1,28 @@
+constraints:
+- コードの修正は行わない（判定のみ）
+- definition_of_done に記載のない項目で reject しない
+created_at: '2026-03-21'
+definition_of_done:
+- '[ ] task-20260321-002 の definition_of_done 全項目に対して判定がある'
+- '[ ] approve / needs_revision の理由が明記されている'
+dependencies:
+- task-20260321-002
+goal: 実装された経過表示インジケーターが設計・受け入れ条件を満たしているか確認する
+inputs:
+- path: docs/design/last-record-indicator.md
+  type: file
+- path: frontend/src/components/HealthForm.tsx
+  type: file
+- path: frontend/src/App.tsx
+  type: file
+notes: ''
+outputs:
+- path: docs/qa/task-20260321-002-review.md
+  type: file
+priority: low
+retry_count: 0
+role: reviewer
+status: done
+task_id: task-20260321-003
+title: 最終記録経過表示のレビュー
+updated_at: '2026-03-21'

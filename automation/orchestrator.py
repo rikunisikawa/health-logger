@@ -209,12 +209,13 @@ def run_cycle(
     dry_run: bool = False,
     max_cycles: int = 10,
     model: str = DEFAULT_MODEL,
+    auto_approve: bool = False,
 ) -> dict:
     cycle_id = datetime.now().strftime("%Y%m%d-%H%M%S")
     logger = setup_logging(cycle_id)
 
     logger.info(f"=== 開発サイクル開始: {cycle_id} ===")
-    logger.info(f"dry_run={dry_run}, max_cycles={max_cycles}, model={model}")
+    logger.info(f"dry_run={dry_run}, max_cycles={max_cycles}, model={model}, auto_approve={auto_approve}")
 
     # inbox → ready への昇格
     inbox_tasks = load_tasks("inbox")
@@ -256,7 +257,7 @@ def run_cycle(
             results["executed"].append(task_id)
 
             # reviewer タスクは自動で done に
-            if role == "reviewer" or dry_run:
+            if auto_approve or role == "reviewer" or dry_run:
                 save_task(task, "done")
         else:
             retry = task.get("retry_count", 0)
@@ -301,6 +302,7 @@ if __name__ == "__main__":
     parser.add_argument("--dry-run", action="store_true", help="Claude を実際に呼ばずに動作確認")
     parser.add_argument("--max-cycles", type=int, default=10, help="最大サイクル数（デフォルト: 10）")
     parser.add_argument("--model", default=DEFAULT_MODEL, help="Claude モデル (haiku/sonnet/opus)")
+    parser.add_argument("--auto-approve", action="store_true", help="review → done を自動遷移（デモ用）")
     args = parser.parse_args()
 
     try:
@@ -313,5 +315,6 @@ if __name__ == "__main__":
         dry_run=args.dry_run,
         max_cycles=args.max_cycles,
         model=args.model,
+        auto_approve=args.auto_approve,
     )
     sys.exit(0 if not results.get("failed") else 1)
