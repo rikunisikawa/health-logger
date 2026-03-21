@@ -110,24 +110,30 @@ bash scripts/run-dev-env-review.sh --model haiku  # 高速・低コスト版
 bash scripts/run-dev-env-review.sh --dry-run      # 動作確認のみ
 ```
 
-### 定期実行セットアップ（macOS launchd）
+### 定期実行セットアップ（Windows / WSL）
+
+詳細は `scripts/setup-schedule.md` を参照。
+
+**WSL の cron を使う場合（推奨）:**
 
 ```bash
-# 1. plist を編集して実際のパスに置換
-#    <REPO_PATH> → リポジトリの絶対パス
-#    <YOUR_HOME_DIR> → ホームディレクトリ (例: /Users/username)
-vim scripts/com.health-logger.dev-env-review.plist
+# cron を起動
+sudo service cron start
 
-# 2. ログディレクトリ作成
-mkdir -p ~/.claude/logs
+# crontab を編集（毎月1日 AM 9:00）
+crontab -e
+# 以下を追記:
+# 0 9 1 * * bash ~/dev/health-logger/health-logger/scripts/run-dev-env-review.sh --model haiku >> /tmp/dev-env-review.log 2>&1
+```
 
-# 3. LaunchAgents にコピーして登録
-cp scripts/com.health-logger.dev-env-review.plist \
-   ~/Library/LaunchAgents/com.health-logger.dev-env-review.plist
-launchctl load ~/Library/LaunchAgents/com.health-logger.dev-env-review.plist
+**Windows タスクスケジューラを使う場合:**
 
-# 4. 手動テスト実行
-launchctl start com.health-logger.dev-env-review
+```powershell
+# PowerShell で登録（scripts/setup-schedule.md に詳細手順あり）
+$action = New-ScheduledTaskAction -Execute "wsl.exe" `
+  -Argument "-e bash -c `"cd ~/dev/health-logger/health-logger && bash scripts/run-dev-env-review.sh --model haiku`""
+$trigger = New-ScheduledTaskTrigger -Weekly -WeeksInterval 4 -DaysOfWeek Monday -At "09:00"
+Register-ScheduledTask -TaskName "health-logger: Claude Code Dev Env Review" -Action $action -Trigger $trigger
 ```
 
 ### 成果物
@@ -144,4 +150,4 @@ launchctl start com.health-logger.dev-env-review
 | `.claude/commands/dev-env-review.md` | `/dev-env-review` スラッシュコマンド定義 |
 | `.claude/prompts/dev-env-review.md` | 非インタラクティブ実行用プロンプト |
 | `scripts/run-dev-env-review.sh` | 実行スクリプト（cron/launchd から呼び出す） |
-| `scripts/com.health-logger.dev-env-review.plist` | macOS launchd 設定テンプレート |
+| `scripts/setup-schedule.md` | Windows/WSL 定期実行セットアップ手順 |
