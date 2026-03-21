@@ -16,13 +16,14 @@ const pulseKeyframes = `
 `
 
 export default function VoiceInputButton({ onTranscript, disabled, size = 'md' }: Props) {
-  const { isSupported, state, transcript, startRecording, stopRecording } = useVoiceInput()
+  const { isSupported, state, transcript, startRecording, stopRecording, clearTranscript } = useVoiceInput()
 
   useEffect(() => {
     if (transcript) {
       onTranscript(transcript)
+      clearTranscript() // 消費後にクリアして再レンダリングループを防ぐ
     }
-  }, [transcript, onTranscript])
+  }, [transcript, onTranscript, clearTranscript])
 
   if (!isSupported) return null
 
