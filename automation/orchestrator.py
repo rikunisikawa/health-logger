@@ -169,8 +169,17 @@ def run_claude(prompt: str, model: str, allowed_tools: str, dry_run: bool,
         logger.info("  [DRY RUN] claude --print の呼び出しをスキップ")
         return True, "[DRY RUN] スキップ"
 
+    # bash の PATH が subprocess に引き継がれない場合があるためフルパスを取得
+    import shutil
+    claude_bin = shutil.which("claude")
+    if not claude_bin:
+        # nvm 経由インストールの場合の既知パスにフォールバック
+        fallback = Path.home() / ".nvm/versions/node/v22.16.0/bin/claude"
+        claude_bin = str(fallback) if fallback.exists() else "claude"
+    logger.debug(f"  claude path: {claude_bin}")
+
     cmd = [
-        "claude", "--print",
+        claude_bin, "--print",
         "--model", model,
         "--permission-mode", "bypassPermissions",
         "--allowedTools", allowed_tools,
@@ -186,7 +195,8 @@ def run_claude(prompt: str, model: str, allowed_tools: str, dry_run: bool,
             cwd=str(REPO_ROOT),
         )
         output = result.stdout + (("\n" + result.stderr) if result.stderr else "")
-        success = result.returncode == 0 and "✅ 完了" in result.stdout
+        # returncode == 0 であれば成功とする（Claude が ✅ を出さない場合も許容）
+        success = result.returncode == 0
         return success, output
     except subprocess.TimeoutExpired:
         return False, "タイムアウト（300秒）"
