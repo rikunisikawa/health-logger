@@ -88,3 +88,60 @@ $BASE plan -var='lambda_s3_keys={"create_record":"placeholder","get_latest":"pla
 - `terraform.tfvars` にシークレット値（PAT など）を直接コミットしない
 - `lambda_s3_keys` のプレースホルダ値でデプロイしない（Lambda が起動しなくなる）
 - `cors_allow_origins = ["*"]` のまま本番運用しない（Amplify URL に制限すること）
+
+## 開発環境レビューの定期実行
+
+Claude Code の設定（settings.json / hooks / MCP / agents）を定期的にレビューし、改善案を自動生成する仕組み。  
+**Claude.ai Pro サブスクリプションの範囲内で動作**（API 別途課金不要）。
+
+### 実行方法
+
+#### A. インタラクティブ実行（Claude Code セッション内）
+
+```
+/dev-env-review
+```
+
+#### B. 非インタラクティブ実行（CLI から直接）
+
+```bash
+bash scripts/run-dev-env-review.sh              # デフォルト（sonnet）
+bash scripts/run-dev-env-review.sh --model haiku  # 高速・低コスト版
+bash scripts/run-dev-env-review.sh --dry-run      # 動作確認のみ
+```
+
+### 定期実行セットアップ（macOS launchd）
+
+```bash
+# 1. plist を編集して実際のパスに置換
+#    <REPO_PATH> → リポジトリの絶対パス
+#    <YOUR_HOME_DIR> → ホームディレクトリ (例: /Users/username)
+vim scripts/com.health-logger.dev-env-review.plist
+
+# 2. ログディレクトリ作成
+mkdir -p ~/.claude/logs
+
+# 3. LaunchAgents にコピーして登録
+cp scripts/com.health-logger.dev-env-review.plist \
+   ~/Library/LaunchAgents/com.health-logger.dev-env-review.plist
+launchctl load ~/Library/LaunchAgents/com.health-logger.dev-env-review.plist
+
+# 4. 手動テスト実行
+launchctl start com.health-logger.dev-env-review
+```
+
+### 成果物
+
+| ファイル | 内容 |
+|---------|------|
+| `docs/claude-code-dev-env-review.md` | 改善レポート（自動上書き） |
+
+### 関連ファイル
+
+| ファイル | 役割 |
+|---------|------|
+| `.claude/skills/dev-env-review/SKILL.md` | レビュー知識ベース・チェックリスト |
+| `.claude/commands/dev-env-review.md` | `/dev-env-review` スラッシュコマンド定義 |
+| `.claude/prompts/dev-env-review.md` | 非インタラクティブ実行用プロンプト |
+| `scripts/run-dev-env-review.sh` | 実行スクリプト（cron/launchd から呼び出す） |
+| `scripts/com.health-logger.dev-env-review.plist` | macOS launchd 設定テンプレート |
