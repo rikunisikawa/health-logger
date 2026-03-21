@@ -19,6 +19,15 @@ CLAUDE.md の開発サイクルを厳守し、GitHub を通じてタスクの計
 - リスク管理・進捗追跡
 - 開発サイクルのチェックポイント確認
 
+## ⚠️ 絶対ルール
+
+**実装・コミット・コード変更は必ず Issue 作成後に行う。**
+**Issue なしで作業を開始してはいけない。**
+**既存ブランチに無関係な変更をコミットしてはいけない（1 PR = 1 修正）。**
+
+会話の中でバグや修正が発生した場合も、実装前に必ず Issue を作成し、
+専用ブランチを切り出してから作業を開始すること。
+
 ## 開発サイクル（必ずこの順序）
 
 ### 1. Issue 作成
@@ -26,7 +35,7 @@ CLAUDE.md の開発サイクルを厳守し、GitHub を通じてタスクの計
 ```bash
 gh issue create \
   --title "<変更内容の要約>" \
-  --body "$(cat <<'EOF'
+  --body "$(cat <<'BODY'
 ## 背景・目的
 - ...
 
@@ -35,7 +44,7 @@ gh issue create \
 
 ## 完了条件
 - ...
-EOF
+BODY
 )"
 ```
 
@@ -53,20 +62,32 @@ git switch -c <prefix>/<issue番号>-<簡潔な名前>
 | `chore/` | 設定変更・依存更新・リファクタ |
 | `terraform/` | インフラ変更のみ |
 
-例: `feature/42-add-sleep-quality-score`
+例: `fix/118-pm25-weed-pollen`、`feature/42-add-sleep-quality-score`
 
-### 3. テスト通過確認（コミット前）
+### 3. テスト先行（Red）
+
+失敗するテストを先に書く（TDD）。
+
+```bash
+pytest lambda/<対象>/ -v    # RED を確認してから実装へ
+```
+
+### 4. 実装（Green）
+
+テストが通る最小限の実装を行う。
+
+### 5. テスト通過確認
 
 ```bash
 pytest lambda/ -v                    # → 全件 PASSED
-cd frontend && npx tsc --noEmit      # → エラーなし
-cd frontend && npm run build          # → 成功
+cd frontend && npx tsc --noEmit      # → エラーなし（フロントエンド変更時）
+cd frontend && npm run build          # → 成功（フロントエンド変更時）
 ```
 
-### 4. コミット
+### 6. コミット
 
 ```bash
-git add <ファイルを個別に指定>         # git add -A は使わない
+git add <ファイルを個別に指定>         # git add -A / git add . は使わない
 git commit -m "<type>: <変更内容>"
 ```
 
@@ -79,13 +100,14 @@ git commit -m "<type>: <変更内容>"
 | `chore` | 設定・依存・ドキュメント |
 | `terraform` | インフラ変更 |
 
-### 5. PR 作成
+### 7. PR 作成
 
 ```bash
-git push origin HEAD
+git push -u origin HEAD
 gh pr create \
   --title "<変更内容>" \
-  --body "$(cat <<'EOF'
+  --base main \
+  --body "$(cat <<'BODY'
 ## 関連イシュー
 Closes #<issue番号>
 
@@ -99,16 +121,36 @@ Closes #<issue番号>
 
 ## レビュー観点
 - ...
-EOF
+BODY
 )"
 ```
 
-### 6. CI 確認・マージ
+### 8. CI 確認・マージ
 
 ```bash
-gh pr checks <PR番号>                # CI 通過確認
+gh pr checks <PR番号>                          # CI 通過確認
 gh pr merge <PR番号> --squash --delete-branch  # squash merge
 ```
+
+## バグ発見時の即時フロー
+
+会話中に突発的なバグを発見・修正した場合も、以下を必ず守る：
+
+```
+1. 現在の作業ブランチを確認（git status / git branch）
+2. 別件ならコード変更を行う前に gh issue create でバグ Issue を作成
+3. git switch main && git pull origin main
+4. git switch -c fix/<issue番号>-<バグ名>
+5. 修正・テスト確認
+6. git add <個別ファイル> && git commit
+7. git push && gh pr create --base main
+8. 元の作業ブランチに戻る（git switch <元のブランチ>）
+```
+
+**絶対にやってはいけないこと：**
+- 既存の feature ブランチに無関係な fix をコミットする
+- Issue を作らずに fix コミットをする
+- cherry-pick での後処理で済ませることを前提に、先に実装する
 
 ## スプリント計画
 
@@ -174,4 +216,4 @@ gh run view <run-id> --log-failed
 - 1 PR = 1 機能・1 修正（複数の変更を混在させない）
 - PR 説明文にシークレット値（VAPID 鍵・PAT 等）を絶対に書かない
 - terraform/** 変更を含む PR には `terraform plan` の出力を貼付する
-- Issue なしで作業を開始しない
+- **Issue なしで作業を開始しない（最重要）**

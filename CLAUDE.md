@@ -73,9 +73,20 @@ $BASE plan -var='lambda_s3_keys={"create_record":"placeholder","get_latest":"pla
 
 ---
 
-## 開発フロー
+## 開発フロー（厳守）
 
-**Issue 作成 → ブランチ作成 → テスト先行（Red）→ 実装（Green）→ 全テスト通過確認 → コミット → PR**
+**必ずこの順序で行うこと。Issue なしで実装を始めてはいけない。**
+
+```
+1. gh issue create          # 必ず最初に Issue を作る
+2. git switch -c fix/<issue番号>-<名前>  # Issue 番号をブランチ名に含める
+3. テスト先行（Red）         # 失敗するテストを先に書く
+4. 実装（Green）             # テストが通る最小実装
+5. pytest lambda/ -v        # 全テスト通過確認
+6. git add <個別ファイル>   # git add -A は使わない
+7. git commit               # Conventional Commits 形式
+8. git push && gh pr create # Closes #<issue番号> を本文に含める
+```
 
 詳細な手順・コミット規約・ブランチ命名・PR テンプレートは `git-workflow` スキルを参照。
 
@@ -85,6 +96,8 @@ $BASE plan -var='lambda_s3_keys={"create_record":"placeholder","get_latest":"pla
 
 - **`terraform apply` を Claude が自律的に実行してはいけない**（必ず事前確認）
 - **`app/`、`terraform/envs/dev/` を編集・デプロイしない**（参照用のみ）
+- **Issue を作らずに実装・コミットを始めてはいけない**
+- **既存の機能ブランチに無関係な fix をコミットしない**（1 PR = 1 修正）
 - `terraform.tfvars` にシークレット値（PAT など）を直接コミットしない
 - `lambda_s3_keys` のプレースホルダ値でデプロイしない（Lambda が起動しなくなる）
 - `cors_allow_origins = ["*"]` のまま本番運用しない（Amplify URL に制限すること）
