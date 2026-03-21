@@ -22,7 +22,7 @@ data/dbt/
 │   └── marts/
 │       ├── environment/   # 環境データのファクトテーブル
 │       └── health/        # 体調データのファクトテーブル
-├── seeds/                 # マスタデータ CSV（天気コード・地点マスタ）
+├── seeds/                 # マスタデータ CSV（天気コード・地点マスタ・FLAGS定義）
 ├── snapshots/             # SCD Type 2 変更履歴
 ├── tests/                 # singular tests（SQL アサーション）
 ├── dbt_project.yml
@@ -254,6 +254,19 @@ WMO 天気コードの日本語ラベルとカテゴリ。
 
 観測地点のマスタ。緯度・経度・タイムゾーンを管理。
 
+### flags_master.csv
+
+FLAGS ビットマスクの**唯一の正規定義**。Lambda・dbt・フロントエンドすべての参照元。
+
+| flag_bit | flag_name | flag_name_ja | category |
+|---------|----------|-------------|----------|
+| 1 | poor_sleep | 睡眠不足 | health_negative |
+| 2 | headache | 頭痛 | health_negative |
+| 4 | stomachache | 腹痛 | health_negative |
+| 8 | exercise | 運動 | health_positive |
+| 16 | alcohol | 飲酒 | health_negative |
+| 32 | caffeine | カフェイン過多 | health_negative |
+
 ### column_types の明示
 
 ```yaml
@@ -266,6 +279,9 @@ seeds:
       +column_types:
         latitude: double
         longitude: double
+    flags_master:
+      +column_types:
+        flag_bit: bigint
 ```
 
 Athena の型推論に依存しないよう、数値型は明示的に指定する。

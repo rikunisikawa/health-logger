@@ -1,0 +1,81 @@
+version: 2
+
+seeds:
+  - name: flags_master
+    description: |
+      体調フラグ ビットマスクの正規マスターデータ。
+      Lambda (create_record)・dbt モデル・フロントエンドで共通参照する唯一の定義元。
+      FLAGS は整数値の各ビットに意味を持つ（bit 0 = poor_sleep, bit 1 = headache, ...）。
+    meta:
+      owner: riku_nishikawa
+      sensitivity: public
+      domain: reference_data
+    columns:
+      - name: flag_bit
+        description: "ビットマスク値（2の累乗: 1, 2, 4, 8, 16, 32）"
+        tests:
+          - not_null
+          - unique
+      - name: flag_name
+        description: "フラグ英語名（コード内で使用）"
+        tests:
+          - not_null
+          - unique
+      - name: flag_name_ja
+        description: "フラグ日本語名（UI表示用）"
+        tests:
+          - not_null
+      - name: category
+        description: "フラグカテゴリ（health_negative: 不調要因 / health_positive: 健康行動）"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['health_negative', 'health_positive']
+      - name: description_ja
+        description: "フラグの詳細説明（日本語）"
+
+  - name: weather_codes
+    description: "WMO 天気コードの日本語マスターデータ（Open-Meteo 準拠）"
+    meta:
+      owner: riku_nishikawa
+      sensitivity: public
+      domain: reference_data
+    columns:
+      - name: weather_code
+        description: "WMO 天気コード整数値"
+        tests:
+          - not_null
+          - unique
+      - name: description_ja
+        description: "天気の日本語説明"
+        tests:
+          - not_null
+      - name: category
+        description: "天気カテゴリ（sunny/cloudy/rainy/snowy/stormy）"
+        tests:
+          - not_null
+
+  - name: location_master
+    description: "観測地点マスターデータ（緯度・経度・タイムゾーン）"
+    meta:
+      owner: riku_nishikawa
+      sensitivity: public
+      domain: reference_data
+    columns:
+      - name: location_id
+        description: "地点ID（例: musashikosugi）"
+        tests:
+          - not_null
+          - unique
+      - name: location_name_ja
+        description: "地点名（日本語）"
+        tests:
+          - not_null
+      - name: latitude
+        description: "緯度（小数度）"
+        tests:
+          - not_null
+      - name: longitude
+        description: "経度（小数度）"
+        tests:
+          - not_null

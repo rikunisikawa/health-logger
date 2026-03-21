@@ -43,12 +43,14 @@ resource "aws_iam_role_policy" "glue_s3tables" {
 }
 
 resource "aws_glue_catalog_database" "main" {
-  name = replace("${local.name}_health_logs", "-", "_")
+  name        = replace("${local.name}_health_logs", "-", "_")
+  description = "Health Logger 体調記録データベース。Lambda → Firehose → S3 Tables (Iceberg) パイプライン。owner: riku_nishikawa, sensitivity: personal"
 }
 
 resource "aws_glue_catalog_table" "health_records" {
   name          = "health_records"
   database_name = aws_glue_catalog_database.main.name
+  description   = "体調記録ファクトテーブル (Iceberg v2)。fatigue/mood/motivation スコア + FLAGS ビットマスク。owner: riku_nishikawa, sensitivity: personal, pii: user_id(仮名)"
   table_type    = "EXTERNAL_TABLE"
 
   open_table_format_input {

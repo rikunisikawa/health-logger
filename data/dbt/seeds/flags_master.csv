@@ -1,0 +1,7 @@
+flag_bit,flag_name,flag_name_ja,category,description_ja
+1,poor_sleep,睡眠不足,health_negative,前日の睡眠が不足していた
+2,headache,頭痛,health_negative,頭痛があった
+4,stomachache,腹痛,health_negative,腹痛・胃痛があった
+8,exercise,運動,health_positive,運動・身体活動をした（ウォーキング・ジム等）
+16,alcohol,飲酒,health_negative,アルコールを摂取した
+32,caffeine,カフェイン過多,health_negative,カフェインを多量に摂取した（コーヒー3杯以上等）

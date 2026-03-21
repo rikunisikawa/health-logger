@@ -3,6 +3,11 @@ version: 2
 models:
   - name: stg_env__hourly
     description: "Open-Meteo 環境データの正規化ビュー（型変換・NULL除外）"
+    meta:
+      owner: riku_nishikawa
+      sensitivity: public
+      sla: 25h  # EventBridge daily trigger + processing margin
+      domain: environment
     columns:
       - name: observation_datetime_jst
         description: "観測日時（JST）"
@@ -36,6 +41,12 @@ models:
 
   - name: stg_health__records
     description: "体調記録の正規化ビュー（型変換・NULL除外）"
+    meta:
+      owner: riku_nishikawa
+      sensitivity: personal  # ユーザーの健康情報（仮名化済）
+      sla: 1h  # Firehose buffer 15min + processing margin
+      domain: health
+      pii_fields: [user_id]  # Cognito sub（仮名識別子）
     columns:
       - name: record_id
         description: "レコードID（UUID）"
@@ -43,7 +54,7 @@ models:
           - not_null
           - unique
       - name: user_id
-        description: "ユーザーID（UUID）"
+        description: "ユーザーID（UUID: Cognito sub クレーム、仮名識別子）"
         tests:
           - not_null
       - name: record_type
@@ -57,31 +68,41 @@ models:
               config:
                 severity: warn
       - name: fatigue_score
-        description: "疲労感スコア（0-10）"
+        description: "疲労感スコア（0-100）"
         tests:
           - dbt_utils.accepted_range:
               min_value: 0
-              max_value: 10
+              max_value: 100
               config:
                 severity: warn
       - name: mood_score
-        description: "気分スコア（0-10）"
+        description: "気分スコア（0-100）"
         tests:
           - dbt_utils.accepted_range:
               min_value: 0
-              max_value: 10
+              max_value: 100
               config:
                 severity: warn
       - name: motivation_score
-        description: "やる気スコア（0-10）"
+        description: "やる気スコア（0-100）"
         tests:
           - dbt_utils.accepted_range:
               min_value: 0
-              max_value: 10
+              max_value: 100
+              config:
+                severity: warn
+      - name: concentration_score
+        description: "集中力スコア（0-100）。未入力の場合 NULL"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 100
               config:
                 severity: warn
       - name: flags
-        description: "体調フラグ ビットマスク（poor_sleep=1, headache=2, stomachache=4, exercise=8, alcohol=16, caffeine=32）"
+        description: |
+          体調フラグ ビットマスク（seeds/flags_master.csv が正規定義）
+          poor_sleep=1, headache=2, stomachache=4, exercise=8, alcohol=16, caffeine=32
         tests:
           - not_null
           - dbt_utils.accepted_range:

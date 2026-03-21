@@ -2,7 +2,19 @@ version: 2
 
 models:
   - name: fct_health_env_joined_hourly
-    description: "体調記録と環境データの結合ファクトテーブル（分析のメインテーブル）"
+    description: |
+      体調記録と環境データの結合ファクトテーブル（分析のメインテーブル）。
+      体調記録の recorded_at を JST に変換し、同一時刻の環境データを LEFT JOIN。
+      気圧・気温・花粉などの環境変数と体調スコアの相関分析に使用する。
+    meta:
+      owner: riku_nishikawa
+      sensitivity: personal
+      domain: health
+      pii_fields: [user_id]
+      sla: 25h  # 環境データ SLA に依存
+      downstream_consumers:
+        - health_logger_app  # exposures.yml 参照
+        - health_environment_analysis
     columns:
       - name: record_id
         description: "体調記録ID（UUID）"
@@ -10,20 +22,57 @@ models:
           - not_null
           - unique
       - name: user_id
-        description: "ユーザーID"
+        description: "ユーザーID（Cognito sub クレーム、仮名識別子）"
         tests:
           - not_null
+      - name: recorded_at
+        description: "記録日時（UTC）"
+        tests:
+          - not_null
+      - name: record_type
+        description: "記録種別（daily/event/status）"
       - name: fatigue_score
-        description: "疲労感スコア（0-10）"
+        description: "疲労感スコア（0-100）"
         tests:
           - dbt_utils.accepted_range:
               min_value: 0
-              max_value: 10
+              max_value: 100
+              config:
+                severity: warn
+      - name: mood_score
+        description: "気分スコア（0-100）"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 100
+              config:
+                severity: warn
+      - name: motivation_score
+        description: "やる気スコア（0-100）"
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 100
               config:
                 severity: warn
       - name: flags
-        description: "体調フラグ ビットマスク"
+        description: |
+          体調フラグ ビットマスク（seeds/flags_master.csv が正規定義）
         tests:
           - not_null
       - name: pressure_hpa
-        description: "記録時刻の気圧（hPa）- 左結合のためNULL許容"
+        description: "記録時刻の気圧（hPa）- 環境データなしの場合 NULL"
+      - name: temperature_c
+        description: "記録時刻の気温（摂氏）- 環境データなしの場合 NULL"
+      - name: humidity_pct
+        description: "記録時刻の湿度（%）- 環境データなしの場合 NULL"
+      - name: pressure_diff_3h
+        description: "記録時刻の3時間気圧差分（hPa）- 頭痛相関分析用"
+      - name: birch_pollen
+        description: "記録時刻の白樺花粉（grains/m³）"
+      - name: grass_pollen
+        description: "記録時刻のイネ科花粉（grains/m³）"
+      - name: weed_pollen
+        description: "記録時刻の雑草花粉（grains/m³）"
+      - name: aqi
+        description: "記録時刻の大気質指数"
