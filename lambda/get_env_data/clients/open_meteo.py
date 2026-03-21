@@ -38,7 +38,6 @@ AIR_QUALITY_HOURLY_PARAMS = ",".join([
     "european_aqi",
     "birch_pollen",
     "grass_pollen",
-    "weed_pollen",
 ])
 
 JST = timezone(timedelta(hours=9))
@@ -144,7 +143,6 @@ class OpenMeteoClient(WeatherProvider):
                 "aqi": _safe_get(aq_hourly, "european_aqi", i),
                 "birch_pollen": _safe_get(aq_hourly, "birch_pollen", i),
                 "grass_pollen": _safe_get(aq_hourly, "grass_pollen", i),
-                "weed_pollen": _safe_get(aq_hourly, "weed_pollen", i),
             }
 
         archive_times = archive_hourly.get("time", [])
@@ -178,7 +176,6 @@ class OpenMeteoClient(WeatherProvider):
                 pm25=aq.get("pm25"),
                 birch_pollen=aq.get("birch_pollen"),
                 grass_pollen=aq.get("grass_pollen"),
-                weed_pollen=aq.get("weed_pollen"),
                 raw_ingested_at=ingested_at,
                 record_created_at=ingested_at,
             )
