@@ -101,3 +101,46 @@ $BASE plan -var='lambda_s3_keys={"create_record":"placeholder","get_latest":"pla
 - `terraform.tfvars` にシークレット値（PAT など）を直接コミットしない
 - `lambda_s3_keys` のプレースホルダ値でデプロイしない（Lambda が起動しなくなる）
 - `cors_allow_origins = ["*"]` のまま本番運用しない（Amplify URL に制限すること）
+
+## GitHub Actions での Claude Code 実行（CI ルール）
+
+### 対象ワークフロー
+
+`.github/workflows/claude-code-review.yml` — 開発環境改善案の自動生成（`workflow_dispatch`）
+
+### CI 環境での動作制約
+
+GitHub Actions ランナーはローカルと異なる環境のため、以下の制約が適用される。
+
+| 設定 | ローカル | GitHub Actions |
+|------|---------|----------------|
+| `~/.claude/settings.json` | 有効 | **無効**（ランナーに存在しない） |
+| `.claude/settings.local.json` | 有効 | **無効**（git 管理外） |
+| `.claude/settings.json` | 有効 | ✅ 有効（リポジトリに含まれる） |
+| `.mcp.json` の MCP サーバー | 有効 | ✅ 有効（ツールが PATH に存在する場合） |
+| hooks スクリプト | 有効 | ✅ 有効（相対パスで参照） |
+
+### CI 実行時の禁止事項
+
+- **`terraform apply/destroy` を CI から実行しない**
+- **AWS リソースの作成・削除を CI から実行しない**
+- **シークレット値（API キー・PAT）を workflow ログに出力しない**
+- **`git push --force` を CI から実行しない**
+- **`docs/claude-code-dev-env-review.md` 以外のファイルを CI から変更しない**
+  （review workflow の制約）
+
+### 必要な GitHub Secrets
+
+| Secret 名 | 用途 | 設定方法 |
+|-----------|------|---------|
+| `ANTHROPIC_API_KEY` | Claude Code API 認証 | Anthropic Console → API Keys から取得し、GitHub Settings → Secrets に設定 |
+
+`GITHUB_TOKEN` は GitHub Actions が自動提供するため設定不要。
+
+### MCP サーバーのパス要件
+
+`.mcp.json` の MCP サーバーは以下のコマンドを使用する（パスではなくコマンド名で指定）:
+- `npx`: Node.js インストール時に自動で使用可能
+- `uvx`: `pip install uv` 後に使用可能（workflow で自動セットアップ）
+- `docker`: GitHub Actions ubuntu-latest に標準搭載
+

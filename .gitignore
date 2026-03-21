@@ -12,8 +12,8 @@
 # Storage
 /storage/
 
-# Local tool config
-.mcp.json
+# Local tool config (.mcp.json はリポジトリ管理対象に変更)
+# .mcp.json  ← 削除: GitHub Actions でも使用するためリポジトリに含める
 .claude/settings.local.json
 
 # Node

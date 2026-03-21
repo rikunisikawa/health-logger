@@ -1,0 +1,93 @@
+name: Claude Code - Dev Environment Review
+
+# 手動トリガー（まず安全な workflow_dispatch から始める）
+# 将来的に schedule も追加可能:
+#   schedule:
+#     - cron: '0 2 * * 1'  # 毎週月曜 AM 2:00 UTC (= JST 11:00)
+on:
+  workflow_dispatch:
+    inputs:
+      model:
+        description: '使用する Claude モデル'
+        type: choice
+        options:
+          - claude-opus-4-5
+          - claude-sonnet-4-5
+          - claude-haiku-4-5
+        default: claude-sonnet-4-5
+
+# Claude Code が git push・PR 作成できる最小権限
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  review:
+    name: Generate Dev Environment Review
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # フルヒストリー（git log 参照のため）
+
+      # ── MCP サーバー依存ツールのセットアップ ────────────────────────────
+      - name: Setup Node.js (for npx-based MCP servers)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Python & uv (for uvx-based MCP servers)
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install uv
+        run: pip install uv
+
+      # ── Claude Code 実行 ────────────────────────────────────────────────
+      - name: Run Claude Code - Dev Environment Review
+        uses: anthropics/claude-code-action@beta
+        env:
+          # git MCP が使用するワーキングディレクトリ
+          GIT_BASE_DIR: ${{ github.workspace }}
+          # AWS MCP 向け（この workflow では AWS 操作は行わない）
+          AWS_PROFILE: ""
+          AWS_REGION: ap-northeast-1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          model: ${{ inputs.model }}
+          # 改善案生成用プロンプトを読み込む
+          prompt_file: .claude/prompts/dev-env-review.md
+          # Claude Code が使用できるツールを制限（レビュー・出力のみ許可）
+          allowed_tools: >-
+            Read,
+            Write,
+            Glob,
+            Grep,
+            Bash(git add *),
+            Bash(git branch *),
+            Bash(git commit *),
+            Bash(git push *),
+            Bash(git log *),
+            Bash(git diff *),
+            Bash(git status),
+            Bash(git switch *),
+            Bash(gh pr create *),
+            Bash(gh pr view *),
+            Bash(gh pr comment *),
+            Bash(ls *),
+            Bash(find *),
+            Bash(echo *),
+            Bash(date *)
+          # 破壊的操作は明示的に禁止
+          disallowed_tools: >-
+            Bash(git push --force *),
+            Bash(rm *),
+            Bash(terraform *),
+            Bash(aws *)
+          max_turns: "30"

@@ -1,0 +1,66 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "./frontend", "./terraform"]
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_TOKEN": "${GITHUB_TOKEN}"
+      }
+    },
+    "aws": {
+      "command": "uvx",
+      "args": ["awslabs.core-mcp-server==1.0.23"],
+      "env": {
+        "AWS_PROFILE": "${AWS_PROFILE:-default}",
+        "AWS_REGION": "${AWS_REGION:-ap-northeast-1}",
+        "FASTMCP_LOG_LEVEL": "ERROR"
+      }
+    },
+    "dbt": {
+      "command": "docker",
+      "args": [
+        "run",
+        "--rm",
+        "-v",
+        "${PWD}:/usr/app",
+        "ghcr.io/dbt-labs/dbt-athena",
+        "dbt",
+        "debug"
+      ]
+    },
+    "terraform": {
+      "command": "docker",
+      "args": ["run", "-i", "--rm", "hashicorp/terraform-mcp-server"]
+    },
+    "git": {
+      "command": "npx",
+      "args": ["-y", "@cyanheads/git-mcp-server@latest"],
+      "env": {
+        "MCP_TRANSPORT_TYPE": "stdio",
+        "MCP_TRANSPORT": "stdio",
+        "MCP_LOG_LEVEL": "info",
+        "GIT_BASE_DIR": "${PWD}",
+        "GIT_SIGN_COMMITS": "false"
+      }
+    },
+    "fetch": {
+      "command": "uvx",
+      "args": ["mcp-server-fetch"],
+      "env": {
+        "FETCH_ALLOWLIST": "docs.aws.amazon.com,aws.amazon.com,awslabs.github.io,registry.terraform.io,github.com,zenn.dev,qiita.com,docs.anthropic.com,anthropic.com"
+      }
+    },
+    "mermaid": {
+      "command": "uvx",
+      "args": ["--from", "mcp-mermaid-image-gen", "mcp_mermaid_image_gen"]
+    },
+    "drawio": {
+      "command": "npx",
+      "args": ["-y", "@drawio/mcp"]
+    }
+  }
+}

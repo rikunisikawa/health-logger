@@ -65,7 +65,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 /home/riku_nishikawa/dev/health-logger/health-logger/.claude/hooks/block-forbidden-dirs.py",
+            "command": "python3 .claude/hooks/block-forbidden-dirs.py",
             "description": "app/ と terraform/envs/dev/ への書き込みをブロック"
           }
         ]
@@ -75,7 +75,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 /home/riku_nishikawa/dev/health-logger/health-logger/.claude/hooks/git-push-reminder.py",
+            "command": "python3 .claude/hooks/git-push-reminder.py",
             "description": "git push 前にシークレット漏洩・CI 確認を促す"
           }
         ]
@@ -87,7 +87,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 /home/riku_nishikawa/dev/health-logger/health-logger/.claude/hooks/run-tests-after-edit.py",
+            "command": "python3 .claude/hooks/run-tests-after-edit.py",
             "description": "lambda/ 実装 .py 変更後に pytest を自動実行"
           }
         ]
