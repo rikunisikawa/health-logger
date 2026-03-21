@@ -1,0 +1,42 @@
+# ============================================================
+# タスクテンプレート
+# 使い方: このファイルをコピーして tasks/inbox/<task_id>.yaml に配置
+# ============================================================
+
+task_id: task-YYYYMMDD-001          # 一意なID（日付+連番）
+title: "タスクのタイトル"
+goal: "このタスクで達成したいこと（1文）"
+
+role: engineer                       # product_manager | project_manager | designer
+                                     # engineer | reviewer | explainer
+priority: medium                     # high | medium | low
+
+status: inbox                        # inbox | ready | doing | review | done
+                                     # failed | waiting_approval
+
+dependencies: []                     # 先行タスクの task_id リスト
+                                     # 例: ["task-20260301-001"]
+
+inputs:
+  - type: file
+    path: ""                         # 入力ファイルのパス
+  - type: description
+    content: ""                      # テキストでの入力説明
+
+constraints:
+  - "既存ファイルの大規模な変更は行わない"
+  - "テストが通る状態を維持する"
+
+definition_of_done:
+  - "[ ] 成果物ファイルが出力されている"
+  - "[ ] テストが通過している（該当する場合）"
+  - "[ ] reviewer が approve している"
+
+outputs:
+  - type: file
+    path: ""                         # 成果物ファイルのパス
+
+created_at: "YYYY-MM-DD"
+updated_at: "YYYY-MM-DD"
+notes: ""                            # 備考・作業メモ
+retry_count: 0                       # orchestrator が管理（手動変更不要）

@@ -57,6 +57,9 @@ health-logger プロジェクトにおける全エージェントのコーディ
 | アーキテクチャ設計・技術選定 | `architecture` |
 | データ分析・Athena クエリ調査 | `analysis` |
 | ドキュメント作成・更新 | `documentation` |
+| UI/UX 設計・画面要件・文言設計 | `designer` |
+| 開発サイクルの受け入れ条件チェック・完了判定 | `reviewer` |
+| 説明資料・スライド原稿・pptx 生成 | `explainer` |
 
 ## Workflows
 
