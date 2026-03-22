@@ -13,7 +13,8 @@ import { useAuth } from './hooks/useAuth'
 import { useItemConfig } from './hooks/useItemConfig'
 import { useOfflineQueue } from './hooks/useOfflineQueue'
 import { usePushNotification } from './hooks/usePushNotification'
-import type { LatestRecord } from './types'
+import type { EnabledSliders, LatestRecord } from './types'
+import { DEFAULT_ENABLED_SLIDERS } from './types'
 
 const API_ENDPOINT = import.meta.env.VITE_API_ENDPOINT as string
 
@@ -23,6 +24,21 @@ function AppContent() {
   const { subscribed, subscribe, unsubscribe } = usePushNotification(token)
   const { configs, save } = useItemConfig(token)
   const [showSettings, setShowSettings] = useState(false)
+
+  // ビルトインスライダーの有効/無効設定（localStorage で永続化）
+  const [enabledSliders, setEnabledSliders] = useState<EnabledSliders>(() => {
+    try {
+      const stored = localStorage.getItem('health_logger_enabled_sliders')
+      return stored ? { ...DEFAULT_ENABLED_SLIDERS, ...(JSON.parse(stored) as Partial<EnabledSliders>) } : DEFAULT_ENABLED_SLIDERS
+    } catch {
+      return DEFAULT_ENABLED_SLIDERS
+    }
+  })
+
+  const saveEnabledSliders = (next: EnabledSliders) => {
+    setEnabledSliders(next)
+    try { localStorage.setItem('health_logger_enabled_sliders', JSON.stringify(next)) } catch {}
+  }
   const [page, setPage] = useState(0)
   const [records, setRecords] = useState<LatestRecord[]>([])
   const [toast, setToast] = useState<{ show: boolean; message: string; variant: ToastVariant }>({ show: false, message: '', variant: 'success' })
@@ -141,6 +157,7 @@ function AppContent() {
               formItems={formItems}
               eventItems={eventItems}
               statusItems={statusItems}
+              enabledSliders={enabledSliders}
               latestDailyRecord={latestDailyRecord}
               onToast={showToast}
             />
@@ -224,6 +241,8 @@ function AppContent() {
         <ItemConfigScreen
           configs={configs}
           onSave={save}
+          enabledSliders={enabledSliders}
+          onSaveBuiltins={saveEnabledSliders}
           onClose={() => setShowSettings(false)}
         />
       )}
