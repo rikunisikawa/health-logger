@@ -122,6 +122,26 @@ export default function HealthForm({ formItems, eventItems, statusItems, latestD
     } catch {}
   }, [activeStatuses])
 
+  // スライダーのオン/オフ設定（localStorage で永続化）
+  type SliderKey = 'fatigue' | 'mood' | 'motivation' | 'concentration'
+  const [enabledSliders, setEnabledSliders] = useState<Record<SliderKey, boolean>>(() => {
+    try {
+      const stored = localStorage.getItem('health_logger_enabled_sliders')
+      const defaults = { fatigue: true, mood: true, motivation: true, concentration: true }
+      return stored ? { ...defaults, ...(JSON.parse(stored) as Partial<Record<SliderKey, boolean>>) } : defaults
+    } catch {
+      return { fatigue: true, mood: true, motivation: true, concentration: true }
+    }
+  })
+
+  const toggleSlider = (key: SliderKey) => {
+    setEnabledSliders((prev) => {
+      const next = { ...prev, [key]: !prev[key] }
+      try { localStorage.setItem('health_logger_enabled_sliders', JSON.stringify(next)) } catch {}
+      return next
+    })
+  }
+
 
   const handleVoiceTranscript = (text: string) => {
     const customLabels = [
@@ -225,10 +245,10 @@ export default function HealthForm({ formItems, eventItems, statusItems, latestD
     setSubmitting(true)
     const record: HealthRecordInput = {
       record_type:          'daily',
-      fatigue_score:        fatigue,
-      mood_score:           mood,
-      motivation_score:     motivation,
-      concentration_score:  concentration,
+      ...(enabledSliders.fatigue       && { fatigue_score:       fatigue }),
+      ...(enabledSliders.mood          && { mood_score:          mood }),
+      ...(enabledSliders.motivation    && { motivation_score:    motivation }),
+      ...(enabledSliders.concentration && { concentration_score: concentration }),
       flags:                0,
       note:             note.slice(0, 280),
       recorded_at:      getRecordedAtISO(),
@@ -538,14 +558,54 @@ export default function HealthForm({ formItems, eventItems, statusItems, latestD
       {/* ── Daily Form ────────────────────────────────────────── */}
       <Card variant="outlined" sx={{ mb: 2, borderRadius: 2 }}>
         <CardContent sx={{ pt: 1.5, px: 2 }}>
-          <Typography
-            variant="h6"
-            color="success.main"
-            sx={{ mb: 2, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}
-          >
-            体調記録
-            <VoiceInputButton onTranscript={handleVoiceTranscript} />
-          </Typography>
+          <div className="d-flex align-items-start justify-content-between mb-2 flex-wrap gap-2">
+            <Typography
+              variant="h6"
+              color="success.main"
+              sx={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}
+            >
+              体調記録
+              <VoiceInputButton onTranscript={handleVoiceTranscript} />
+            </Typography>
+            {/* スライダーのオン/オフ切り替え */}
+            <div className="d-flex flex-wrap gap-2">
+              {(
+                [
+                  { key: 'fatigue',       label: '疲労感', color: SLIDER_COLORS.fatigue       },
+                  { key: 'mood',          label: '気分',   color: SLIDER_COLORS.mood           },
+                  { key: 'motivation',    label: 'やる気', color: SLIDER_COLORS.motivation     },
+                  { key: 'concentration', label: '集中力', color: SLIDER_COLORS.concentration  },
+                ] as const
+              ).map(({ key, label, color }) => (
+                <label
+                  key={key}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    fontSize: '0.75rem',
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    padding: '2px 8px',
+                    borderRadius: '12px',
+                    border: `1px solid ${enabledSliders[key] ? color : '#dee2e6'}`,
+                    backgroundColor: enabledSliders[key] ? `${color}18` : '#f8f9fa',
+                    color: enabledSliders[key] ? color : '#adb5bd',
+                    userSelect: 'none',
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={enabledSliders[key]}
+                    onChange={() => toggleSlider(key)}
+                    style={{ accentColor: color, width: '13px', height: '13px', cursor: 'pointer' }}
+                  />
+                  {label}
+                </label>
+              ))}
+            </div>
+          </div>
           <form onSubmit={handleSubmit}>
             {/* MUI Sliders */}
             {(
@@ -555,7 +615,8 @@ export default function HealthForm({ formItems, eventItems, statusItems, latestD
                 { label: 'やる気', value: motivation,    setter: setMotivation,    colorKey: 'motivation'    as const, prev: prevMotivation    },
                 { label: '集中力', value: concentration, setter: setConcentration, colorKey: 'concentration' as const, prev: prevConcentration },
               ] as const
-            ).map(({ label, value, setter, colorKey, prev }) => (
+            ).filter(({ colorKey }) => enabledSliders[colorKey])
+             .map(({ label, value, setter, colorKey, prev }) => (
               <div className="mb-2" key={label}>
                 <div className="d-flex justify-content-between align-items-center mb-1">
                   <Typography variant="body2" sx={{ fontWeight: 500 }}>{label}</Typography>
