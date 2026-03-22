@@ -7,7 +7,7 @@ import Typography from '@mui/material/Typography'
 import { createRecord } from '../api'
 import { useAuth } from '../hooks/useAuth'
 import { useOfflineQueue } from '../hooks/useOfflineQueue'
-import type { CustomFieldValue, EnabledSliders, HealthRecordInput, ItemConfig, LatestRecord } from '../types'
+import type { CustomFieldValue, HealthRecordInput, ItemConfig, LatestRecord } from '../types'
 import VoiceInputButton from './VoiceInputButton'
 import VoiceConfirmModal from './VoiceConfirmModal'
 import { parseVoiceInput } from '../utils/voiceParser'
@@ -54,16 +54,15 @@ function datetimeLocalToISO(value: string): string {
 export type ToastVariant = 'success' | 'danger' | 'warning'
 
 interface Props {
-  formItems:       ItemConfig[]
-  eventItems:      ItemConfig[]
-  statusItems:     ItemConfig[]
-  enabledSliders?: EnabledSliders
+  formItems:    ItemConfig[]
+  eventItems:   ItemConfig[]
+  statusItems:  ItemConfig[]
   latestDailyRecord?: LatestRecord
-  onToast:         (message: string, variant: ToastVariant) => void
+  onToast: (message: string, variant: ToastVariant) => void
   onRecordsSubmitted?: () => void
 }
 
-export default function HealthForm({ formItems, eventItems, statusItems, enabledSliders, latestDailyRecord, onToast, onRecordsSubmitted }: Props) {
+export default function HealthForm({ formItems, eventItems, statusItems, latestDailyRecord, onToast, onRecordsSubmitted }: Props) {
   const { token } = useAuth()
   const { enqueue, flush } = useOfflineQueue(API_ENDPOINT)
 
@@ -224,13 +223,12 @@ export default function HealthForm({ formItems, eventItems, statusItems, enabled
     e.preventDefault()
     if (!token) return
     setSubmitting(true)
-    const enabled = enabledSliders ?? { fatigue: true, mood: true, motivation: true, concentration: true }
     const record: HealthRecordInput = {
       record_type:          'daily',
-      ...(enabled.fatigue       && { fatigue_score:       fatigue }),
-      ...(enabled.mood          && { mood_score:          mood }),
-      ...(enabled.motivation    && { motivation_score:    motivation }),
-      ...(enabled.concentration && { concentration_score: concentration }),
+      fatigue_score:        fatigue,
+      mood_score:           mood,
+      motivation_score:     motivation,
+      concentration_score:  concentration,
       flags:                0,
       note:             note.slice(0, 280),
       recorded_at:      getRecordedAtISO(),
@@ -557,8 +555,7 @@ export default function HealthForm({ formItems, eventItems, statusItems, enabled
                 { label: 'やる気', value: motivation,    setter: setMotivation,    colorKey: 'motivation'    as const, prev: prevMotivation    },
                 { label: '集中力', value: concentration, setter: setConcentration, colorKey: 'concentration' as const, prev: prevConcentration },
               ] as const
-            ).filter(({ colorKey }) => (enabledSliders ?? { fatigue: true, mood: true, motivation: true, concentration: true })[colorKey] !== false)
-             .map(({ label, value, setter, colorKey, prev }) => (
+            ).map(({ label, value, setter, colorKey, prev }) => (
               <div className="mb-2" key={label}>
                 <div className="d-flex justify-content-between align-items-center mb-1">
                   <Typography variant="body2" sx={{ fontWeight: 500 }}>{label}</Typography>

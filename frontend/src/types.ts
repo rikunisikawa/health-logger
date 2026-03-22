@@ -57,18 +57,3 @@ export interface LatestRecord {
   custom_fields:    string
   written_at:       string
 }
-
-/** ビルトインスライダーの表示オン/オフ設定 */
-export interface EnabledSliders {
-  fatigue:       boolean
-  mood:          boolean
-  motivation:    boolean
-  concentration: boolean
-}
-
-export const DEFAULT_ENABLED_SLIDERS: EnabledSliders = {
-  fatigue:       true,
-  mood:          true,
-  motivation:    true,
-  concentration: true,
-}
