@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { ItemConfig, ItemMode, ItemType } from '../types'
+import type { EnabledSliders, ItemConfig, ItemMode, ItemType } from '../types'
 
 const ICON_OPTIONS = [
   '😴', '💤', '🤕', '🤢', '😣', '🤧', '💊', '🌡️',
@@ -46,15 +46,25 @@ const emptyEdit = (): EditState => ({
 })
 
 interface Props {
-  configs: ItemConfig[]
-  onSave:  (configs: ItemConfig[]) => Promise<void>
-  onClose: () => void
+  configs:         ItemConfig[]
+  onSave:          (configs: ItemConfig[]) => Promise<void>
+  enabledSliders:  EnabledSliders
+  onSaveBuiltins:  (enabled: EnabledSliders) => void
+  onClose:         () => void
 }
 
-export default function ItemConfigScreen({ configs, onSave, onClose }: Props) {
-  const [items, setItems]     = useState<ItemConfig[]>(configs)
-  const [edit, setEdit]       = useState<EditState | null>(null)
-  const [saving, setSaving]   = useState(false)
+export default function ItemConfigScreen({ configs, onSave, enabledSliders, onSaveBuiltins, onClose }: Props) {
+  const [items, setItems]       = useState<ItemConfig[]>(configs)
+  const [edit, setEdit]         = useState<EditState | null>(null)
+  const [saving, setSaving]     = useState(false)
+  const [localEnabled, setLocalEnabled] = useState<EnabledSliders>(enabledSliders)
+
+  const BUILTIN_SLIDERS: { key: keyof EnabledSliders; label: string; icon: string }[] = [
+    { key: 'fatigue',       label: '疲労感', icon: '😓' },
+    { key: 'mood',          label: '気分',   icon: '🙂' },
+    { key: 'motivation',    label: 'やる気', icon: '💪' },
+    { key: 'concentration', label: '集中力', icon: '🎯' },
+  ]
 
   const startAdd = () => setEdit(emptyEdit())
 
@@ -108,6 +118,7 @@ export default function ItemConfigScreen({ configs, onSave, onClose }: Props) {
   const handleSave = async () => {
     setSaving(true)
     try {
+      onSaveBuiltins(localEnabled)
       await onSave(items)
       onClose()
     } finally {
@@ -130,6 +141,43 @@ export default function ItemConfigScreen({ configs, onSave, onClose }: Props) {
           </button>
           <h1 className="h5 mb-0 fw-bold">記録項目の設定</h1>
         </div>
+
+        {/* ── ビルトイン項目 ─────────────────────────────── */}
+        <div className="mb-4">
+          <h2 className="h6 fw-bold mb-2">体調スライダー（ビルトイン）</h2>
+          <p className="text-muted small mb-2">記録フォームに表示するスライダーを選択できます。</p>
+          <div className="d-flex flex-column gap-2">
+            {BUILTIN_SLIDERS.map(({ key, label, icon }) => (
+              <div
+                key={key}
+                className="d-flex align-items-center justify-content-between p-2 border rounded"
+                style={{ backgroundColor: localEnabled[key] ? '#f0fdf4' : '#f8f9fa' }}
+              >
+                <span className="fw-semibold">
+                  <span className="me-2">{icon}</span>{label}
+                </span>
+                <div className="form-check form-switch mb-0">
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    role="switch"
+                    id={`builtin-${key}`}
+                    checked={localEnabled[key]}
+                    onChange={(e) =>
+                      setLocalEnabled((prev) => ({ ...prev, [key]: e.target.checked }))
+                    }
+                    style={{ width: '2.5em', height: '1.25em', cursor: 'pointer' }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <hr className="mb-3" />
+
+        {/* ── カスタム項目 ────────────────────────────────── */}
+        <h2 className="h6 fw-bold mb-2">カスタム項目</h2>
 
         {/* Item list */}
         {items.length === 0 && !edit && (
