@@ -24,6 +24,7 @@
 |---------|------|---------|
 | `API_REFERENCE.md` | 全 API エンドポイント仕様（8 エンドポイント） | 開発者 |
 | `DATABASE_SCHEMA.md` | S3 Tables (Iceberg) / DynamoDB のスキーマ定義 | 開発者・データエンジニア |
+| `ER_DIAGRAM.md` | ER 図・dbt データリネージ・record_type 別利用パターン | 開発者・データエンジニア |
 | `DEPLOYMENT_GUIDE.md` | 初回デプロイ・継続的デプロイ・ロールバック手順 | 開発者・運用担当者 |
 | `LAMBDA_DEVELOPMENT.md` | Lambda の実装パターン・テスト・新規追加手順 | 開発者 |
 | `FRONTEND_DEVELOPMENT.md` | React/TS 開発・Amplify Auth・PWA 構成 | 開発者 |
