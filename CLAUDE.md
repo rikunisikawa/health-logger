@@ -70,6 +70,7 @@ $BASE plan -var='lambda_s3_keys={"create_record":"placeholder","get_latest":"pla
 - AWS provider バージョン `>= 5.75` 必須（`aws_s3tables_*` リソースのため）
 - センシティブな変数（`github_access_token` など）は `sensitive = true` を付与
 - `terraform.tfvars` にシークレット値を直接書かないこと
+- **IAM ポリシー変更時は PR 作成前に `aws iam simulate-principal-policy` で権限を確認する**（詳細は `.claude/rules/terraform/workflow.md` 参照）
 
 ---
 

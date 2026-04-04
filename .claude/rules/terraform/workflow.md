@@ -5,6 +5,42 @@ paths:
 ---
 # Terraform ワークフロールール
 
+## IAM ポリシー変更時の権限シミュレーション（PR 作成前に必須）
+
+`aws_iam_role_policy` / `aws_iam_policy` を変更・追加した場合、PR 作成前に必ず
+`aws iam simulate-principal-policy` で実際の権限を確認すること。
+
+```bash
+# GitHub Actions ロールの Glue 権限を確認する例
+aws iam simulate-principal-policy \
+  --policy-source-arn arn:aws:iam::143944071087:role/health-logger-prod-github-actions \
+  --action-names <追加・変更した action を列挙> \
+  --resource-arns "arn:aws:glue:ap-northeast-1:143944071087:catalog" \
+  --region ap-northeast-1 \
+  --query 'EvaluationResults[*].{Action:EvalActionName,Decision:EvalDecision}' \
+  --output table
+```
+
+### チェックルール
+
+- 結果が **`allowed`** → OK
+- 結果が **`implicitDeny`** → ポリシーに権限が不足 → コードを修正してから再確認
+- 結果が **`explicitDeny`** → SCP や境界ポリシーで拒否されている → ユーザーに確認
+
+### よく使うリソース ARN
+
+| リソース | ARN |
+|---------|-----|
+| Glue カタログ | `arn:aws:glue:ap-northeast-1:143944071087:catalog` |
+| Glue データベース | `arn:aws:glue:ap-northeast-1:143944071087:database/health_logger_prod_health_logs` |
+| Lambda 関数（全体） | `arn:aws:lambda:ap-northeast-1:143944071087:function:*` |
+| S3（全体） | `arn:aws:s3:::*` |
+
+> **背景**: PR #143 で `glue:UpdateDatabase` が不足していたことが apply 後に判明。
+> plan では検出できない権限エラーを事前に潰すため、このチェックを義務化する。
+
+---
+
 ## apply は Claude が自律実行しない
 
 **`terraform apply` は必ずユーザーに確認してから実行する。**
