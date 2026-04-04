@@ -6,18 +6,11 @@ on:
     paths:
       - "terraform/**"
       - "migrations/athena/**"
-  push:
-    branches: [main]
-    paths:
-      - "terraform/**"
-      - "migrations/athena/**"
 
-# 同一ブランチでの並行実行を防ぎ state lock 競合を回避する
-# cancel-in-progress: PR は新しい push で古いランをキャンセル
-# main への push は直列化（キャンセルしない）
+# PR で同一ブランチへの新しい push が来たら古いランをキャンセルする
 concurrency:
   group: terraform-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  cancel-in-progress: true
 
 env:
   TF_VERSION: "1.12.0"
@@ -95,17 +88,3 @@ jobs:
               });
             }
 
-      - name: Terraform Apply (main branch only)
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: terraform apply -auto-approve tfplan
-
-      - name: Run Athena schema migrations (main branch only)
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        working-directory: ${{ github.workspace }}
-        run: |
-          pip install boto3 --quiet
-          python3 scripts/athena-migrate.py
-        env:
-          ATHENA_DATABASE: health_logger_prod_health_logs
-          ATHENA_OUTPUT_BUCKET: health-logger-prod-health-export
-          MIGRATION_TRACKING_TABLE: health-logger-prod-athena-migrations
