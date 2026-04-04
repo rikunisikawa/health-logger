@@ -15,6 +15,11 @@ _UUID_RE = re.compile(
     r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
 )
 
+# date partition filter; validate to prevent SQL injection
+_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+
+_VALID_RECORD_TYPES = {"daily", "event", "status"}
+
 
 def lambda_handler(event, context):
     # Health check (no auth required)
@@ -33,15 +38,38 @@ def lambda_handler(event, context):
     # Parse query params
     params = event.get("queryStringParameters") or {}
     try:
-        limit = min(int(params.get("limit", 10)), 100)
+        limit = min(int(params.get("limit", 10)), 1000)
     except (ValueError, TypeError):
         limit = 10
+
+    record_type = params.get("record_type")
+    if record_type is not None and record_type not in _VALID_RECORD_TYPES:
+        return _json(400, {"error": "Invalid record_type"})
+
+    date_from = params.get("date_from")
+    if date_from is not None and not _DATE_RE.match(date_from):
+        return _json(400, {"error": "Invalid date_from"})
+
+    date_to = params.get("date_to")
+    if date_to is not None and not _DATE_RE.match(date_to):
+        return _json(400, {"error": "Invalid date_to"})
+
+    # Build optional WHERE conditions
+    conditions = [f"user_id = '{user_id}'"]
+    if record_type:
+        conditions.append(f"record_type = '{record_type}'")
+    if date_from:
+        conditions.append(f"dt >= '{date_from}'")
+    if date_to:
+        conditions.append(f"dt <= '{date_to}'")
+
+    where_clause = " AND ".join(conditions)
 
     query = f"""
         SELECT id, record_type, fatigue_score, mood_score, motivation_score, concentration_score,
                flags, note, recorded_at, timezone, device_id, app_version, custom_fields, written_at
         FROM health_records
-        WHERE user_id = '{user_id}'
+        WHERE {where_clause}
         ORDER BY recorded_at DESC
         LIMIT {limit}
     """
