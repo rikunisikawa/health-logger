@@ -10,6 +10,7 @@ import { useOfflineQueue } from '../hooks/useOfflineQueue'
 import type { CustomFieldValue, HealthRecordInput, ItemConfig, LatestRecord } from '../types'
 import VoiceInputButton from './VoiceInputButton'
 import VoiceConfirmModal from './VoiceConfirmModal'
+import StatusManagerModal from './StatusManagerModal'
 import { parseVoiceInput } from '../utils/voiceParser'
 import type { ParsedVoiceItem, VoiceParseResult } from '../utils/voiceParser'
 
@@ -106,6 +107,8 @@ export default function HealthForm({ formItems, eventItems, statusItems, latestD
   // Quick event state
   const [eventInputs, setEventInputs] = useState<Record<string, string>>({})
   const [eventSending, setEventSending] = useState<Record<string, boolean>>({})
+
+  const [statusManagerOpen, setStatusManagerOpen] = useState(false)
 
   const [activeStatuses, setActiveStatuses] = useState<Record<string, boolean>>(() => {
     try {
@@ -399,9 +402,19 @@ export default function HealthForm({ formItems, eventItems, statusItems, latestD
       {/* ── Status (ongoing conditions) ───────────────────────── */}
       <Card variant="outlined" sx={{ mb: 2, borderRadius: 2 }}>
         <CardContent sx={{ pb: '12px !important', pt: 1.5, px: 2 }}>
-          <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1.5, fontWeight: 600 }}>
-            ステータス
-          </Typography>
+          <div className="d-flex align-items-center justify-content-between mb-2">
+            <Typography variant="subtitle2" color="text.secondary" sx={{ fontWeight: 600 }}>
+              ステータス
+            </Typography>
+            <button
+              type="button"
+              className="btn btn-outline-secondary"
+              style={{ fontSize: '0.7rem', padding: '2px 8px' }}
+              onClick={() => setStatusManagerOpen(true)}
+            >
+              履歴・修正
+            </button>
+          </div>
           <div className="d-flex flex-wrap gap-2">
             {[...STATUS_ITEMS, ...statusItems].map((item) => {
               const isOn = activeStatuses[item.item_id] ?? false
@@ -772,6 +785,17 @@ export default function HealthForm({ formItems, eventItems, statusItems, latestD
           onConfirm={handleVoiceConfirm}
           onCancel={() => setVoiceResult(null)}
           submitting={voiceSubmitting}
+        />
+      )}
+
+      {/* ── Status Manager Modal ─────────────────────────────── */}
+      {token && (
+        <StatusManagerModal
+          open={statusManagerOpen}
+          onClose={() => setStatusManagerOpen(false)}
+          token={token}
+          statusItems={statusItems}
+          onToast={onToast}
         />
       )}
     </div>

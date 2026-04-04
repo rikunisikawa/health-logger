@@ -61,3 +61,15 @@ export function getEnvData(
 ): Promise<{ records: EnvDataRecord[] }> {
   return apiFetch(`/env-data/latest?days=${days}`, token)
 }
+
+export function getStatusRecords(
+  token: string,
+  dateFrom: string,
+  dateTo: string,
+  limit = 500,
+): Promise<{ records: LatestRecord[] }> {
+  return apiFetch(
+    `/records/latest?record_type=status&date_from=${dateFrom}&date_to=${dateTo}&limit=${limit}`,
+    token,
+  )
+}
