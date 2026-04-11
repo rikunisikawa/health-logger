@@ -1,5 +1,13 @@
 # 自動開発サイクル
 
+> **新しい自動実装システム（推奨）**: GitHub Issue をキューとして使う
+> `scripts/auto-implement.sh` → 詳細は `docs/auto-implement.md` を参照。
+>
+> 本ドキュメントは tasks/YAML ベースの旧システム（`automation/`）の説明。
+> 並行運用可能だが、新規タスクは GitHub Issue に登録することを推奨。
+
+---
+
 cron から起動し、各ロールエージェントにタスクを割り振り、成果物を蓄積して説明資料を自動生成する仕組み。
 
 ---

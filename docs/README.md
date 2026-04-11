@@ -9,6 +9,15 @@
 
 ## ドキュメント一覧
 
+### プロダクト戦略
+
+| ファイル | 内容 | 主な読者 |
+|---------|------|---------|
+| `product/vision.md` | プロダクトビジョン・ロードマップ・KPI・技術的方向性 | プロジェクトオーナー |
+| `product/push-notification.md` | プッシュ通知機能の設計 | 開発者 |
+
+---
+
 ### 業務・システム理解向け
 
 | ファイル | 内容 | 主な読者 |
@@ -32,6 +41,8 @@
 | `claude-code-usage.md` | Claude Code の使い方・Agent Teams・worktree・並列実行 | 開発者（AI コーディング） |
 | `claude-code-setup.md` | Claude Code の設定構成・agents/skills/hooks の設計方針 | 開発者（AI コーディング） |
 | `dev-cycle.md` | 自動開発サイクルの構成・実行方法・cron 設定・タスク管理 | 開発者（AI コーディング） |
+| `auto-implement.md` | GitHub Issue ベースの自動実装システム（cron + Claude）| 開発者（AI コーディング） |
+| `cron.md` | cron 登録済みジョブ一覧・起動確認・ログ確認手順 | 開発者（AI コーディング） |
 | `github-tokens.md` | GitHub トークンの管理方法 | 開発者 |
 | `infrastructure.drawio` | インフラ構成図（draw.io 形式） | 開発者・アーキテクト |
 
