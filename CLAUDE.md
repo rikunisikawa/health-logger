@@ -152,3 +152,47 @@ Register-ScheduledTask -TaskName "health-logger: Claude Code Dev Env Review" -Ac
 | `.claude/prompts/dev-env-review.md` | 非インタラクティブ実行用プロンプト |
 | `scripts/run-dev-env-review.sh` | 実行スクリプト（cron/launchd から呼び出す） |
 | `scripts/setup-schedule.md` | Windows/WSL 定期実行セットアップ手順 |
+
+---
+
+## AI PM ガバナンス原則
+
+### 人間が最終承認者である
+
+AI エージェントは **提案・分析・草案作成のみ** を行う。
+以下は必ずユーザーの明示的な承認が必要:
+
+- スプリント計画の確定・Issue へのマイルストーン割り当て
+- Issue/PR の新規作成・クローズ
+- PR のマージ
+- アーキテクチャ変更の意思決定
+- 外部公開情報（リリースノート）の確定
+
+### AI が自律的に行ってはいけないこと（追加）
+
+- 仕様変更（CLAUDE.md・settings.json の内容変更）
+- settings.json の deny リストを緩める変更
+- ユーザー未承認の Issue/PR 作成
+- main ブランチへの直接コミット
+- GitHub MCP 経由の破壊的操作（Issue クローズ・PR マージ）
+
+### AI PM エージェント階層
+
+```
+pm-agent（戦略・判断）
+  ├── deep-research-agent : 情報収集・データ分析
+  ├── architect-agent     : 技術設計の起案
+  ├── engineer-agent      : 実装の進捗管理
+  ├── qa-agent            : 品質確認の統括
+  └── integration-agent   : GitHub MCP 操作の代行
+```
+
+既存エージェント（orchestrator/frontend/lambda 等）は引き続き有効。
+新エージェントは既存を「置き換える」のではなく「上位から調整する」。
+
+### GitHub MCP 利用ルール
+
+- MCP 経由の書き込み操作は事前確認ステップを必ず設ける
+- `GITHUB_PERSONAL_ACCESS_TOKEN` はコードにハードコードしない（環境変数経由）
+- MCP が未接続でも `gh CLI` でフォールバック可能な設計にする
+- GitHub を Single Source of Truth とし、ローカルの状態より GitHub の状態を優先する
