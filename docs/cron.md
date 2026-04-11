@@ -14,6 +14,15 @@ WSL 上で動作する定期実行ジョブの一覧と運用手順。
 
 ---
 
+## 注意事項
+
+- **cron は nvm の PATH を引き継がない**ため、`scripts/auto-implement.sh` の先頭で nvm の PATH を明示的に設定している
+- Node.js のバージョンを変更した場合は `scripts/auto-implement.sh` の PATH 設定も更新すること
+  ```bash
+  # 現在の claude パスを確認
+  which claude
+  ```
+
 ## cron サービスの管理
 
 WSL を再起動すると cron が止まる場合がある。以下で確認・起動する。
