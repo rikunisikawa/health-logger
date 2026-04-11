@@ -29,6 +29,9 @@
 
 set -euo pipefail
 
+# ── PATH 設定（cron は通常ユーザーの PATH を引き継がないため明示的に設定）───
+export PATH="/home/riku_nishikawa/.nvm/versions/node/v22.16.0/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
+
 # ── 設定 ────────────────────────────────────────────────────
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
