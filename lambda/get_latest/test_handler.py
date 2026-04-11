@@ -152,7 +152,7 @@ def test_invalid_record_type_returns_400():
 
 @patch("handler.athena")
 def test_date_from_filter(mock_athena):
-    """date_from adds dt >= '...' to WHERE clause"""
+    """date_from adds DATE(recorded_at) >= DATE '...' to WHERE clause"""
     mock_athena.start_query_execution.return_value = {"QueryExecutionId": "qid-df"}
     mock_athena.get_query_execution.return_value = {
         "QueryExecution": {"Status": {"State": "SUCCEEDED"}}
@@ -165,12 +165,12 @@ def test_date_from_filter(mock_athena):
     result = handler.lambda_handler(_auth_event_params(date_from="2024-01-01"), None)
     assert result["statusCode"] == 200
     qs = mock_athena.start_query_execution.call_args[1]["QueryString"]
-    assert "dt >= '2024-01-01'" in qs
+    assert "DATE(recorded_at) >= DATE '2024-01-01'" in qs
 
 
 @patch("handler.athena")
 def test_date_to_filter(mock_athena):
-    """date_to adds dt <= '...' to WHERE clause"""
+    """date_to adds DATE(recorded_at) <= DATE '...' to WHERE clause"""
     mock_athena.start_query_execution.return_value = {"QueryExecutionId": "qid-dt"}
     mock_athena.get_query_execution.return_value = {
         "QueryExecution": {"Status": {"State": "SUCCEEDED"}}
@@ -183,7 +183,7 @@ def test_date_to_filter(mock_athena):
     result = handler.lambda_handler(_auth_event_params(date_to="2024-01-31"), None)
     assert result["statusCode"] == 200
     qs = mock_athena.start_query_execution.call_args[1]["QueryString"]
-    assert "dt <= '2024-01-31'" in qs
+    assert "DATE(recorded_at) <= DATE '2024-01-31'" in qs
 
 
 def test_invalid_date_from_returns_400():
@@ -214,3 +214,37 @@ def test_limit_cap_increased_to_1000(mock_athena):
     assert result["statusCode"] == 200
     qs = mock_athena.start_query_execution.call_args[1]["QueryString"]
     assert "LIMIT 1000" in qs
+
+
+@patch("handler.athena")
+def test_get_status_records_combined(mock_athena):
+    """getStatusRecords pattern: record_type=status + date_from + date_to uses DATE(recorded_at)"""
+    mock_athena.start_query_execution.return_value = {"QueryExecutionId": "qid-sr"}
+    mock_athena.get_query_execution.return_value = {
+        "QueryExecution": {"Status": {"State": "SUCCEEDED"}}
+    }
+    mock_athena.get_query_results.return_value = {
+        "ResultSet": {
+            "Rows": [
+                {"Data": [{"VarCharValue": "id"}, {"VarCharValue": "record_type"}, {"VarCharValue": "recorded_at"}]},
+                {"Data": [{"VarCharValue": "abc-123"}, {"VarCharValue": "status"}, {"VarCharValue": "2026-04-01T10:00:00Z"}]},
+            ]
+        }
+    }
+
+    import handler
+    result = handler.lambda_handler(
+        _auth_event_params(record_type="status", date_from="2026-04-01", date_to="2026-04-11", limit="500"),
+        None,
+    )
+    assert result["statusCode"] == 200
+    body = json.loads(result["body"])
+    assert len(body["records"]) == 1
+
+    qs = mock_athena.start_query_execution.call_args[1]["QueryString"]
+    assert "record_type = 'status'" in qs
+    assert "DATE(recorded_at) >= DATE '2026-04-01'" in qs
+    assert "DATE(recorded_at) <= DATE '2026-04-11'" in qs
+    # dt column must NOT appear in the query
+    assert "dt >=" not in qs
+    assert "dt <=" not in qs

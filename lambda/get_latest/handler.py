@@ -59,9 +59,9 @@ def lambda_handler(event, context):
     if record_type:
         conditions.append(f"record_type = '{record_type}'")
     if date_from:
-        conditions.append(f"dt >= '{date_from}'")
+        conditions.append(f"DATE(recorded_at) >= DATE '{date_from}'")
     if date_to:
-        conditions.append(f"dt <= '{date_to}'")
+        conditions.append(f"DATE(recorded_at) <= DATE '{date_to}'")
 
     where_clause = " AND ".join(conditions)
 
