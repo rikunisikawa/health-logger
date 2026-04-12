@@ -97,6 +97,8 @@ module "apigw" {
   delete_record_function_name           = module.lambda.delete_record_function_name
   get_env_data_latest_lambda_invoke_arn = module.lambda.get_env_data_latest_invoke_arn
   get_env_data_latest_function_name     = module.lambda.get_env_data_latest_function_name
+  get_summary_lambda_invoke_arn         = module.lambda.get_summary_invoke_arn
+  get_summary_function_name             = module.lambda.get_summary_function_name
 }
 
 # ── Amplify (React frontend hosting) ─────────────────────────────────────────
