@@ -54,7 +54,7 @@ jobs:
         id: plan
         run: |
           terraform plan \
-            -var='lambda_s3_keys={"create_record":"placeholder","get_latest":"placeholder","push_subscribe":"placeholder","push_notify":"placeholder","get_item_config":"placeholder","save_item_config":"placeholder","delete_record":"placeholder","get_env_data":"placeholder","get_env_data_latest":"placeholder"}' \
+            -var='lambda_s3_keys={"create_record":"placeholder","get_latest":"placeholder","push_subscribe":"placeholder","push_notify":"placeholder","get_item_config":"placeholder","save_item_config":"placeholder","delete_record":"placeholder","get_env_data":"placeholder","get_env_data_latest":"placeholder","get_summary":"placeholder"}' \
             -no-color -out=tfplan
         env:
           TF_VAR_vapid_private_key: ${{ secrets.VAPID_PRIVATE_KEY_PROD }}
