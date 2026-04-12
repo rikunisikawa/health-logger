@@ -165,34 +165,7 @@ select_next_issue() {
   echo "$issue_number"
 }
 
-ISSUE_NUMBER=$(select_next_issue || true)
-
-if [[ -z "$ISSUE_NUMBER" ]]; then
-  log "実装する Issue がありません。終了します。"
-  exit 0
-fi
-
-# Issue の詳細を取得
-ISSUE_TITLE=$(gh issue view "$ISSUE_NUMBER" --json title --jq '.title' 2>/dev/null || echo "Issue #$ISSUE_NUMBER")
-ISSUE_URL=$(gh issue view "$ISSUE_NUMBER" --json url --jq '.url' 2>/dev/null || echo "")
-
-log "実装対象: #$ISSUE_NUMBER - $ISSUE_TITLE"
-log "URL: $ISSUE_URL"
-
-# ── dry-run の場合はここで終了 ────────────────────────────────
-if [[ "$DRY_RUN" == "true" ]]; then
-  log "[DRY RUN] 実際には実行しません。"
-  log "[DRY RUN] 実装対象 Issue: #$ISSUE_NUMBER"
-  exit 0
-fi
-
-# ── in-progress ラベルを付与 ─────────────────────────────────
-log "ラベル付与: $LABEL_IN_PROGRESS"
-gh issue edit "$ISSUE_NUMBER" --add-label "$LABEL_IN_PROGRESS" 2>/dev/null || true
-
-# ── Claude で実装 ────────────────────────────────────────────
-# 開発手順は .claude/skills/implement/SKILL.md で定義済み。
-# $ARGUMENTS を Issue 番号に置換したものをプロンプトとして渡す。
+# ── スキルファイルの存在確認 ─────────────────────────────────
 SKILL_FILE="$REPO_ROOT/.claude/skills/implement/SKILL.md"
 
 if [[ ! -f "$SKILL_FILE" ]]; then
@@ -200,50 +173,82 @@ if [[ ! -f "$SKILL_FILE" ]]; then
   exit 1
 fi
 
-log "Claude を実行しています (model: $MODEL)..."
+# ── メインループ: Issue がなくなるか rate limit まで繰り返す ──
+# --issue 指定時は1件のみ処理して終了する
+PROCESSED=0
 
-CLAUDE_EXIT=0
-CLAUDE_TMP="/tmp/auto-implement-claude-$$.txt"
+while true; do
+  ISSUE_NUMBER=$(select_next_issue || true)
 
-# SKILL.md の $ARGUMENTS を Issue 番号に置換して stdin 経由で渡す（引数渡しだと -- 始まりで誤認される）
-# 出力を一時ファイルに保存してレート制限の検出に使う
-sed "s/\$ARGUMENTS/${ISSUE_NUMBER}/g" "$SKILL_FILE" | claude \
-  --print \
-  --model "$MODEL" \
-  --permission-mode bypassPermissions \
-  --allowedTools "Read,Write,Edit,Glob,Grep,Bash(git *),Bash(gh *),Bash(npm *),Bash(pytest *),Bash(python *),Bash(python3 *),Bash(npx *),Bash(ls *),Bash(find *),Bash(echo *),Bash(pwd),Bash(cd * && *)" \
-  > "$CLAUDE_TMP" 2>&1 || CLAUDE_EXIT=$?
+  if [[ -z "$ISSUE_NUMBER" ]]; then
+    log "実装する Issue がありません。終了します。（処理済み: ${PROCESSED}件）"
+    break
+  fi
 
-# 一時ファイルの内容をログに流す
-cat "$CLAUDE_TMP"
+  # Issue の詳細を取得
+  ISSUE_TITLE=$(gh issue view "$ISSUE_NUMBER" --json title --jq '.title' 2>/dev/null || echo "Issue #$ISSUE_NUMBER")
+  ISSUE_URL=$(gh issue view "$ISSUE_NUMBER" --json url --jq '.url' 2>/dev/null || echo "")
 
-# ── レート制限チェック（blocked にせず次回 cron で再試行）────────
-if grep -qiE "You've hit your limit|hit your.*limit" "$CLAUDE_TMP" 2>/dev/null; then
+  log "実装対象: #$ISSUE_NUMBER - $ISSUE_TITLE"
+  log "URL: $ISSUE_URL"
+
+  # ── dry-run の場合はここで終了 ──────────────────────────────
+  if [[ "$DRY_RUN" == "true" ]]; then
+    log "[DRY RUN] 実際には実行しません。"
+    log "[DRY RUN] 実装対象 Issue: #$ISSUE_NUMBER"
+    break
+  fi
+
+  # ── in-progress ラベルを付与 ───────────────────────────────
+  log "ラベル付与: $LABEL_IN_PROGRESS"
+  gh issue edit "$ISSUE_NUMBER" --add-label "$LABEL_IN_PROGRESS" 2>/dev/null || true
+
+  # ── Claude で実装 ──────────────────────────────────────────
+  log "Claude を実行しています (model: $MODEL)..."
+
+  CLAUDE_EXIT=0
+  CLAUDE_TMP="/tmp/auto-implement-claude-$$.txt"
+
+  sed "s/\$ARGUMENTS/${ISSUE_NUMBER}/g" "$SKILL_FILE" | claude \
+    --print \
+    --model "$MODEL" \
+    --permission-mode bypassPermissions \
+    --allowedTools "Read,Write,Edit,Glob,Grep,Bash(git *),Bash(gh *),Bash(npm *),Bash(pytest *),Bash(python *),Bash(python3 *),Bash(npx *),Bash(ls *),Bash(find *),Bash(echo *),Bash(pwd),Bash(cd * && *)" \
+    > "$CLAUDE_TMP" 2>&1 || CLAUDE_EXIT=$?
+
+  cat "$CLAUDE_TMP"
+
+  # ── rate limit チェック → ループを抜けて終了 ────────────────
+  if grep -qiE "You've hit your limit|hit your.*limit" "$CLAUDE_TMP" 2>/dev/null; then
+    rm -f "$CLAUDE_TMP"
+    log "レート制限に達しました。in-progress ラベルを外して終了します。（処理済み: ${PROCESSED}件）"
+    gh issue edit "$ISSUE_NUMBER" --remove-label "$LABEL_IN_PROGRESS" 2>/dev/null || true
+    break
+  fi
   rm -f "$CLAUDE_TMP"
-  log "レート制限に達しました。in-progress ラベルを外して次回 cron で再試行します。"
+
+  # ── 結果に応じてラベルを更新 ───────────────────────────────
   gh issue edit "$ISSUE_NUMBER" --remove-label "$LABEL_IN_PROGRESS" 2>/dev/null || true
-  exit 0
-fi
-rm -f "$CLAUDE_TMP"
 
-# ── 結果に応じてラベルを更新 ─────────────────────────────────
-gh issue edit "$ISSUE_NUMBER" --remove-label "$LABEL_IN_PROGRESS" 2>/dev/null || true
+  if [[ $CLAUDE_EXIT -eq 0 ]]; then
+    log "実装成功: Issue #$ISSUE_NUMBER"
+    gh issue edit "$ISSUE_NUMBER" --add-label "$LABEL_DONE" 2>/dev/null || true
+    log "ラベル付与: $LABEL_DONE"
+    PROCESSED=$((PROCESSED + 1))
+  else
+    log_error "実装失敗: Issue #$ISSUE_NUMBER (exit code: $CLAUDE_EXIT)"
+    gh issue edit "$ISSUE_NUMBER" --add-label "$LABEL_BLOCKED" 2>/dev/null || true
+    log "ラベル付与: $LABEL_BLOCKED（次の Issue に進みます）"
 
-if [[ $CLAUDE_EXIT -eq 0 ]]; then
-  log "実装成功: Issue #$ISSUE_NUMBER"
-  gh issue edit "$ISSUE_NUMBER" --add-label "$LABEL_DONE" 2>/dev/null || true
-  log "ラベル付与: $LABEL_DONE"
-else
-  log_error "実装失敗: Issue #$ISSUE_NUMBER (exit code: $CLAUDE_EXIT)"
-  gh issue edit "$ISSUE_NUMBER" --add-label "$LABEL_BLOCKED" 2>/dev/null || true
-  log "ラベル付与: $LABEL_BLOCKED"
+    gh issue comment "$ISSUE_NUMBER" \
+      --body "⚠️ **自動実装が失敗しました** ($(date '+%Y-%m-%d %H:%M'))\n\nClaude の実行が exit code ${CLAUDE_EXIT} で終了しました。ログは \`/tmp/auto-implement.log\` を確認してください。\n\n手動での実装が必要です。" \
+      2>/dev/null || true
+  fi
 
-  # Issue にコメントを残す
-  gh issue comment "$ISSUE_NUMBER" \
-    --body "⚠️ **自動実装が失敗しました** ($(date '+%Y-%m-%d %H:%M'))\n\nClaude の実行が exit code ${CLAUDE_EXIT} で終了しました。ログは \`/tmp/auto-implement.log\` を確認してください。\n\n手動での実装が必要です。" \
-    2>/dev/null || true
-
-  exit 1
-fi
+  # --issue 指定時は1件で終了
+  if [[ -n "$FORCE_ISSUE" ]]; then
+    break
+  fi
+done
 
 log "終了"
