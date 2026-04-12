@@ -1,0 +1,284 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+
+    <!-- ===== タイトル ===== -->
+    <mxCell id="title" value="health-logger × Claude Code 自動開発システム" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=20;fontStyle=1;fontColor=#1a1a2e;" vertex="1" parent="1">
+      <mxGeometry x="300" y="20" width="1050" height="40" as="geometry"/>
+    </mxCell>
+
+    <!-- ===== A: CRON スケジューリング (左上) ===== -->
+    <mxCell id="cron-bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;opacity=50;" vertex="1" parent="1">
+      <mxGeometry x="40" y="80" width="340" height="220" as="geometry"/>
+    </mxCell>
+    <mxCell id="cron-title" value="⏰ Cron スケジューリング" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=1;fontSize=13;fontColor=#7d4e00;" vertex="1" parent="1">
+      <mxGeometry x="55" y="88" width="240" height="24" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="cron-1000" value="AM 10:00" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="60" y="120" width="100" height="36" as="geometry"/>
+    </mxCell>
+    <mxCell id="cron-1800" value="PM 18:00" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="60" y="170" width="100" height="36" as="geometry"/>
+    </mxCell>
+    <mxCell id="cron-0901" value="毎月1日 AM 9:00" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="60" y="220" width="140" height="36" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="auto-impl-sh" value="scripts/auto-implement.sh" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0a30a;strokeColor=#BD7000;fontColor=#000000;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="200" y="135" width="160" height="46" as="geometry"/>
+    </mxCell>
+    <mxCell id="dev-env-sh" value="scripts/run-dev-env-review.sh" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="210" y="220" width="160" height="36" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="e-cron1000" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="cron-1000" target="auto-impl-sh" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e-cron1800" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="cron-1800" target="auto-impl-sh" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e-cron0901" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="cron-0901" target="dev-env-sh" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <!-- ===== B: 自動実装フロー (中央上) ===== -->
+    <mxCell id="autoflow-bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;opacity=50;" vertex="1" parent="1">
+      <mxGeometry x="400" y="80" width="860" height="220" as="geometry"/>
+    </mxCell>
+    <mxCell id="autoflow-title" value="🤖 自動実装フロー（auto-implement.sh）" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=1;fontSize=13;fontColor=#00458c;" vertex="1" parent="1">
+      <mxGeometry x="415" y="88" width="400" height="24" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="flow-milestone" value="最小番号の&#xa;open Milestone を取得&#xa;(gh api)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="420" y="118" width="130" height="56" as="geometry"/>
+    </mxCell>
+    <mxCell id="flow-issue" value="blocked/in-progress 除外&#xa;最小 Issue を選択" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="570" y="118" width="130" height="56" as="geometry"/>
+    </mxCell>
+    <mxCell id="flow-label-start" value="ラベル付与&#xa;(in-progress)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="720" y="118" width="120" height="56" as="geometry"/>
+    </mxCell>
+    <mxCell id="flow-claude" value="claude --print&#xa;--model sonnet&#xa;(implement skill)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#4a90d9;strokeColor=#2c5f8a;fontColor=#fff;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+      <mxGeometry x="860" y="112" width="140" height="60" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="flow-done" value="✅ done ラベル" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="1030" y="100" width="110" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="flow-blocked" value="⛔ blocked ラベル&#xa;+ Issueコメント" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="1030" y="160" width="110" height="46" as="geometry"/>
+    </mxCell>
+    <mxCell id="flow-none" value="対象なし&#xa;→ 正常終了" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="570" y="200" width="110" height="40" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="e-ms-issue" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="flow-milestone" target="flow-issue" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e-issue-label" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="flow-issue" target="flow-label-start" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e-label-claude" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="flow-label-start" target="flow-claude" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e-claude-done" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="flow-claude" target="flow-done" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="1010" y="130"/>
+          <mxPoint x="1010" y="120"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e-claude-blocked" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="flow-claude" target="flow-blocked" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="1010" y="155"/>
+          <mxPoint x="1010" y="183"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="e-issue-none" style="edgeStyle=orthogonalEdgeStyle;dashed=1;" edge="1" source="flow-issue" target="flow-none" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <!-- ===== C: 開発サイクル (左中央) ===== -->
+    <mxCell id="devcycle-bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;opacity=50;" vertex="1" parent="1">
+      <mxGeometry x="40" y="330" width="580" height="310" as="geometry"/>
+    </mxCell>
+    <mxCell id="devcycle-title" value="🔄 開発サイクル（implement skill）" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=1;fontSize=13;fontColor=#235e15;" vertex="1" parent="1">
+      <mxGeometry x="55" y="338" width="380" height="24" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="dc-issue" value="Step 1&#xa;Issue確認&#xa;+ スキーマ調査" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="60" y="370" width="100" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="dc-branch" value="Step 2&#xa;ブランチ作成&#xa;(main → feature/*)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="180" y="370" width="110" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="dc-red" value="Step 3 RED&#xa;失敗テストを書く&#xa;(pytest → FAILED確認)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="310" y="370" width="130" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="dc-green" value="Step 4 GREEN&#xa;最小実装&#xa;(pytest → PASSED)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="460" y="370" width="130" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="dc-alltest" value="Step 5&#xa;全テスト通過&#xa;pytest lambda/ &amp;&#xa;npm run build" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="460" y="460" width="130" height="66" as="geometry"/>
+    </mxCell>
+    <mxCell id="dc-review" value="Step 6&#xa;セルフレビュー&#xa;(SQL注入・secrets)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="310" y="460" width="130" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="dc-commit" value="Step 7&#xa;コミット&#xa;(feat/fix/chore...)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="180" y="460" width="110" height="60" as="geometry"/>
+    </mxCell>
+    <mxCell id="dc-pr" value="Step 8&#xa;PR作成&#xa;(gh pr create)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#82b366;strokeColor=#235e15;fontColor=#fff;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="60" y="460" width="100" height="60" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="e-dc12" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="dc-issue" target="dc-branch" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e-dc23" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="dc-branch" target="dc-red" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e-dc34" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="dc-red" target="dc-green" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e-dc45" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="dc-green" target="dc-alltest" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e-dc56" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="dc-alltest" target="dc-review" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e-dc67" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="dc-review" target="dc-commit" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+    <mxCell id="e-dc78" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="dc-commit" target="dc-pr" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+    <mxCell id="athena-note" value="★ Athena クエリ変更時:&#xa;SQL文字列アサート必須&#xa;(dt ではなく DATE(recorded_at))" style="text;html=1;strokeColor=#d6b656;fillColor=#fffde7;align=left;fontSize=10;rounded=1;" vertex="1" parent="1">
+      <mxGeometry x="310" y="545" width="220" height="56" as="geometry"/>
+    </mxCell>
+
+    <!-- ===== D: ガードレール (右中央) ===== -->
+    <mxCell id="guard-bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;opacity=50;" vertex="1" parent="1">
+      <mxGeometry x="640" y="330" width="620" height="310" as="geometry"/>
+    </mxCell>
+    <mxCell id="guard-title" value="🛡️ ガードレール" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=1;fontSize=13;fontColor=#8b0000;" vertex="1" parent="1">
+      <mxGeometry x="655" y="338" width="300" height="24" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="hooks-bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffd7d7;strokeColor=#b85450;" vertex="1" parent="1">
+      <mxGeometry x="655" y="362" width="280" height="200" as="geometry"/>
+    </mxCell>
+    <mxCell id="hooks-title" value="Hooks (settings.json)" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="665" y="368" width="240" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="hook1" value="block-forbidden-dirs.py&#xa;(PreToolUse: Write/Edit)&#xa;→ 禁止ディレクトリへの書き込みをブロック" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;align=left;" vertex="1" parent="1">
+      <mxGeometry x="665" y="392" width="260" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="hook2" value="warn-critical-file-edit.py&#xa;(PreToolUse: Write/Edit)&#xa;→ CLAUDE.md / settings.json 変更時に警告" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;align=left;" vertex="1" parent="1">
+      <mxGeometry x="665" y="442" width="260" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="hook3" value="run-tests-after-edit.py&#xa;(PostToolUse: Write/Edit)&#xa;→ Lambda変更後に自動 pytest 実行" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;align=left;" vertex="1" parent="1">
+      <mxGeometry x="665" y="492" width="260" height="44" as="geometry"/>
+    </mxCell>
+    <mxCell id="hook4" value="format-lint-on-edit.py / load-context-on-start.py" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffeaea;strokeColor=#b85450;fontSize=10;align=left;" vertex="1" parent="1">
+      <mxGeometry x="665" y="542" width="260" height="14" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="claudemd-box" value="CLAUDE.md (ガバナンス憲法)&#xa;・main 直コミット禁止&#xa;・settings.json deny リスト変更禁止&#xa;・Issue/PR 作成はユーザー承認必須&#xa;・MCP 書き込みは事前確認必須" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffd7d7;strokeColor=#b85450;fontSize=10;align=left;" vertex="1" parent="1">
+      <mxGeometry x="950" y="362" width="290" height="90" as="geometry"/>
+    </mxCell>
+    <mxCell id="deny-box" value="settings.json deny リスト&#xa;・git push --force&#xa;・git reset --hard&#xa;・rm -rf&#xa;・chmod / sudo&#xa;・curl | sh などの危険操作" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffd7d7;strokeColor=#b85450;fontSize=10;align=left;" vertex="1" parent="1">
+      <mxGeometry x="950" y="462" width="290" height="90" as="geometry"/>
+    </mxCell>
+    <mxCell id="git-push-hook" value="git-push-reminder.py&#xa;(PostToolUse: Bash(git push))&#xa;→ pushした際にPR作成を促す" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffd7d7;strokeColor=#b85450;fontSize=10;align=left;" vertex="1" parent="1">
+      <mxGeometry x="950" y="562" width="290" height="44" as="geometry"/>
+    </mxCell>
+
+    <!-- ===== E: Claude Code 設定構成 (下部) ===== -->
+    <mxCell id="config-bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;opacity=50;" vertex="1" parent="1">
+      <mxGeometry x="40" y="670" width="1220" height="440" as="geometry"/>
+    </mxCell>
+    <mxCell id="config-title" value="⚙️ Claude Code 設定構成（.claude/）" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=1;fontSize=13;fontColor=#4a0d6e;" vertex="1" parent="1">
+      <mxGeometry x="55" y="678" width="400" height="24" as="geometry"/>
+    </mxCell>
+
+    <!-- Agents -->
+    <mxCell id="agents-box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+      <mxGeometry x="55" y="706" width="220" height="386" as="geometry"/>
+    </mxCell>
+    <mxCell id="agents-title" value="Agents (21個)" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="55" y="708" width="220" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="ag1" value="🎯 pm-agent&#xa;(戦略・Issue/PR操作)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d6b3e8;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="65" y="732" width="200" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="ag2" value="🔌 integration-agent&#xa;(GitHub MCP専門)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d6b3e8;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="65" y="778" width="200" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="ag3" value="🏗 architect-agent / engineer-agent&#xa;qa-agent / deep-research-agent" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="65" y="824" width="200" height="46" as="geometry"/>
+    </mxCell>
+    <mxCell id="ag4" value="既存エージェント (15個)&#xa;frontend / lambda / devops&#xa;data_engineering / testing&#xa;orchestrator / analysis&#xa;documentation / project_management&#xa;architecture / reviewer / security&#xa;product_manager / designer / explainer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ede0f4;strokeColor=#9673a6;fontSize=10;align=left;" vertex="1" parent="1">
+      <mxGeometry x="65" y="876" width="200" height="106" as="geometry"/>
+    </mxCell>
+
+    <!-- Skills -->
+    <mxCell id="skills-box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+      <mxGeometry x="290" y="706" width="220" height="386" as="geometry"/>
+    </mxCell>
+    <mxCell id="skills-title" value="Skills (18個)" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="290" y="708" width="220" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="sk1" value="implement ⭐&#xa;(Issue→TDD→実装→PR)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d6b3e8;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="300" y="732" width="200" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="sk2" value="issue-triage / sprint-planning&#xa;status-report / pr-review-prep" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d6b3e8;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="300" y="778" width="200" height="40" as="geometry"/>
+    </mxCell>
+    <mxCell id="sk3" value="task-breakdown / risk-review&#xa;release-check / update-docs&#xa;deep-research" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="300" y="824" width="200" height="46" as="geometry"/>
+    </mxCell>
+    <mxCell id="sk4" value="技術スキル (9個)&#xa;git-workflow / python-lambda&#xa;typescript-react / terraform-iac&#xa;ci-cd / data-pipeline&#xa;project-architecture / aws-boto3&#xa;dev-env-review" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ede0f4;strokeColor=#9673a6;fontSize=10;align=left;" vertex="1" parent="1">
+      <mxGeometry x="300" y="876" width="200" height="106" as="geometry"/>
+    </mxCell>
+
+    <!-- Commands -->
+    <mxCell id="cmds-box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+      <mxGeometry x="525" y="706" width="200" height="386" as="geometry"/>
+    </mxCell>
+    <mxCell id="cmds-title" value="Commands (12個)" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="525" y="708" width="200" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="cmd-list" value="/implement&#xa;/tdd&#xa;/issue-triage&#xa;/sprint-plan&#xa;/status-report&#xa;/risk-review&#xa;/release-check&#xa;/code-review&#xa;/checkpoint&#xa;/plan&#xa;/learn&#xa;/dev-env-review" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="535" y="732" width="185" height="210" as="geometry"/>
+    </mxCell>
+
+    <!-- Rules -->
+    <mxCell id="rules-box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+      <mxGeometry x="740" y="706" width="240" height="386" as="geometry"/>
+    </mxCell>
+    <mxCell id="rules-title" value="Rules (.claude/rules/)" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="740" y="708" width="240" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="rules-list" value="python/testing.md&#xa;  ・Athena SQL文字列アサート必須&#xa;  ・RED→GREEN TDD 手順&#xa;  ・モック設計ガイド&#xa;&#xa;python/lambda.md&#xa;  ・UUID検証・Pydantic v2分離&#xa;  ・エラーレスポンス統一形式&#xa;&#xa;terraform/&#xa;  ・sensitive=true&#xa;  ・モジュール分割規則&#xa;&#xa;typescript/&#xa;  ・strict:true 維持&#xa;  ・環境変数 VITE_* 経由のみ" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="750" y="732" width="225" height="240" as="geometry"/>
+    </mxCell>
+
+    <!-- Docs -->
+    <mxCell id="docs-box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+      <mxGeometry x="995" y="706" width="255" height="386" as="geometry"/>
+    </mxCell>
+    <mxCell id="docs-title" value="関連ドキュメント" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+      <mxGeometry x="995" y="708" width="255" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="docs-list" value="docs/product/vision.md&#xa;  → ミッション・ロードマップ・KPI&#xa;&#xa;docs/ai-pm/&#xa;  → ガバナンス・ワークフロー&#xa;  → スプリント管理・ADR&#xa;&#xa;docs/auto-implement.md&#xa;  → 自動実装システム詳細&#xa;&#xa;docs/cron.md&#xa;  → cronジョブ一覧・管理&#xa;&#xa;docs/templates/&#xa;  → Issue / PR テンプレート" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="1005" y="732" width="240" height="220" as="geometry"/>
+    </mxCell>
+
+    <!-- ===== 接続矢印 ===== -->
+    <mxCell id="e-sh-flow" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#d79b00;strokeWidth=2;" edge="1" source="auto-impl-sh" target="flow-milestone" parent="1">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e-claude-dc" value="implement skill を使用" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#4a90d9;strokeWidth=2;" edge="1" source="flow-claude" target="dc-issue" parent="1">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="930" y="310"/>
+          <mxPoint x="110" y="310"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+
+  </root>
+</mxGraphModel>
