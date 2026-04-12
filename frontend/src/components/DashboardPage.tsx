@@ -27,8 +27,14 @@ import {
 } from "../utils/time";
 import { linearRegression, interpretCorrelation } from "../utils/regression";
 import type { CorrPoint, RegressionResult } from "../utils/regression";
-
-type MetricKey = "fatigue" | "mood" | "motivation" | "concentration";
+import {
+  minuteTick,
+  computeDailyAverages,
+  computeWeekdayAverages,
+  computeTimebandAverages,
+  computeIntradayData,
+} from "../utils/dashboardUtils";
+import type { MetricKey } from "../utils/dashboardUtils";
 type Tab = "trend" | "intraday" | "events" | "env" | "correlation";
 type EventsView = "timeline" | "trend";
 type TrendAggMode = "daily" | "weekday" | "timeband";
@@ -50,22 +56,7 @@ const METRIC_CONFIG: Record<
   concentration: { name: "集中力", stroke: "#0d6efd", btnVariant: "primary" },
 };
 
-interface DailyAvg {
-  date: string;
-  fatigue: number | null;
-  mood: number | null;
-  motivation: number | null;
-  concentration: number | null;
-}
-
-interface IntradayPoint {
-  time: string;
-  minutes: number;
-  fatigue: number | null;
-  mood: number | null;
-  motivation: number | null;
-  concentration: number | null;
-}
+import type { DailyAvg, IntradayPoint } from "../utils/dashboardUtils";
 
 interface EventPoint {
   x: number;
@@ -124,13 +115,6 @@ const STATUS_COLORS = [
   "#96ceb4",
   "#dda0dd",
 ];
-
-const WEEKDAY_LABELS = ["月", "火", "水", "木", "金", "土", "日"];
-
-const minuteTick = (v: number) =>
-  `${Math.floor(v / 60)
-    .toString()
-    .padStart(2, "0")}:${(v % 60).toString().padStart(2, "0")}`;
 
 interface MetricSelectorProps {
   visibleMetrics: Set<MetricKey>;
@@ -217,188 +201,26 @@ export default function DashboardPage({ onBack }: Props) {
   const trendData = useMemo((): DailyAvg[] => {
     const cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - trendDays);
-
-    const byDate: Record<
-      string,
-      {
-        fatigue: number[];
-        mood: number[];
-        motivation: number[];
-        concentration: number[];
-      }
-    > = {};
-    for (const r of records) {
-      if (r.record_type !== "daily") continue;
-      const d = parseUtc(r.recorded_at);
-      if (d < cutoff) continue;
-      const key = toLocalDateStr(d);
-      if (!byDate[key])
-        byDate[key] = {
-          fatigue: [],
-          mood: [],
-          motivation: [],
-          concentration: [],
-        };
-      const f = parseFloat(r.fatigue_score);
-      const m = parseFloat(r.mood_score);
-      const mv = parseFloat(r.motivation_score);
-      const c = parseFloat(r.concentration_score);
-      if (!isNaN(f)) byDate[key].fatigue.push(f);
-      if (!isNaN(m)) byDate[key].mood.push(m);
-      if (!isNaN(mv)) byDate[key].motivation.push(mv);
-      if (!isNaN(c)) byDate[key].concentration.push(c);
-    }
-
-    return Object.entries(byDate)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([date, { fatigue, mood, motivation, concentration }]) => {
-        const avg = (arr: number[]) =>
-          arr.length
-            ? Math.round(arr.reduce((a, b) => a + b, 0) / arr.length)
-            : null;
-        return {
-          date: date.slice(5), // MM-DD
-          fatigue: avg(fatigue),
-          mood: avg(mood),
-          motivation: avg(motivation),
-          concentration: avg(concentration),
-        };
-      });
+    return computeDailyAverages(records, cutoff);
   }, [records, trendDays]);
 
   // ── 曜日別集計 ────────────────────────────────────────────────────────
   const weekdayData = useMemo(() => {
     const cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - trendDays);
-
-    const byWeekday: Record<
-      number,
-      {
-        fatigue: number[];
-        mood: number[];
-        motivation: number[];
-        concentration: number[];
-      }
-    > = {};
-    for (let i = 0; i < 7; i++) {
-      byWeekday[i] = {
-        fatigue: [],
-        mood: [],
-        motivation: [],
-        concentration: [],
-      };
-    }
-
-    for (const r of records) {
-      if (r.record_type !== "daily") continue;
-      const d = parseUtc(r.recorded_at);
-      if (d < cutoff) continue;
-      // JS: 0=日, 1=月, ..., 6=土 → 月始まりに変換 (月=0, ..., 日=6)
-      const jsDay = d.getDay();
-      const monFirst = jsDay === 0 ? 6 : jsDay - 1;
-      const f = parseFloat(r.fatigue_score);
-      const m = parseFloat(r.mood_score);
-      const mv = parseFloat(r.motivation_score);
-      const c = parseFloat(r.concentration_score);
-      if (!isNaN(f)) byWeekday[monFirst].fatigue.push(f);
-      if (!isNaN(m)) byWeekday[monFirst].mood.push(m);
-      if (!isNaN(mv)) byWeekday[monFirst].motivation.push(mv);
-      if (!isNaN(c)) byWeekday[monFirst].concentration.push(c);
-    }
-
-    const avg = (arr: number[]) =>
-      arr.length
-        ? Math.round(arr.reduce((a, b) => a + b, 0) / arr.length)
-        : null;
-
-    return WEEKDAY_LABELS.map((label, i) => ({
-      label,
-      fatigue: avg(byWeekday[i].fatigue),
-      mood: avg(byWeekday[i].mood),
-      motivation: avg(byWeekday[i].motivation),
-      concentration: avg(byWeekday[i].concentration),
-    }));
+    return computeWeekdayAverages(records, cutoff);
   }, [records, trendDays]);
 
   // ── 時間帯別集計 ──────────────────────────────────────────────────────
   const timebandData = useMemo(() => {
     const cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - trendDays);
-
-    const bands: Record<
-      string,
-      {
-        fatigue: number[];
-        mood: number[];
-        motivation: number[];
-        concentration: number[];
-      }
-    > = {
-      朝: { fatigue: [], mood: [], motivation: [], concentration: [] },
-      昼: { fatigue: [], mood: [], motivation: [], concentration: [] },
-      夜: { fatigue: [], mood: [], motivation: [], concentration: [] },
-    };
-
-    const getBand = (hour: number): string => {
-      if (hour >= 5 && hour < 12) return "朝";
-      if (hour >= 12 && hour < 18) return "昼";
-      return "夜";
-    };
-
-    for (const r of records) {
-      if (r.record_type !== "daily") continue;
-      const d = parseUtc(r.recorded_at);
-      if (d < cutoff) continue;
-      const hour = d.getHours();
-      const band = getBand(hour);
-      const f = parseFloat(r.fatigue_score);
-      const m = parseFloat(r.mood_score);
-      const mv = parseFloat(r.motivation_score);
-      const c = parseFloat(r.concentration_score);
-      if (!isNaN(f)) bands[band].fatigue.push(f);
-      if (!isNaN(m)) bands[band].mood.push(m);
-      if (!isNaN(mv)) bands[band].motivation.push(mv);
-      if (!isNaN(c)) bands[band].concentration.push(c);
-    }
-
-    const avg = (arr: number[]) =>
-      arr.length
-        ? Math.round(arr.reduce((a, b) => a + b, 0) / arr.length)
-        : null;
-
-    return (["朝", "昼", "夜"] as const).map((label) => ({
-      label,
-      fatigue: avg(bands[label].fatigue),
-      mood: avg(bands[label].mood),
-      motivation: avg(bands[label].motivation),
-      concentration: avg(bands[label].concentration),
-    }));
+    return computeTimebandAverages(records, cutoff);
   }, [records, trendDays]);
 
   // ── 日内変動 ─────────────────────────────────────────────────────────
   const intradayData = useMemo((): IntradayPoint[] => {
-    return records
-      .filter(
-        (r) =>
-          r.record_type === "daily" &&
-          toLocalDateStr(parseUtc(r.recorded_at)) === selectedDate,
-      )
-      .map((r) => {
-        const d = parseUtc(r.recorded_at);
-        const f = parseFloat(r.fatigue_score);
-        const m = parseFloat(r.mood_score);
-        const mv = parseFloat(r.motivation_score);
-        const c = parseFloat(r.concentration_score);
-        return {
-          time: toLocalTimeStr(d),
-          minutes: toLocalMinutes(d),
-          fatigue: isNaN(f) ? null : f,
-          mood: isNaN(m) ? null : m,
-          motivation: isNaN(mv) ? null : mv,
-          concentration: isNaN(c) ? null : c,
-        };
-      })
-      .sort((a, b) => a.minutes - b.minutes);
+    return computeIntradayData(records, selectedDate);
   }, [records, selectedDate]);
 
   // ── ステータス期間（日内変動用）───────────────────────────────────────
