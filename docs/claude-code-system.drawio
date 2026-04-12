@@ -13,9 +13,12 @@
     <mxCell id="cron-bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;opacity=50;" vertex="1" parent="1">
       <mxGeometry x="40" y="80" width="340" height="220" as="geometry"/>
     </mxCell>
-    <mxCell id="cron-title" value="⏰ Cron スケジューリング" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=1;fontSize=13;fontColor=#7d4e00;" vertex="1" parent="1">
-      <mxGeometry x="55" y="88" width="240" height="24" as="geometry"/>
-    </mxCell>
+    <!-- cron-title: リンク → docs/cron.md -->
+    <UserObject label="⏰ Cron スケジューリング" link="https://github.com/rikunisikawa/health-logger/blob/main/docs/cron.md" id="cron-title">
+      <mxCell style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=5;fontSize=13;fontColor=#7d4e00;" vertex="1" parent="1">
+        <mxGeometry x="55" y="88" width="240" height="24" as="geometry"/>
+      </mxCell>
+    </UserObject>
 
     <mxCell id="cron-1000" value="AM 10:00" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;" vertex="1" parent="1">
       <mxGeometry x="60" y="120" width="100" height="36" as="geometry"/>
@@ -27,12 +30,19 @@
       <mxGeometry x="60" y="220" width="140" height="36" as="geometry"/>
     </mxCell>
 
-    <mxCell id="auto-impl-sh" value="scripts/auto-implement.sh" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0a30a;strokeColor=#BD7000;fontColor=#000000;fontStyle=1;fontSize=12;" vertex="1" parent="1">
-      <mxGeometry x="200" y="135" width="160" height="46" as="geometry"/>
-    </mxCell>
-    <mxCell id="dev-env-sh" value="scripts/run-dev-env-review.sh" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
-      <mxGeometry x="210" y="220" width="160" height="36" as="geometry"/>
-    </mxCell>
+    <!-- auto-impl-sh: リンク → scripts/auto-implement.sh -->
+    <UserObject label="scripts/auto-implement.sh" link="https://github.com/rikunisikawa/health-logger/blob/main/scripts/auto-implement.sh" id="auto-impl-sh">
+      <mxCell style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0a30a;strokeColor=#BD7000;fontColor=#000000;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+        <mxGeometry x="200" y="135" width="160" height="46" as="geometry"/>
+      </mxCell>
+    </UserObject>
+
+    <!-- dev-env-sh: リンク → scripts/run-dev-env-review.sh -->
+    <UserObject label="scripts/run-dev-env-review.sh" link="https://github.com/rikunisikawa/health-logger/blob/main/scripts/run-dev-env-review.sh" id="dev-env-sh">
+      <mxCell style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+        <mxGeometry x="210" y="220" width="160" height="36" as="geometry"/>
+      </mxCell>
+    </UserObject>
 
     <mxCell id="e-cron1000" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="cron-1000" target="auto-impl-sh" parent="1">
       <mxGeometry relative="1" as="geometry"/>
@@ -48,9 +58,12 @@
     <mxCell id="autoflow-bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;opacity=50;" vertex="1" parent="1">
       <mxGeometry x="400" y="80" width="860" height="220" as="geometry"/>
     </mxCell>
-    <mxCell id="autoflow-title" value="🤖 自動実装フロー（auto-implement.sh）" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=1;fontSize=13;fontColor=#00458c;" vertex="1" parent="1">
-      <mxGeometry x="415" y="88" width="400" height="24" as="geometry"/>
-    </mxCell>
+    <!-- autoflow-title: リンク → docs/auto-implement.md -->
+    <UserObject label="🤖 自動実装フロー（auto-implement.sh）" link="https://github.com/rikunisikawa/health-logger/blob/main/docs/auto-implement.md" id="autoflow-title">
+      <mxCell style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=5;fontSize=13;fontColor=#00458c;" vertex="1" parent="1">
+        <mxGeometry x="415" y="88" width="400" height="24" as="geometry"/>
+      </mxCell>
+    </UserObject>
 
     <mxCell id="flow-milestone" value="最小番号の&#xa;open Milestone を取得&#xa;(gh api)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
       <mxGeometry x="420" y="118" width="130" height="56" as="geometry"/>
@@ -108,9 +121,12 @@
     <mxCell id="devcycle-bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;opacity=50;" vertex="1" parent="1">
       <mxGeometry x="40" y="330" width="580" height="310" as="geometry"/>
     </mxCell>
-    <mxCell id="devcycle-title" value="🔄 開発サイクル（implement skill）" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=1;fontSize=13;fontColor=#235e15;" vertex="1" parent="1">
-      <mxGeometry x="55" y="338" width="380" height="24" as="geometry"/>
-    </mxCell>
+    <!-- devcycle-title: リンク → .claude/skills/implement/SKILL.md -->
+    <UserObject label="🔄 開発サイクル（implement skill）" link="https://github.com/rikunisikawa/health-logger/blob/main/.claude/skills/implement/SKILL.md" id="devcycle-title">
+      <mxCell style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=5;fontSize=13;fontColor=#235e15;" vertex="1" parent="1">
+        <mxGeometry x="55" y="338" width="380" height="24" as="geometry"/>
+      </mxCell>
+    </UserObject>
 
     <mxCell id="dc-issue" value="Step 1&#xa;Issue確認&#xa;+ スキーマ調査" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
       <mxGeometry x="60" y="370" width="100" height="60" as="geometry"/>
@@ -145,9 +161,12 @@
     <mxCell id="e-dc67" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="dc-review" target="dc-commit" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
     <mxCell id="e-dc78" style="edgeStyle=orthogonalEdgeStyle;" edge="1" source="dc-commit" target="dc-pr" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
 
-    <mxCell id="athena-note" value="★ Athena クエリ変更時:&#xa;SQL文字列アサート必須&#xa;(dt ではなく DATE(recorded_at))" style="text;html=1;strokeColor=#d6b656;fillColor=#fffde7;align=left;fontSize=10;rounded=1;" vertex="1" parent="1">
-      <mxGeometry x="310" y="545" width="220" height="56" as="geometry"/>
-    </mxCell>
+    <!-- athena-note: リンク → .claude/rules/python/testing.md -->
+    <UserObject label="★ Athena クエリ変更時:&lt;br&gt;SQL文字列アサート必須&lt;br&gt;(dt ではなく DATE(recorded_at))" link="https://github.com/rikunisikawa/health-logger/blob/main/.claude/rules/python/testing.md" id="athena-note">
+      <mxCell style="text;html=1;strokeColor=#d6b656;fillColor=#fffde7;align=left;fontSize=10;rounded=1;" vertex="1" parent="1">
+        <mxGeometry x="310" y="545" width="220" height="56" as="geometry"/>
+      </mxCell>
+    </UserObject>
 
     <!-- ===== D: ガードレール (右中央) ===== -->
     <mxCell id="guard-bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;opacity=50;" vertex="1" parent="1">
@@ -160,39 +179,69 @@
     <mxCell id="hooks-bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffd7d7;strokeColor=#b85450;" vertex="1" parent="1">
       <mxGeometry x="655" y="362" width="280" height="200" as="geometry"/>
     </mxCell>
-    <mxCell id="hooks-title" value="Hooks (settings.json)" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=1;fontSize=11;" vertex="1" parent="1">
-      <mxGeometry x="665" y="368" width="240" height="20" as="geometry"/>
-    </mxCell>
-    <mxCell id="hook1" value="block-forbidden-dirs.py&#xa;(PreToolUse: Write/Edit)&#xa;→ 禁止ディレクトリへの書き込みをブロック" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;align=left;" vertex="1" parent="1">
-      <mxGeometry x="665" y="392" width="260" height="44" as="geometry"/>
-    </mxCell>
-    <mxCell id="hook2" value="warn-critical-file-edit.py&#xa;(PreToolUse: Write/Edit)&#xa;→ CLAUDE.md / settings.json 変更時に警告" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;align=left;" vertex="1" parent="1">
-      <mxGeometry x="665" y="442" width="260" height="44" as="geometry"/>
-    </mxCell>
-    <mxCell id="hook3" value="run-tests-after-edit.py&#xa;(PostToolUse: Write/Edit)&#xa;→ Lambda変更後に自動 pytest 実行" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;align=left;" vertex="1" parent="1">
-      <mxGeometry x="665" y="492" width="260" height="44" as="geometry"/>
-    </mxCell>
+    <!-- hooks-title: リンク → .claude/settings.json -->
+    <UserObject label="Hooks (settings.json)" link="https://github.com/rikunisikawa/health-logger/blob/main/.claude/settings.json" id="hooks-title">
+      <mxCell style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=5;fontSize=11;" vertex="1" parent="1">
+        <mxGeometry x="665" y="368" width="240" height="20" as="geometry"/>
+      </mxCell>
+    </UserObject>
+
+    <!-- hook1: リンク → .claude/hooks/block-forbidden-dirs.py -->
+    <UserObject label="block-forbidden-dirs.py&lt;br&gt;(PreToolUse: Write/Edit)&lt;br&gt;→ 禁止ディレクトリへの書き込みをブロック" link="https://github.com/rikunisikawa/health-logger/blob/main/.claude/hooks/block-forbidden-dirs.py" id="hook1">
+      <mxCell style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;align=left;" vertex="1" parent="1">
+        <mxGeometry x="665" y="392" width="260" height="44" as="geometry"/>
+      </mxCell>
+    </UserObject>
+
+    <!-- hook2: リンク → .claude/hooks/warn-critical-file-edit.py -->
+    <UserObject label="warn-critical-file-edit.py&lt;br&gt;(PreToolUse: Write/Edit)&lt;br&gt;→ CLAUDE.md / settings.json 変更時に警告" link="https://github.com/rikunisikawa/health-logger/blob/main/.claude/hooks/warn-critical-file-edit.py" id="hook2">
+      <mxCell style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;align=left;" vertex="1" parent="1">
+        <mxGeometry x="665" y="442" width="260" height="44" as="geometry"/>
+      </mxCell>
+    </UserObject>
+
+    <!-- hook3: リンク → .claude/hooks/run-tests-after-edit.py -->
+    <UserObject label="run-tests-after-edit.py&lt;br&gt;(PostToolUse: Write/Edit)&lt;br&gt;→ Lambda変更後に自動 pytest 実行" link="https://github.com/rikunisikawa/health-logger/blob/main/.claude/hooks/run-tests-after-edit.py" id="hook3">
+      <mxCell style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;align=left;" vertex="1" parent="1">
+        <mxGeometry x="665" y="492" width="260" height="44" as="geometry"/>
+      </mxCell>
+    </UserObject>
+
     <mxCell id="hook4" value="format-lint-on-edit.py / load-context-on-start.py" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffeaea;strokeColor=#b85450;fontSize=10;align=left;" vertex="1" parent="1">
       <mxGeometry x="665" y="542" width="260" height="14" as="geometry"/>
     </mxCell>
 
-    <mxCell id="claudemd-box" value="CLAUDE.md (ガバナンス憲法)&#xa;・main 直コミット禁止&#xa;・settings.json deny リスト変更禁止&#xa;・Issue/PR 作成はユーザー承認必須&#xa;・MCP 書き込みは事前確認必須" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffd7d7;strokeColor=#b85450;fontSize=10;align=left;" vertex="1" parent="1">
-      <mxGeometry x="950" y="362" width="290" height="90" as="geometry"/>
-    </mxCell>
-    <mxCell id="deny-box" value="settings.json deny リスト&#xa;・git push --force&#xa;・git reset --hard&#xa;・rm -rf&#xa;・chmod / sudo&#xa;・curl | sh などの危険操作" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffd7d7;strokeColor=#b85450;fontSize=10;align=left;" vertex="1" parent="1">
-      <mxGeometry x="950" y="462" width="290" height="90" as="geometry"/>
-    </mxCell>
-    <mxCell id="git-push-hook" value="git-push-reminder.py&#xa;(PostToolUse: Bash(git push))&#xa;→ pushした際にPR作成を促す" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffd7d7;strokeColor=#b85450;fontSize=10;align=left;" vertex="1" parent="1">
-      <mxGeometry x="950" y="562" width="290" height="44" as="geometry"/>
-    </mxCell>
+    <!-- claudemd-box: リンク → CLAUDE.md -->
+    <UserObject label="CLAUDE.md (ガバナンス憲法)&lt;br&gt;・main 直コミット禁止&lt;br&gt;・settings.json deny リスト変更禁止&lt;br&gt;・Issue/PR 作成はユーザー承認必須&lt;br&gt;・MCP 書き込みは事前確認必須" link="https://github.com/rikunisikawa/health-logger/blob/main/CLAUDE.md" id="claudemd-box">
+      <mxCell style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffd7d7;strokeColor=#b85450;fontSize=10;align=left;" vertex="1" parent="1">
+        <mxGeometry x="950" y="362" width="290" height="90" as="geometry"/>
+      </mxCell>
+    </UserObject>
+
+    <!-- deny-box: リンク → .claude/settings.json -->
+    <UserObject label="settings.json deny リスト&lt;br&gt;・git push --force&lt;br&gt;・git reset --hard&lt;br&gt;・rm -rf&lt;br&gt;・chmod / sudo&lt;br&gt;・curl | sh などの危険操作" link="https://github.com/rikunisikawa/health-logger/blob/main/.claude/settings.json" id="deny-box">
+      <mxCell style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffd7d7;strokeColor=#b85450;fontSize=10;align=left;" vertex="1" parent="1">
+        <mxGeometry x="950" y="462" width="290" height="90" as="geometry"/>
+      </mxCell>
+    </UserObject>
+
+    <!-- git-push-hook: リンク → .claude/hooks/git-push-reminder.py -->
+    <UserObject label="git-push-reminder.py&lt;br&gt;(PostToolUse: Bash(git push))&lt;br&gt;→ pushした際にPR作成を促す" link="https://github.com/rikunisikawa/health-logger/blob/main/.claude/hooks/git-push-reminder.py" id="git-push-hook">
+      <mxCell style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffd7d7;strokeColor=#b85450;fontSize=10;align=left;" vertex="1" parent="1">
+        <mxGeometry x="950" y="562" width="290" height="44" as="geometry"/>
+      </mxCell>
+    </UserObject>
 
     <!-- ===== E: Claude Code 設定構成 (下部) ===== -->
     <mxCell id="config-bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;opacity=50;" vertex="1" parent="1">
       <mxGeometry x="40" y="670" width="1220" height="440" as="geometry"/>
     </mxCell>
-    <mxCell id="config-title" value="⚙️ Claude Code 設定構成（.claude/）" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=1;fontSize=13;fontColor=#4a0d6e;" vertex="1" parent="1">
-      <mxGeometry x="55" y="678" width="400" height="24" as="geometry"/>
-    </mxCell>
+    <!-- config-title: リンク → docs/claude-code-setup.md -->
+    <UserObject label="⚙️ Claude Code 設定構成（.claude/）" link="https://github.com/rikunisikawa/health-logger/blob/main/docs/claude-code-setup.md" id="config-title">
+      <mxCell style="text;html=1;strokeColor=none;fillColor=none;align=left;fontStyle=5;fontSize=13;fontColor=#4a0d6e;" vertex="1" parent="1">
+        <mxGeometry x="55" y="678" width="400" height="24" as="geometry"/>
+      </mxCell>
+    </UserObject>
 
     <!-- Agents -->
     <mxCell id="agents-box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
@@ -201,12 +250,18 @@
     <mxCell id="agents-title" value="Agents (21個)" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontStyle=1;fontSize=11;" vertex="1" parent="1">
       <mxGeometry x="55" y="708" width="220" height="20" as="geometry"/>
     </mxCell>
-    <mxCell id="ag1" value="🎯 pm-agent&#xa;(戦略・Issue/PR操作)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d6b3e8;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
-      <mxGeometry x="65" y="732" width="200" height="40" as="geometry"/>
-    </mxCell>
-    <mxCell id="ag2" value="🔌 integration-agent&#xa;(GitHub MCP専門)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d6b3e8;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
-      <mxGeometry x="65" y="778" width="200" height="40" as="geometry"/>
-    </mxCell>
+    <!-- ag1: リンク → .claude/agents/pm-agent.md -->
+    <UserObject label="🎯 pm-agent&lt;br&gt;(戦略・Issue/PR操作)" link="https://github.com/rikunisikawa/health-logger/blob/main/.claude/agents/pm-agent.md" id="ag1">
+      <mxCell style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d6b3e8;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+        <mxGeometry x="65" y="732" width="200" height="40" as="geometry"/>
+      </mxCell>
+    </UserObject>
+    <!-- ag2: リンク → .claude/agents/integration-agent.md -->
+    <UserObject label="🔌 integration-agent&lt;br&gt;(GitHub MCP専門)" link="https://github.com/rikunisikawa/health-logger/blob/main/.claude/agents/integration-agent.md" id="ag2">
+      <mxCell style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d6b3e8;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+        <mxGeometry x="65" y="778" width="200" height="40" as="geometry"/>
+      </mxCell>
+    </UserObject>
     <mxCell id="ag3" value="🏗 architect-agent / engineer-agent&#xa;qa-agent / deep-research-agent" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
       <mxGeometry x="65" y="824" width="200" height="46" as="geometry"/>
     </mxCell>
@@ -221,9 +276,12 @@
     <mxCell id="skills-title" value="Skills (18個)" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontStyle=1;fontSize=11;" vertex="1" parent="1">
       <mxGeometry x="290" y="708" width="220" height="20" as="geometry"/>
     </mxCell>
-    <mxCell id="sk1" value="implement ⭐&#xa;(Issue→TDD→実装→PR)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d6b3e8;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
-      <mxGeometry x="300" y="732" width="200" height="40" as="geometry"/>
-    </mxCell>
+    <!-- sk1: リンク → .claude/skills/implement/SKILL.md -->
+    <UserObject label="implement ⭐&lt;br&gt;(Issue→TDD→実装→PR)" link="https://github.com/rikunisikawa/health-logger/blob/main/.claude/skills/implement/SKILL.md" id="sk1">
+      <mxCell style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d6b3e8;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+        <mxGeometry x="300" y="732" width="200" height="40" as="geometry"/>
+      </mxCell>
+    </UserObject>
     <mxCell id="sk2" value="issue-triage / sprint-planning&#xa;status-report / pr-review-prep" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d6b3e8;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
       <mxGeometry x="300" y="778" width="200" height="40" as="geometry"/>
     </mxCell>
@@ -249,9 +307,12 @@
     <mxCell id="rules-box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
       <mxGeometry x="740" y="706" width="240" height="386" as="geometry"/>
     </mxCell>
-    <mxCell id="rules-title" value="Rules (.claude/rules/)" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontStyle=1;fontSize=11;" vertex="1" parent="1">
-      <mxGeometry x="740" y="708" width="240" height="20" as="geometry"/>
-    </mxCell>
+    <!-- rules-title: リンク → .claude/rules/README.md -->
+    <UserObject label="Rules (.claude/rules/)" link="https://github.com/rikunisikawa/health-logger/blob/main/.claude/rules/README.md" id="rules-title">
+      <mxCell style="text;html=1;strokeColor=none;fillColor=none;align=center;fontStyle=5;fontSize=11;" vertex="1" parent="1">
+        <mxGeometry x="740" y="708" width="240" height="20" as="geometry"/>
+      </mxCell>
+    </UserObject>
     <mxCell id="rules-list" value="python/testing.md&#xa;  ・Athena SQL文字列アサート必須&#xa;  ・RED→GREEN TDD 手順&#xa;  ・モック設計ガイド&#xa;&#xa;python/lambda.md&#xa;  ・UUID検証・Pydantic v2分離&#xa;  ・エラーレスポンス統一形式&#xa;&#xa;terraform/&#xa;  ・sensitive=true&#xa;  ・モジュール分割規則&#xa;&#xa;typescript/&#xa;  ・strict:true 維持&#xa;  ・環境変数 VITE_* 経由のみ" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=10;" vertex="1" parent="1">
       <mxGeometry x="750" y="732" width="225" height="240" as="geometry"/>
     </mxCell>
@@ -260,9 +321,12 @@
     <mxCell id="docs-box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
       <mxGeometry x="995" y="706" width="255" height="386" as="geometry"/>
     </mxCell>
-    <mxCell id="docs-title" value="関連ドキュメント" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontStyle=1;fontSize=11;" vertex="1" parent="1">
-      <mxGeometry x="995" y="708" width="255" height="20" as="geometry"/>
-    </mxCell>
+    <!-- docs-title: リンク → docs/README.md -->
+    <UserObject label="関連ドキュメント" link="https://github.com/rikunisikawa/health-logger/blob/main/docs/README.md" id="docs-title">
+      <mxCell style="text;html=1;strokeColor=none;fillColor=none;align=center;fontStyle=5;fontSize=11;" vertex="1" parent="1">
+        <mxGeometry x="995" y="708" width="255" height="20" as="geometry"/>
+      </mxCell>
+    </UserObject>
     <mxCell id="docs-list" value="docs/product/vision.md&#xa;  → ミッション・ロードマップ・KPI&#xa;&#xa;docs/ai-pm/&#xa;  → ガバナンス・ワークフロー&#xa;  → スプリント管理・ADR&#xa;&#xa;docs/auto-implement.md&#xa;  → 自動実装システム詳細&#xa;&#xa;docs/cron.md&#xa;  → cronジョブ一覧・管理&#xa;&#xa;docs/templates/&#xa;  → Issue / PR テンプレート" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=10;" vertex="1" parent="1">
       <mxGeometry x="1005" y="732" width="240" height="220" as="geometry"/>
     </mxCell>

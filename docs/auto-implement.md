@@ -3,6 +3,8 @@
 GitHub Issue を実装キューとして、cron から Claude を呼び出して自動実装する仕組み。
 トークン制限で実装が中断しても、次回の cron 実行から続きを再開できる。
 
+> 📊 **システム全体図**: [`docs/claude-code-system.drawio`](./claude-code-system.drawio)（Draw.io / VS Code 拡張で開く）
+
 ---
 
 ## 全体の流れ

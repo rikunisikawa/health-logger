@@ -39,7 +39,8 @@
 | `DBT_OPERATIONS.md` | dbt 実行方法・モデル構成・スキーマ変更手順 | 開発者・データエンジニア |
 | `TROUBLESHOOTING.md` | よくあるエラーと対処集 | 開発者・運用担当者 |
 | `claude-code-usage.md` | Claude Code の使い方・Agent Teams・worktree・並列実行 | 開発者（AI コーディング） |
-| `claude-code-setup.md` | Claude Code の設定構成・agents/skills/hooks の設計方針 | 開発者（AI コーディング） |
+| `claude-code-setup.md` | Claude Code の設定構成・agents/skills/hooks の設計方針（Mermaid 全体図あり） | 開発者（AI コーディング） |
+| `claude-code-system.drawio` | Claude Code 自動開発システム全体図（Draw.io・リンク付き） | 開発者（AI コーディング） |
 | `dev-cycle.md` | 自動開発サイクルの構成・実行方法・cron 設定・タスク管理 | 開発者（AI コーディング） |
 | `auto-implement.md` | GitHub Issue ベースの自動実装システム（cron + Claude）| 開発者（AI コーディング） |
 | `cron.md` | cron 登録済みジョブ一覧・起動確認・ログ確認手順 | 開発者（AI コーディング） |

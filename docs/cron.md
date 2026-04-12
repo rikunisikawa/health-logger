@@ -2,6 +2,8 @@
 
 WSL 上で動作する定期実行ジョブの一覧と運用手順。
 
+> 📊 **システム全体図**: [`docs/claude-code-system.drawio`](./claude-code-system.drawio)（Draw.io / VS Code 拡張で開く）
+
 ---
 
 ## 登録済みジョブ

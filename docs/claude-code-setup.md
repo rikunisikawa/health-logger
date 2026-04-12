@@ -2,6 +2,57 @@
 
 health-logger プロジェクトにおける Claude Code の設定方針と構成を解説する。
 
+> 📊 **システム全体図（詳細版）**: [`docs/claude-code-system.drawio`](./claude-code-system.drawio) を VS Code（Draw.io 拡張）または [app.diagrams.net](https://app.diagrams.net) で開く。図内の各ノードはクリックで対応ファイルに遷移する。
+
+---
+
+## システム全体図（概要）
+
+```mermaid
+flowchart TD
+    subgraph CRON["⏰ Cron スケジューリング"]
+        C1["AM 10:00"]
+        C2["PM 18:00"]
+        C3["毎月1日 AM 9:00"]
+    end
+
+    subgraph AUTO["🤖 auto-implement.sh"]
+        A1["最小 Milestone の\nopen Issue 選択\n(gh api)"]
+        A2["claude --print\n--model sonnet"]
+        A3["✅ done ラベル"]
+        A4["⛔ blocked ラベル\n+ Issue コメント"]
+    end
+
+    subgraph SKILL["🔄 implement skill（開発サイクル）"]
+        D1["Step1: Issue確認\n+ スキーマ調査"]
+        D2["Step2: ブランチ作成"]
+        D3["Step3: RED\nテスト先行"]
+        D4["Step4: GREEN\n最小実装"]
+        D5["Step5: 全テスト\npytest + build"]
+        D6["Step6: セルフレビュー"]
+        D7["Step7: コミット"]
+        D8["Step8: PR作成\ngh pr create"]
+    end
+
+    subgraph GUARD["🛡️ ガードレール"]
+        G1["Hooks（5種）\nblock / warn / test\n/ lint / context"]
+        G2["CLAUDE.md\nガバナンス憲法"]
+        G3["settings.json\ndeny リスト"]
+    end
+
+    C1 --> A1
+    C2 --> A1
+    C3 --> DEV["run-dev-env-review.sh"]
+    A1 --> A2
+    A2 -->|exit 0| A3
+    A2 -->|exit 1| A4
+    A2 -->|implement skill| D1
+    D1 --> D2 --> D3 --> D4 --> D5 --> D6 --> D7 --> D8
+
+    GUARD -.->|制約・強制| AUTO
+    GUARD -.->|制約・強制| SKILL
+```
+
 ---
 
 ## 設計方針
