@@ -153,7 +153,8 @@ select_next_issue() {
       .[] |
       select(
         (.labels | map(.name) | contains([\"$LABEL_BLOCKED\"]) | not) and
-        (.labels | map(.name) | contains([\"$LABEL_IN_PROGRESS\"]) | not)
+        (.labels | map(.name) | contains([\"$LABEL_IN_PROGRESS\"]) | not) and
+        (.labels | map(.name) | contains([\"$LABEL_DONE\"]) | not)
       )
     ] | sort_by(.number) | .[0].number" 2>/dev/null || echo "")
 
