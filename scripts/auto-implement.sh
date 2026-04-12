@@ -203,13 +203,28 @@ fi
 log "Claude を実行しています (model: $MODEL)..."
 
 CLAUDE_EXIT=0
+CLAUDE_TMP="/tmp/auto-implement-claude-$$.txt"
+
 # SKILL.md の $ARGUMENTS を Issue 番号に置換して stdin 経由で渡す（引数渡しだと -- 始まりで誤認される）
+# 出力を一時ファイルに保存してレート制限の検出に使う
 sed "s/\$ARGUMENTS/${ISSUE_NUMBER}/g" "$SKILL_FILE" | claude \
   --print \
   --model "$MODEL" \
   --permission-mode bypassPermissions \
   --allowedTools "Read,Write,Edit,Glob,Grep,Bash(git *),Bash(gh *),Bash(npm *),Bash(pytest *),Bash(python *),Bash(python3 *),Bash(npx *),Bash(ls *),Bash(find *),Bash(echo *),Bash(pwd),Bash(cd * && *)" \
-  || CLAUDE_EXIT=$?
+  > "$CLAUDE_TMP" 2>&1 || CLAUDE_EXIT=$?
+
+# 一時ファイルの内容をログに流す
+cat "$CLAUDE_TMP"
+
+# ── レート制限チェック（blocked にせず次回 cron で再試行）────────
+if grep -qiE "You've hit your limit|hit your.*limit" "$CLAUDE_TMP" 2>/dev/null; then
+  rm -f "$CLAUDE_TMP"
+  log "レート制限に達しました。in-progress ラベルを外して次回 cron で再試行します。"
+  gh issue edit "$ISSUE_NUMBER" --remove-label "$LABEL_IN_PROGRESS" 2>/dev/null || true
+  exit 0
+fi
+rm -f "$CLAUDE_TMP"
 
 # ── 結果に応じてラベルを更新 ─────────────────────────────────
 gh issue edit "$ISSUE_NUMBER" --remove-label "$LABEL_IN_PROGRESS" 2>/dev/null || true

@@ -10,8 +10,7 @@ WSL 上で動作する定期実行ジョブの一覧と運用手順。
 
 | 実行時刻 | スクリプト | ログ | 目的 |
 |---------|-----------|------|------|
-| 毎日 AM 10:00 | `scripts/auto-implement.sh` | `/tmp/auto-implement.log` | GitHub Issue を自動実装して PR を作成 |
-| 毎日 PM 6:00 | `scripts/auto-implement.sh` | `/tmp/auto-implement.log` | 同上（1日2回実行） |
+| 3時間ごと | `scripts/auto-implement.sh` | `/tmp/auto-implement.log` | GitHub Issue を自動実装して PR を作成（0:00 / 3:00 / 6:00 / 9:00 / 12:00 / 15:00 / 18:00 / 21:00）|
 | 毎月1日 AM 9:00 | `scripts/run-dev-env-review.sh --model haiku` | `/tmp/dev-env-review.log` | Claude Code 開発環境レビュー |
 
 ---
@@ -55,9 +54,8 @@ crontab -e
 現在の crontab:
 
 ```cron
-# 毎日 AM 10:00 と PM 6:00 に自動実装を実行
-0 10 * * * cd ~/dev/health-logger/health-logger && bash scripts/auto-implement.sh >> /tmp/auto-implement.log 2>&1
-0 18 * * * cd ~/dev/health-logger/health-logger && bash scripts/auto-implement.sh >> /tmp/auto-implement.log 2>&1
+# 3時間ごとに自動実装を実行（レート制限時は次回に自動持ち越し）
+0 */3 * * * cd ~/dev/health-logger/health-logger && bash scripts/auto-implement.sh >> /tmp/auto-implement.log 2>&1
 
 # 毎月1日 AM 9:00 に開発環境レビューを実行
 0 9 1 * * cd /home/riku_nishikawa/dev/health-logger/health-logger && bash scripts/run-dev-env-review.sh --model haiku >> /tmp/dev-env-review.log 2>&1
