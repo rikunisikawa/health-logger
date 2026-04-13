@@ -3,7 +3,7 @@ variable "env" { type = string }
 
 variable "lambda_s3_keys" {
   type        = map(string)
-  description = "Map of function name to S3 key: {create_record=..., get_latest=..., push_subscribe=..., push_notify=..., get_item_config=..., save_item_config=..., delete_record=...}"
+  description = "Map of function name to S3 key: {create_record=..., get_latest=..., push_subscribe=..., push_notify=..., weekly_push_notify=..., get_item_config=..., save_item_config=..., delete_record=..., get_env_data_latest=...}"
 }
 
 variable "firehose_stream_arn" { type = string }

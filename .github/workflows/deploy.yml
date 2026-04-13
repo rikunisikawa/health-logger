@@ -52,6 +52,7 @@ jobs:
       get_env_data_key:          ${{ steps.upload.outputs.get_env_data_key }}
       get_env_data_latest_key:   ${{ steps.upload.outputs.get_env_data_latest_key }}
       get_summary_key:           ${{ steps.upload.outputs.get_summary_key }}
+      weekly_push_notify_key:    ${{ steps.upload.outputs.weekly_push_notify_key }}
 
     steps:
       - uses: actions/checkout@v4
@@ -126,6 +127,12 @@ jobs:
           pip install -r requirements.txt -t . --quiet
           zip -r ../../get_summary.zip . -x "test_*" "conftest.py" "*.pyc" "__pycache__/*"
 
+      - name: Package weekly_push_notify Lambda
+        run: |
+          cd lambda/weekly_push_notify
+          pip install -r requirements.txt -t . --quiet
+          zip -r ../../weekly_push_notify.zip . -x "test_*" "conftest.py" "*.pyc" "__pycache__/*"
+
       - name: Upload ZIPs to S3 artifacts bucket
         id: upload
         run: |
@@ -141,6 +148,7 @@ jobs:
           GET_ENV_KEY="get_env_data/${SHA}.zip"
           GET_ENV_LATEST_KEY="get_env_data_latest/${SHA}.zip"
           GET_SUMMARY_KEY="get_summary/${SHA}.zip"
+          WEEKLY_PUSH_KEY="weekly_push_notify/${SHA}.zip"
 
           aws s3 cp create_record.zip         "s3://${BUCKET}/${CREATE_KEY}"
           aws s3 cp get_latest.zip            "s3://${BUCKET}/${LATEST_KEY}"
@@ -152,17 +160,19 @@ jobs:
           aws s3 cp get_env_data.zip          "s3://${BUCKET}/${GET_ENV_KEY}"
           aws s3 cp get_env_data_latest.zip   "s3://${BUCKET}/${GET_ENV_LATEST_KEY}"
           aws s3 cp get_summary.zip           "s3://${BUCKET}/${GET_SUMMARY_KEY}"
+          aws s3 cp weekly_push_notify.zip    "s3://${BUCKET}/${WEEKLY_PUSH_KEY}"
 
-          echo "create_record_key=${CREATE_KEY}"           >> $GITHUB_OUTPUT
-          echo "get_latest_key=${LATEST_KEY}"               >> $GITHUB_OUTPUT
-          echo "push_subscribe_key=${PUSH_SUB_KEY}"         >> $GITHUB_OUTPUT
-          echo "push_notify_key=${PUSH_NOTIFY_KEY}"         >> $GITHUB_OUTPUT
-          echo "get_item_config_key=${GET_ITEM_KEY}"        >> $GITHUB_OUTPUT
-          echo "save_item_config_key=${SAVE_ITEM_KEY}"      >> $GITHUB_OUTPUT
-          echo "delete_record_key=${DELETE_KEY}"            >> $GITHUB_OUTPUT
-          echo "get_env_data_key=${GET_ENV_KEY}"            >> $GITHUB_OUTPUT
-          echo "get_env_data_latest_key=${GET_ENV_LATEST_KEY}" >> $GITHUB_OUTPUT
-          echo "get_summary_key=${GET_SUMMARY_KEY}"         >> $GITHUB_OUTPUT
+          echo "create_record_key=${CREATE_KEY}"               >> $GITHUB_OUTPUT
+          echo "get_latest_key=${LATEST_KEY}"                   >> $GITHUB_OUTPUT
+          echo "push_subscribe_key=${PUSH_SUB_KEY}"             >> $GITHUB_OUTPUT
+          echo "push_notify_key=${PUSH_NOTIFY_KEY}"             >> $GITHUB_OUTPUT
+          echo "get_item_config_key=${GET_ITEM_KEY}"            >> $GITHUB_OUTPUT
+          echo "save_item_config_key=${SAVE_ITEM_KEY}"          >> $GITHUB_OUTPUT
+          echo "delete_record_key=${DELETE_KEY}"                >> $GITHUB_OUTPUT
+          echo "get_env_data_key=${GET_ENV_KEY}"                >> $GITHUB_OUTPUT
+          echo "get_env_data_latest_key=${GET_ENV_LATEST_KEY}"  >> $GITHUB_OUTPUT
+          echo "get_summary_key=${GET_SUMMARY_KEY}"             >> $GITHUB_OUTPUT
+          echo "weekly_push_notify_key=${WEEKLY_PUSH_KEY}"      >> $GITHUB_OUTPUT
 
   # ── 2. Terraform apply (infrastructure + Lambda config) ───────────────────
   terraform-apply:
@@ -194,7 +204,7 @@ jobs:
       - name: Terraform Apply
         run: |
           terraform apply -auto-approve \
-            -var='lambda_s3_keys={"create_record":"${{ needs.build-lambda.outputs.create_record_key }}","get_latest":"${{ needs.build-lambda.outputs.get_latest_key }}","push_subscribe":"${{ needs.build-lambda.outputs.push_subscribe_key }}","push_notify":"${{ needs.build-lambda.outputs.push_notify_key }}","get_item_config":"${{ needs.build-lambda.outputs.get_item_config_key }}","save_item_config":"${{ needs.build-lambda.outputs.save_item_config_key }}","delete_record":"${{ needs.build-lambda.outputs.delete_record_key }}","get_env_data":"${{ needs.build-lambda.outputs.get_env_data_key }}","get_env_data_latest":"${{ needs.build-lambda.outputs.get_env_data_latest_key }}","get_summary":"${{ needs.build-lambda.outputs.get_summary_key }}"}'
+            -var='lambda_s3_keys={"create_record":"${{ needs.build-lambda.outputs.create_record_key }}","get_latest":"${{ needs.build-lambda.outputs.get_latest_key }}","push_subscribe":"${{ needs.build-lambda.outputs.push_subscribe_key }}","push_notify":"${{ needs.build-lambda.outputs.push_notify_key }}","weekly_push_notify":"${{ needs.build-lambda.outputs.weekly_push_notify_key }}","get_item_config":"${{ needs.build-lambda.outputs.get_item_config_key }}","save_item_config":"${{ needs.build-lambda.outputs.save_item_config_key }}","delete_record":"${{ needs.build-lambda.outputs.delete_record_key }}","get_env_data":"${{ needs.build-lambda.outputs.get_env_data_key }}","get_env_data_latest":"${{ needs.build-lambda.outputs.get_env_data_latest_key }}","get_summary":"${{ needs.build-lambda.outputs.get_summary_key }}"}'
         env:
           TF_VAR_vapid_private_key: ${{ secrets.VAPID_PRIVATE_KEY_PROD }}
 
