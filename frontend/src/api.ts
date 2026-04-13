@@ -99,3 +99,15 @@ export function getStatusRecords(
     token,
   );
 }
+
+export function exportRecords(
+  token: string,
+  format: "csv" | "json" = "csv",
+  dateFrom?: string,
+  dateTo?: string,
+): Promise<{ url: string; filename: string; count: number }> {
+  const params = new URLSearchParams({ format });
+  if (dateFrom) params.set("date_from", dateFrom);
+  if (dateTo) params.set("date_to", dateTo);
+  return apiFetch(`/export?${params.toString()}`, token);
+}

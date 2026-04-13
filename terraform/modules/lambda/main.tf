@@ -427,6 +427,30 @@ resource "aws_lambda_function" "weekly_push_notify" {
   depends_on = [aws_s3_bucket.artifacts]
 }
 
+resource "aws_lambda_function" "export_records" {
+  function_name = "${local.name}-export-records"
+  role          = aws_iam_role.lambda.arn
+  runtime       = "python3.13"
+  handler       = "handler.lambda_handler"
+
+  s3_bucket   = aws_s3_bucket.artifacts.id
+  s3_key      = var.lambda_s3_keys["export_records"]
+  timeout     = 120
+  memory_size = 512
+
+  tracing_config { mode = "Active" }
+
+  environment {
+    variables = {
+      ATHENA_DATABASE      = var.athena_database
+      ATHENA_OUTPUT_BUCKET = var.s3_results_bucket_name
+      EXPORT_BUCKET        = var.s3_results_bucket_name
+    }
+  }
+
+  depends_on = [aws_s3_bucket.artifacts]
+}
+
 # ── EventBridge Scheduler (weekly push summary every Monday 08:00 JST = Sunday 23:00 UTC) ──
 
 resource "aws_scheduler_schedule" "push_notify_weekly" {

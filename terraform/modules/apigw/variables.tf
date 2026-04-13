@@ -26,3 +26,5 @@ variable "get_env_data_latest_lambda_invoke_arn" { type = string }
 variable "get_env_data_latest_function_name" { type = string }
 variable "get_summary_lambda_invoke_arn" { type = string }
 variable "get_summary_function_name" { type = string }
+variable "export_records_lambda_invoke_arn" { type = string }
+variable "export_records_function_name" { type = string }
