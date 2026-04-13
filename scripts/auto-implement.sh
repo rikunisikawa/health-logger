@@ -179,6 +179,14 @@ fi
 PROCESSED=0
 
 while true; do
+  # done だが PR 未マージ（Issue が open のまま）があれば待機（コンフリクト防止）
+  pending_done=$(gh api "repos/$REPO_FULL/issues?state=open&labels=auto-implement%3A%20done&per_page=1" \
+    --jq 'length' 2>/dev/null || echo "0")
+  if [[ "$pending_done" -gt 0 ]]; then
+    log "マージ待ちの実装済み Issue が ${pending_done}件あります。PR をマージしてから次の実装を開始します。"
+    break
+  fi
+
   ISSUE_NUMBER=$(select_next_issue || true)
 
   if [[ -z "$ISSUE_NUMBER" ]]; then
