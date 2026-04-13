@@ -14,3 +14,5 @@ output "delete_record_invoke_arn" { value = aws_lambda_function.delete_record.in
 output "delete_record_function_name" { value = aws_lambda_function.delete_record.function_name }
 output "get_env_data_latest_invoke_arn" { value = aws_lambda_function.get_env_data_latest.invoke_arn }
 output "get_env_data_latest_function_name" { value = aws_lambda_function.get_env_data_latest.function_name }
+output "get_summary_invoke_arn" { value = aws_lambda_function.get_summary.invoke_arn }
+output "get_summary_function_name" { value = aws_lambda_function.get_summary.function_name }

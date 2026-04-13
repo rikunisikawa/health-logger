@@ -58,6 +58,22 @@ resource "aws_dynamodb_table" "push_subscriptions" {
   }
 }
 
+resource "aws_dynamodb_table" "summary_cache" {
+  name         = "${local.name}-summary-cache"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "cache_key"
+
+  attribute {
+    name = "cache_key"
+    type = "S"
+  }
+
+  ttl {
+    attribute_name = "expires_at"
+    enabled        = true
+  }
+}
+
 resource "aws_iam_role_policy" "lambda" {
   role = aws_iam_role.lambda.id
   policy = jsonencode({
@@ -77,6 +93,11 @@ resource "aws_iam_role_policy" "lambda" {
         Effect   = "Allow"
         Action   = ["dynamodb:PutItem", "dynamodb:GetItem"]
         Resource = [aws_dynamodb_table.item_configs.arn]
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["dynamodb:PutItem", "dynamodb:GetItem"]
+        Resource = [aws_dynamodb_table.summary_cache.arn]
       },
       {
         Effect = "Allow"
@@ -346,6 +367,31 @@ resource "aws_lambda_function" "get_env_data_latest" {
   environment {
     variables = {
       S3_ENV_DATA_BUCKET = var.s3_env_data_bucket_name
+    }
+  }
+
+  depends_on = [aws_s3_bucket.artifacts]
+}
+
+resource "aws_lambda_function" "get_summary" {
+  function_name = "${local.name}-get-summary"
+  role          = aws_iam_role.lambda.arn
+  runtime       = "python3.13"
+  handler       = "handler.lambda_handler"
+
+  s3_bucket = aws_s3_bucket.artifacts.id
+  s3_key    = var.lambda_s3_keys["get_summary"]
+
+  timeout     = 60
+  memory_size = 256
+
+  tracing_config { mode = "Active" }
+
+  environment {
+    variables = {
+      ATHENA_DATABASE      = var.athena_database
+      ATHENA_OUTPUT_BUCKET = var.s3_results_bucket_name
+      SUMMARY_CACHE_TABLE  = aws_dynamodb_table.summary_cache.name
     }
   }
 
