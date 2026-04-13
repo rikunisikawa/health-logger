@@ -28,3 +28,5 @@ variable "get_summary_lambda_invoke_arn" { type = string }
 variable "get_summary_function_name" { type = string }
 variable "export_records_lambda_invoke_arn" { type = string }
 variable "export_records_function_name" { type = string }
+variable "get_correlation_lambda_invoke_arn" { type = string }
+variable "get_correlation_function_name" { type = string }

@@ -19,3 +19,5 @@ output "get_summary_function_name" { value = aws_lambda_function.get_summary.fun
 output "weekly_push_notify_function_name" { value = aws_lambda_function.weekly_push_notify.function_name }
 output "export_records_invoke_arn" { value = aws_lambda_function.export_records.invoke_arn }
 output "export_records_function_name" { value = aws_lambda_function.export_records.function_name }
+output "get_correlation_invoke_arn" { value = aws_lambda_function.get_correlation.invoke_arn }
+output "get_correlation_function_name" { value = aws_lambda_function.get_correlation.function_name }

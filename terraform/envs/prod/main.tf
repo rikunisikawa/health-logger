@@ -101,6 +101,8 @@ module "apigw" {
   get_summary_function_name             = module.lambda.get_summary_function_name
   export_records_lambda_invoke_arn      = module.lambda.export_records_invoke_arn
   export_records_function_name          = module.lambda.export_records_function_name
+  get_correlation_lambda_invoke_arn     = module.lambda.get_correlation_invoke_arn
+  get_correlation_function_name         = module.lambda.get_correlation_function_name
 }
 
 # ── Amplify (React frontend hosting) ─────────────────────────────────────────

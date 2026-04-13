@@ -11,12 +11,15 @@ athena = boto3.client("athena")
 DATABASE = os.environ["ATHENA_DATABASE"]
 OUTPUT_BUCKET = os.environ["ATHENA_OUTPUT_BUCKET"]
 
-# Cognito sub is a UUID; validate to prevent SQL injection
 _UUID_RE = re.compile(
     r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
 )
+_DAYS_RE = re.compile(r"^\d{1,4}$")
 
-# Items included in the correlation matrix
+# Minimum number of data points required to compute correlation
+MIN_SAMPLES = 7
+
+# Items in the correlation matrix (order defines display order)
 ITEMS = [
     "fatigue",
     "mood",
@@ -29,25 +32,34 @@ ITEMS = [
     "caffeine",
 ]
 
-# Minimum sample count to report a correlation (fewer → None)
-MIN_SAMPLES = 7
+# Mapping from item name to Athena column expression
+_ITEM_EXPR = {
+    "fatigue":     "CAST(fatigue_score AS DOUBLE)",
+    "mood":        "CAST(mood_score AS DOUBLE)",
+    "motivation":  "CAST(motivation_score AS DOUBLE)",
+    "poor_sleep":  "CAST(bitwise_and(flags, 1) AS DOUBLE)",
+    "headache":    "CAST(bitwise_and(flags, 2) AS DOUBLE)",
+    "stomachache": "CAST(bitwise_and(flags, 4) AS DOUBLE)",
+    "exercise":    "CAST(bitwise_and(flags, 8) AS DOUBLE)",
+    "alcohol":     "CAST(bitwise_and(flags, 16) AS DOUBLE)",
+    "caffeine":    "CAST(bitwise_and(flags, 32) AS DOUBLE)",
+}
 
-# Flags bitmask values
-_FLAG_BITS = {
-    "poor_sleep": 1,
-    "headache": 2,
-    "stomachache": 4,
-    "exercise": 8,
-    "alcohol": 16,
-    "caffeine": 32,
+# Column aliases returned from Athena (must match _HEADERS in tests)
+_ITEM_ALIAS = {
+    "fatigue":     "fatigue_score",
+    "mood":        "mood_score",
+    "motivation":  "motivation_score",
+    "poor_sleep":  "poor_sleep",
+    "headache":    "headache",
+    "stomachache": "stomachache",
+    "exercise":    "exercise",
+    "alcohol":     "alcohol",
+    "caffeine":    "caffeine",
 }
 
 
 def lambda_handler(event, context):
-    # Health check (no auth required)
-    if event.get("rawPath") == "/health":
-        return _json(200, {"status": "ok"})
-
     # Extract user_id from Cognito JWT
     try:
         user_id = event["requestContext"]["authorizer"]["jwt"]["claims"]["sub"]
@@ -59,25 +71,12 @@ def lambda_handler(event, context):
 
     # Parse query params
     params = event.get("queryStringParameters") or {}
-
-    try:
-        days = int(params.get("days", 30))
-    except (ValueError, TypeError):
+    days_str = params.get("days", "90")
+    if not _DAYS_RE.match(str(days_str)):
         return _json(400, {"error": "Invalid days parameter"})
+    days = int(days_str)
 
-    if days < 1 or days > 365:
-        return _json(400, {"error": "days must be between 1 and 365"})
-
-    query = f"""
-        SELECT fatigue_score, mood_score, motivation_score, flags
-        FROM health_records
-        WHERE user_id = '{user_id}'
-          AND record_type = 'daily'
-          AND DATE(recorded_at) >= CURRENT_DATE - INTERVAL '{days}' DAY
-          AND fatigue_score IS NOT NULL
-          AND mood_score IS NOT NULL
-          AND motivation_score IS NOT NULL
-    """
+    query = _build_query(user_id, days)
 
     # Start Athena query
     response = athena.start_query_execution(
@@ -105,57 +104,8 @@ def lambda_handler(event, context):
     results = athena.get_query_results(QueryExecutionId=execution_id)
     rows = results["ResultSet"]["Rows"]
 
-    if not rows or len(rows) < 2:
-        return _json(200, _empty_response())
-
-    headers = [col["VarCharValue"] for col in rows[0]["Data"]]
-
-    # Build data vectors for each item
-    vectors: dict[str, list[float]] = {item: [] for item in ITEMS}
-
-    for row in rows[1:]:
-        cells = {headers[i]: col.get("VarCharValue", "") for i, col in enumerate(row["Data"])}
-
-        fatigue = _to_float(cells.get("fatigue_score"))
-        mood = _to_float(cells.get("mood_score"))
-        motivation = _to_float(cells.get("motivation_score"))
-        flags = _to_int(cells.get("flags"))
-
-        if fatigue is None or mood is None or motivation is None or flags is None:
-            continue
-
-        vectors["fatigue"].append(fatigue)
-        vectors["mood"].append(mood)
-        vectors["motivation"].append(motivation)
-
-        for flag_name, bit in _FLAG_BITS.items():
-            vectors[flag_name].append(1.0 if (flags & bit) != 0 else 0.0)
-
-    # Compute pairwise Pearson correlation
-    n = len(vectors["fatigue"])
-    matrix: dict[str, dict[str, float | None]] = {}
-    sample_counts: dict[str, int] = {}
-
-    for a in ITEMS:
-        matrix[a] = {}
-        for b in ITEMS:
-            if a == b:
-                matrix[a][b] = 1.0
-                continue
-
-            xs = vectors[a]
-            ys = vectors[b]
-            pair_n = len(xs)
-
-            key = f"{a}-{b}"
-            sample_counts[key] = pair_n
-
-            if pair_n < MIN_SAMPLES:
-                matrix[a][b] = None
-                continue
-
-            corr = _pearson(xs, ys)
-            matrix[a][b] = corr
+    data = _parse_rows(rows)
+    matrix, sample_counts = _compute_correlation_matrix(data)
 
     return _json(200, {
         "items": ITEMS,
@@ -164,53 +114,103 @@ def lambda_handler(event, context):
     })
 
 
-def _pearson(xs: list[float], ys: list[float]) -> float | None:
+def _build_query(user_id: str, days: int) -> str:
+    select_parts = [
+        f"{expr} AS {_ITEM_ALIAS[item]}"
+        for item, expr in _ITEM_EXPR.items()
+    ]
+    select_clause = ",\n    ".join(select_parts)
+
+    return f"""
+SELECT
+    {select_clause}
+FROM health_records
+WHERE user_id = '{user_id}'
+  AND record_type = 'daily'
+  AND DATE(recorded_at) >= DATE_ADD('day', -{days}, CURRENT_DATE)
+"""
+
+
+def _parse_rows(rows: list) -> dict:
+    """Parse Athena ResultSet rows into lists per item."""
+    if len(rows) < 2:
+        return {item: [] for item in ITEMS}
+
+    headers = [col["VarCharValue"] for col in rows[0]["Data"]]
+    alias_to_item = {v: k for k, v in _ITEM_ALIAS.items()}
+
+    data: dict = {item: [] for item in ITEMS}
+    for row in rows[1:]:
+        values = {headers[i]: col.get("VarCharValue", "") for i, col in enumerate(row["Data"])}
+        # Collect one data point per row; skip row if any value is missing
+        point = {}
+        valid = True
+        for item in ITEMS:
+            alias = _ITEM_ALIAS[item]
+            raw = values.get(alias, "")
+            if raw == "":
+                valid = False
+                break
+            try:
+                point[item] = float(raw)
+            except ValueError:
+                valid = False
+                break
+        if valid:
+            for item, val in point.items():
+                data[item].append(val)
+
+    return data
+
+
+def _pearson(xs: list, ys: list):
+    """Compute Pearson correlation coefficient. Returns (r, n) or (None, n)."""
+    # Use only indices where both values are available (already aligned)
     n = len(xs)
-    if n < 2:
-        return None
+    if n < MIN_SAMPLES:
+        return None, n
 
-    mean_x = sum(xs) / n
-    mean_y = sum(ys) / n
+    mx = sum(xs) / n
+    my = sum(ys) / n
+    num = sum((x - mx) * (y - my) for x, y in zip(xs, ys))
+    den_x = math.sqrt(sum((x - mx) ** 2 for x in xs))
+    den_y = math.sqrt(sum((y - my) ** 2 for y in ys))
 
-    ss_xx = sum((x - mean_x) ** 2 for x in xs)
-    ss_yy = sum((y - mean_y) ** 2 for y in ys)
-    ss_xy = sum((x - mean_x) * (y - mean_y) for x, y in zip(xs, ys))
+    if den_x == 0 or den_y == 0:
+        return None, n
 
-    if ss_xx == 0 or ss_yy == 0:
-        return None
-
-    r = ss_xy / math.sqrt(ss_xx * ss_yy)
-    # Clamp to [-1, 1] to handle floating-point drift
-    return max(-1.0, min(1.0, r))
-
-
-def _to_float(value: str | None) -> float | None:
-    if value is None or value == "":
-        return None
-    try:
-        return float(value)
-    except (ValueError, TypeError):
-        return None
+    r = num / (den_x * den_y)
+    # Clamp to [-1, 1] to handle floating point imprecision
+    r = max(-1.0, min(1.0, r))
+    return round(r, 4), n
 
 
-def _to_int(value: str | None) -> int | None:
-    if value is None or value == "":
-        return None
-    try:
-        return int(value)
-    except (ValueError, TypeError):
-        return None
+def _compute_correlation_matrix(data: dict):
+    """Compute pairwise Pearson correlations for all ITEMS."""
+    matrix: dict = {item: {} for item in ITEMS}
+    sample_counts: dict = {}
 
+    for i, item_a in enumerate(ITEMS):
+        for j, item_b in enumerate(ITEMS):
+            if item_a == item_b:
+                matrix[item_a][item_b] = 1.0
+                continue
+            # Avoid duplicate computation: use cached result if already computed
+            key = f"{item_a}-{item_b}"
+            rev_key = f"{item_b}-{item_a}"
+            if rev_key in sample_counts:
+                matrix[item_a][item_b] = matrix[item_b][item_a]
+                sample_counts[key] = sample_counts[rev_key]
+                continue
 
-def _empty_response() -> dict:
-    matrix = {a: {b: None for b in ITEMS} for a in ITEMS}
-    for item in ITEMS:
-        matrix[item][item] = 1.0
-    return {
-        "items": ITEMS,
-        "matrix": matrix,
-        "sample_counts": {},
-    }
+            xs = data[item_a]
+            ys = data[item_b]
+            # Both lists are the same length (parsed row by row)
+            r, n = _pearson(xs, ys)
+            matrix[item_a][item_b] = r
+            sample_counts[key] = n
+
+    return matrix, sample_counts
 
 
 def _json(status: int, body: dict) -> dict:

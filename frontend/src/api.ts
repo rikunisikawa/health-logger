@@ -111,3 +111,10 @@ export function exportRecords(
   if (dateTo) params.set("date_to", dateTo);
   return apiFetch(`/export?${params.toString()}`, token);
 }
+
+export function getCorrelation(
+  token: string,
+  days = 90,
+): Promise<import("./types").CorrelationResponse> {
+  return apiFetch(`/correlation?days=${days}`, token);
+}

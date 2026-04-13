@@ -76,3 +76,20 @@ export interface LatestRecord {
   custom_fields: string;
   written_at: string;
 }
+
+export type CorrelationItem =
+  | "fatigue"
+  | "mood"
+  | "motivation"
+  | "poor_sleep"
+  | "headache"
+  | "stomachache"
+  | "exercise"
+  | "alcohol"
+  | "caffeine";
+
+export interface CorrelationResponse {
+  items: CorrelationItem[];
+  matrix: Record<string, Record<string, number | null>>;
+  sample_counts: Record<string, number>;
+}
