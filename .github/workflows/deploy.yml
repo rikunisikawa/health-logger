@@ -54,6 +54,7 @@ jobs:
       get_summary_key:           ${{ steps.upload.outputs.get_summary_key }}
       weekly_push_notify_key:    ${{ steps.upload.outputs.weekly_push_notify_key }}
       export_records_key:        ${{ steps.upload.outputs.export_records_key }}
+      aggregate_daily_key:       ${{ steps.upload.outputs.aggregate_daily_key }}
 
     steps:
       - uses: actions/checkout@v4
@@ -138,6 +139,11 @@ jobs:
           cd lambda/export_records
           pip install -r requirements.txt -t . --quiet
           zip -r ../../export_records.zip . -x "test_*" "conftest.py" "*.pyc" "__pycache__/*"
+      - name: Package aggregate_daily Lambda
+        run: |
+          cd lambda/aggregate_daily
+          pip install -r requirements.txt -t . --quiet
+          zip -r ../../aggregate_daily.zip . -x "test_*" "*.pyc" "__pycache__/*"
 
       - name: Upload ZIPs to S3 artifacts bucket
         id: upload
@@ -156,6 +162,7 @@ jobs:
           GET_SUMMARY_KEY="get_summary/${SHA}.zip"
           WEEKLY_PUSH_KEY="weekly_push_notify/${SHA}.zip"
           EXPORT_KEY="export_records/${SHA}.zip"
+          AGGREGATE_DAILY_KEY="aggregate_daily/${SHA}.zip"
 
           aws s3 cp create_record.zip         "s3://${BUCKET}/${CREATE_KEY}"
           aws s3 cp get_latest.zip            "s3://${BUCKET}/${LATEST_KEY}"
@@ -169,6 +176,7 @@ jobs:
           aws s3 cp get_summary.zip           "s3://${BUCKET}/${GET_SUMMARY_KEY}"
           aws s3 cp weekly_push_notify.zip    "s3://${BUCKET}/${WEEKLY_PUSH_KEY}"
           aws s3 cp export_records.zip        "s3://${BUCKET}/${EXPORT_KEY}"
+          aws s3 cp aggregate_daily.zip       "s3://${BUCKET}/${AGGREGATE_DAILY_KEY}"
 
           echo "create_record_key=${CREATE_KEY}"               >> $GITHUB_OUTPUT
           echo "get_latest_key=${LATEST_KEY}"                   >> $GITHUB_OUTPUT
@@ -182,6 +190,7 @@ jobs:
           echo "get_summary_key=${GET_SUMMARY_KEY}"             >> $GITHUB_OUTPUT
           echo "weekly_push_notify_key=${WEEKLY_PUSH_KEY}"      >> $GITHUB_OUTPUT
           echo "export_records_key=${EXPORT_KEY}"               >> $GITHUB_OUTPUT
+          echo "aggregate_daily_key=${AGGREGATE_DAILY_KEY}"     >> $GITHUB_OUTPUT
 
   # ── 2. Terraform apply (infrastructure + Lambda config) ───────────────────
   terraform-apply:
@@ -215,6 +224,7 @@ jobs:
           terraform apply -auto-approve \
             -var='lambda_s3_keys={"create_record":"${{ needs.build-lambda.outputs.create_record_key }}","get_latest":"${{ needs.build-lambda.outputs.get_latest_key }}","push_subscribe":"${{ needs.build-lambda.outputs.push_subscribe_key }}","push_notify":"${{ needs.build-lambda.outputs.push_notify_key }}","weekly_push_notify":"${{ needs.build-lambda.outputs.weekly_push_notify_key }}","get_item_config":"${{ needs.build-lambda.outputs.get_item_config_key }}","save_item_config":"${{ needs.build-lambda.outputs.save_item_config_key }}","delete_record":"${{ needs.build-lambda.outputs.delete_record_key }}","get_env_data":"${{ needs.build-lambda.outputs.get_env_data_key }}","get_env_data_latest":"${{ needs.build-lambda.outputs.get_env_data_latest_key }}","get_summary":"${{ needs.build-lambda.outputs.get_summary_key }}"}'
             -var='lambda_s3_keys={"create_record":"${{ needs.build-lambda.outputs.create_record_key }}","get_latest":"${{ needs.build-lambda.outputs.get_latest_key }}","push_subscribe":"${{ needs.build-lambda.outputs.push_subscribe_key }}","push_notify":"${{ needs.build-lambda.outputs.push_notify_key }}","get_item_config":"${{ needs.build-lambda.outputs.get_item_config_key }}","save_item_config":"${{ needs.build-lambda.outputs.save_item_config_key }}","delete_record":"${{ needs.build-lambda.outputs.delete_record_key }}","get_env_data":"${{ needs.build-lambda.outputs.get_env_data_key }}","get_env_data_latest":"${{ needs.build-lambda.outputs.get_env_data_latest_key }}","get_summary":"${{ needs.build-lambda.outputs.get_summary_key }}","export_records":"${{ needs.build-lambda.outputs.export_records_key }}"}'
+            -var='lambda_s3_keys={"create_record":"${{ needs.build-lambda.outputs.create_record_key }}","get_latest":"${{ needs.build-lambda.outputs.get_latest_key }}","push_subscribe":"${{ needs.build-lambda.outputs.push_subscribe_key }}","push_notify":"${{ needs.build-lambda.outputs.push_notify_key }}","get_item_config":"${{ needs.build-lambda.outputs.get_item_config_key }}","save_item_config":"${{ needs.build-lambda.outputs.save_item_config_key }}","delete_record":"${{ needs.build-lambda.outputs.delete_record_key }}","get_env_data":"${{ needs.build-lambda.outputs.get_env_data_key }}","get_env_data_latest":"${{ needs.build-lambda.outputs.get_env_data_latest_key }}","get_summary":"${{ needs.build-lambda.outputs.get_summary_key }}","aggregate_daily":"${{ needs.build-lambda.outputs.aggregate_daily_key }}"}'
         env:
           TF_VAR_vapid_private_key: ${{ secrets.VAPID_PRIVATE_KEY_PROD }}
 

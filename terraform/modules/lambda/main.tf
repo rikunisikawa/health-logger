@@ -376,6 +376,40 @@ resource "aws_lambda_function" "get_env_data_latest" {
   depends_on = [aws_s3_bucket.artifacts]
 }
 
+# ── DynamoDB: daily summaries cache ──────────────────────────────────────────
+
+resource "aws_dynamodb_table" "daily_summaries" {
+  name         = "${local.name}-daily-summaries"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "user_id"
+  range_key    = "date"
+
+  attribute {
+    name = "user_id"
+    type = "S"
+  }
+
+  attribute {
+    name = "date"
+    type = "S"
+  }
+}
+
+resource "aws_iam_role_policy" "lambda_daily_summaries" {
+  name = "${local.name}-lambda-daily-summaries"
+  role = aws_iam_role.lambda.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = ["dynamodb:PutItem", "dynamodb:GetItem", "dynamodb:Query"]
+        Resource = [aws_dynamodb_table.daily_summaries.arn]
+      },
+    ]
+  })
+}
+
 resource "aws_lambda_function" "get_summary" {
   function_name = "${local.name}-get-summary"
   role          = aws_iam_role.lambda.arn
@@ -384,16 +418,38 @@ resource "aws_lambda_function" "get_summary" {
 
   s3_bucket   = aws_s3_bucket.artifacts.id
   s3_key      = var.lambda_s3_keys["get_summary"]
-  timeout     = 60
+  timeout     = 30
+  memory_size = 128
+
+  tracing_config { mode = "Active" }
+
+  environment {
+    variables = {
+      DAILY_SUMMARIES_TABLE = aws_dynamodb_table.daily_summaries.name
+    }
+  }
+
+  depends_on = [aws_s3_bucket.artifacts]
+}
+
+resource "aws_lambda_function" "aggregate_daily" {
+  function_name = "${local.name}-aggregate-daily"
+  role          = aws_iam_role.lambda.arn
+  runtime       = "python3.13"
+  handler       = "handler.lambda_handler"
+
+  s3_bucket   = aws_s3_bucket.artifacts.id
+  s3_key      = var.lambda_s3_keys["aggregate_daily"]
+  timeout     = 120
   memory_size = 256
 
   tracing_config { mode = "Active" }
 
   environment {
     variables = {
-      ATHENA_DATABASE      = var.athena_database
-      ATHENA_OUTPUT_BUCKET = var.s3_results_bucket_name
-      SUMMARY_CACHE_TABLE  = aws_dynamodb_table.summary_cache.name
+      ATHENA_DATABASE       = var.athena_database
+      ATHENA_OUTPUT_BUCKET  = var.s3_results_bucket_name
+      DAILY_SUMMARIES_TABLE = aws_dynamodb_table.daily_summaries.name
     }
   }
 
@@ -462,12 +518,45 @@ resource "aws_scheduler_schedule" "push_notify_weekly" {
     maximum_window_in_minutes = 10
   }
 
-  # cron: minute=0, hour=23, day-of-month=?, month=*, day-of-week=SUN, year=*
   schedule_expression          = "cron(0 23 ? * SUN *)"
   schedule_expression_timezone = "UTC"
 
   target {
     arn      = aws_lambda_function.weekly_push_notify.arn
+    role_arn = aws_iam_role.scheduler.arn
+  }
+}
+
+# ── EventBridge Scheduler (daily aggregation at AM 2:00 JST = 17:00 UTC) ─────
+
+resource "aws_iam_role_policy" "scheduler_aggregate_daily" {
+  name = "${local.name}-scheduler-aggregate-daily"
+  role = aws_iam_role.scheduler.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = ["lambda:InvokeFunction"]
+      Resource = [aws_lambda_function.aggregate_daily.arn]
+    }]
+  })
+}
+
+resource "aws_scheduler_schedule" "aggregate_daily" {
+  name       = "${local.name}-aggregate-daily"
+  group_name = "default"
+
+  flexible_time_window {
+    mode                      = "FLEXIBLE"
+    maximum_window_in_minutes = 30
+  }
+
+  # AM 2:00 JST = 17:00 UTC (previous day)
+  schedule_expression          = "cron(0 17 * * ? *)"
+  schedule_expression_timezone = "UTC"
+
+  target {
+    arn      = aws_lambda_function.aggregate_daily.arn
     role_arn = aws_iam_role.scheduler.arn
   }
 }
