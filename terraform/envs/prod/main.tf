@@ -99,6 +99,8 @@ module "apigw" {
   get_env_data_latest_function_name     = module.lambda.get_env_data_latest_function_name
   get_summary_lambda_invoke_arn         = module.lambda.get_summary_invoke_arn
   get_summary_function_name             = module.lambda.get_summary_function_name
+  export_records_lambda_invoke_arn      = module.lambda.export_records_invoke_arn
+  export_records_function_name          = module.lambda.export_records_function_name
 }
 
 # ── Amplify (React frontend hosting) ─────────────────────────────────────────

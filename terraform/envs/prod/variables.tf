@@ -15,8 +15,8 @@ variable "aws_region" {
 
 variable "lambda_s3_keys" {
   type        = map(string)
-  description = "Lambda ZIP S3 keys: {create_record=..., get_latest=..., push_subscribe=..., push_notify=..., weekly_push_notify=..., get_item_config=..., save_item_config=..., delete_record=..., get_env_data=..., get_env_data_latest=..., get_summary=...}"
-  default     = { create_record = "placeholder", get_latest = "placeholder", push_subscribe = "placeholder", push_notify = "placeholder", weekly_push_notify = "placeholder", get_item_config = "placeholder", save_item_config = "placeholder", delete_record = "placeholder", get_env_data = "placeholder", get_env_data_latest = "placeholder", get_summary = "placeholder" }
+  description = "Lambda ZIP S3 keys: {create_record=..., get_latest=..., push_subscribe=..., push_notify=..., weekly_push_notify=..., get_item_config=..., save_item_config=..., delete_record=..., get_env_data=..., get_env_data_latest=..., get_summary=..., aggregate_daily=..., export_records=..., get_correlation=...}"
+  default     = { create_record = "placeholder", get_latest = "placeholder", push_subscribe = "placeholder", push_notify = "placeholder", weekly_push_notify = "placeholder", get_item_config = "placeholder", save_item_config = "placeholder", delete_record = "placeholder", get_env_data = "placeholder", get_env_data_latest = "placeholder", get_summary = "placeholder", aggregate_daily = "placeholder", export_records = "placeholder", get_correlation = "placeholder" }
 }
 
 variable "github_repository" {
@@ -44,3 +44,4 @@ variable "vapid_private_key" {
 variable "vapid_public_key" {
   type = string
 }
+
