@@ -303,7 +303,10 @@ resource "aws_iam_role_policy" "scheduler" {
     Statement = [{
       Effect   = "Allow"
       Action   = ["lambda:InvokeFunction"]
-      Resource = [aws_lambda_function.push_notify.arn]
+      Resource = [
+        aws_lambda_function.push_notify.arn,
+        aws_lambda_function.weekly_push_notify.arn,
+      ]
     }]
   })
 }
@@ -379,9 +382,8 @@ resource "aws_lambda_function" "get_summary" {
   runtime       = "python3.13"
   handler       = "handler.lambda_handler"
 
-  s3_bucket = aws_s3_bucket.artifacts.id
-  s3_key    = var.lambda_s3_keys["get_summary"]
-
+  s3_bucket   = aws_s3_bucket.artifacts.id
+  s3_key      = var.lambda_s3_keys["get_summary"]
   timeout     = 60
   memory_size = 256
 
@@ -396,4 +398,52 @@ resource "aws_lambda_function" "get_summary" {
   }
 
   depends_on = [aws_s3_bucket.artifacts]
+}
+
+resource "aws_lambda_function" "weekly_push_notify" {
+  function_name = "${local.name}-weekly-push-notify"
+  role          = aws_iam_role.lambda.arn
+  runtime       = "python3.13"
+  handler       = "handler.lambda_handler"
+
+  s3_bucket = aws_s3_bucket.artifacts.id
+  s3_key    = var.lambda_s3_keys["weekly_push_notify"]
+
+  # Athena polling can take up to 30s per user; allow headroom for multiple users
+  timeout     = 300
+  memory_size = 256
+
+  tracing_config { mode = "Active" }
+
+  environment {
+    variables = {
+      PUSH_SUBSCRIPTIONS_TABLE = aws_dynamodb_table.push_subscriptions.name
+      VAPID_PRIVATE_KEY        = var.vapid_private_key
+      ATHENA_DATABASE          = var.athena_database
+      ATHENA_OUTPUT_BUCKET     = var.s3_results_bucket_name
+    }
+  }
+
+  depends_on = [aws_s3_bucket.artifacts]
+}
+
+# ── EventBridge Scheduler (weekly push summary every Monday 08:00 JST = Sunday 23:00 UTC) ──
+
+resource "aws_scheduler_schedule" "push_notify_weekly" {
+  name       = "${local.name}-push-notify-weekly"
+  group_name = "default"
+
+  flexible_time_window {
+    mode                      = "FLEXIBLE"
+    maximum_window_in_minutes = 10
+  }
+
+  # cron: minute=0, hour=23, day-of-month=?, month=*, day-of-week=SUN, year=*
+  schedule_expression          = "cron(0 23 ? * SUN *)"
+  schedule_expression_timezone = "UTC"
+
+  target {
+    arn      = aws_lambda_function.weekly_push_notify.arn
+    role_arn = aws_iam_role.scheduler.arn
+  }
 }
