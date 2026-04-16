@@ -17,6 +17,7 @@ import {
   YAxis,
 } from "recharts";
 import { getEnvData, getLatest } from "../api";
+import { CorrelationHeatmap } from "./CorrelationHeatmap";
 import { useAuth } from "../hooks/useAuth";
 import type { EnvDataRecord, LatestRecord } from "../types";
 import {
@@ -1451,6 +1452,11 @@ export default function DashboardPage({ onBack }: Props) {
                 </ComposedChart>
               </ResponsiveContainer>
             )}
+
+            {/* 全項目間ヒートマップ */}
+            <hr className="my-4" />
+            <h6 className="text-muted mb-3">全項目間の相関ヒートマップ</h6>
+            {token && <CorrelationHeatmap token={token} />}
           </div>
         )}
       </div>
