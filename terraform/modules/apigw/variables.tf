@@ -30,3 +30,5 @@ variable "export_records_lambda_invoke_arn" { type = string }
 variable "export_records_function_name" { type = string }
 variable "get_correlation_lambda_invoke_arn" { type = string }
 variable "get_correlation_function_name" { type = string }
+variable "get_next_day_effects_lambda_invoke_arn" { type = string }
+variable "get_next_day_effects_function_name" { type = string }

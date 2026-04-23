@@ -21,3 +21,5 @@ output "export_records_invoke_arn" { value = aws_lambda_function.export_records.
 output "export_records_function_name" { value = aws_lambda_function.export_records.function_name }
 output "get_correlation_invoke_arn" { value = aws_lambda_function.get_correlation.invoke_arn }
 output "get_correlation_function_name" { value = aws_lambda_function.get_correlation.function_name }
+output "get_next_day_effects_invoke_arn" { value = aws_lambda_function.get_next_day_effects.invoke_arn }
+output "get_next_day_effects_function_name" { value = aws_lambda_function.get_next_day_effects.function_name }
