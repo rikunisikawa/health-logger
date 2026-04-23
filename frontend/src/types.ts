@@ -43,21 +43,20 @@ export interface EnvDataRecord {
 
 export interface SummaryDay {
   date: string;
-  fatigue_avg: number | null;
-  fatigue_max: number | null;
-  fatigue_min: number | null;
-  mood_avg: number | null;
-  mood_max: number | null;
-  mood_min: number | null;
-  motivation_avg: number | null;
-  motivation_max: number | null;
-  motivation_min: number | null;
-  record_count: number | null;
+  avg_fatigue: string | null;
+  max_fatigue: string | null;
+  min_fatigue: string | null;
+  avg_mood: string | null;
+  max_mood: string | null;
+  min_mood: string | null;
+  avg_motivation: string | null;
+  max_motivation: string | null;
+  min_motivation: string | null;
+  record_count: string | null;
 }
 
 export interface WeeklySummaryResponse {
-  days: number;
-  summary: SummaryDay[];
+  summaries: SummaryDay[];
 }
 
 export interface LatestRecord {

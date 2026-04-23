@@ -247,3 +247,85 @@ def test_multiple_users_saved(mock_athena, mock_ddb):
     body = json.loads(result["body"])
     assert body["saved_count"] == 2
     assert mock_table.put_item.call_count == 2
+
+
+@patch(f"{_MOD_NAME}.dynamodb")
+@patch(f"{_MOD_NAME}.athena")
+def test_query_includes_max_min(mock_athena, mock_ddb):
+    """Athena クエリに MAX/MIN が含まれる（週次サマリーの最大・最小表示に必要）"""
+    _succeeded_athena(mock_athena, [
+        {"Data": [
+            {"VarCharValue": "user_id"},
+            {"VarCharValue": "avg_fatigue"},
+            {"VarCharValue": "max_fatigue"},
+            {"VarCharValue": "min_fatigue"},
+            {"VarCharValue": "avg_mood"},
+            {"VarCharValue": "max_mood"},
+            {"VarCharValue": "min_mood"},
+            {"VarCharValue": "avg_motivation"},
+            {"VarCharValue": "max_motivation"},
+            {"VarCharValue": "min_motivation"},
+            {"VarCharValue": "record_count"},
+        ]},
+    ])
+    mock_table = MagicMock()
+    mock_ddb.Table.return_value = mock_table
+
+    _h.lambda_handler({}, None)
+
+    qs = mock_athena.start_query_execution.call_args[1]["QueryString"]
+    assert "MAX(fatigue_score)" in qs or "max(fatigue_score)" in qs.lower()
+    assert "MIN(fatigue_score)" in qs or "min(fatigue_score)" in qs.lower()
+    assert "MAX(mood_score)" in qs or "max(mood_score)" in qs.lower()
+    assert "MIN(mood_score)" in qs or "min(mood_score)" in qs.lower()
+    assert "MAX(motivation_score)" in qs or "max(motivation_score)" in qs.lower()
+    assert "MIN(motivation_score)" in qs or "min(motivation_score)" in qs.lower()
+
+
+@patch(f"{_MOD_NAME}.dynamodb")
+@patch(f"{_MOD_NAME}.athena")
+def test_max_min_saved_to_dynamodb(mock_athena, mock_ddb):
+    """MAX/MIN 値が DynamoDB に保存される"""
+    _succeeded_athena(mock_athena, [
+        {"Data": [
+            {"VarCharValue": "user_id"},
+            {"VarCharValue": "avg_fatigue"},
+            {"VarCharValue": "max_fatigue"},
+            {"VarCharValue": "min_fatigue"},
+            {"VarCharValue": "avg_mood"},
+            {"VarCharValue": "max_mood"},
+            {"VarCharValue": "min_mood"},
+            {"VarCharValue": "avg_motivation"},
+            {"VarCharValue": "max_motivation"},
+            {"VarCharValue": "min_motivation"},
+            {"VarCharValue": "record_count"},
+        ]},
+        {"Data": [
+            {"VarCharValue": "12345678-1234-1234-1234-123456789abc"},
+            {"VarCharValue": "60.0"},
+            {"VarCharValue": "80.0"},
+            {"VarCharValue": "40.0"},
+            {"VarCharValue": "70.0"},
+            {"VarCharValue": "90.0"},
+            {"VarCharValue": "50.0"},
+            {"VarCharValue": "50.0"},
+            {"VarCharValue": "70.0"},
+            {"VarCharValue": "30.0"},
+            {"VarCharValue": "3"},
+        ]},
+    ])
+
+    mock_table = MagicMock()
+    mock_ddb.Table.return_value = mock_table
+    mock_table.put_item.return_value = {}
+
+    result = _h.lambda_handler({}, None)
+
+    assert result["statusCode"] == 200
+    item = mock_table.put_item.call_args[1]["Item"]
+    assert item["max_fatigue"] == "80.0"
+    assert item["min_fatigue"] == "40.0"
+    assert item["max_mood"] == "90.0"
+    assert item["min_mood"] == "50.0"
+    assert item["max_motivation"] == "70.0"
+    assert item["min_motivation"] == "30.0"

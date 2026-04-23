@@ -54,8 +54,14 @@ def lambda_handler(event, context):
         {
             "date": item["date"],
             "avg_fatigue": item.get("avg_fatigue"),
+            "max_fatigue": item.get("max_fatigue"),
+            "min_fatigue": item.get("min_fatigue"),
             "avg_mood": item.get("avg_mood"),
+            "max_mood": item.get("max_mood"),
+            "min_mood": item.get("min_mood"),
             "avg_motivation": item.get("avg_motivation"),
+            "max_motivation": item.get("max_motivation"),
+            "min_motivation": item.get("min_motivation"),
             "record_count": item.get("record_count"),
         }
         for item in response.get("Items", [])

@@ -132,7 +132,7 @@ def test_dynamodb_error_returns_500(mock_ddb):
 
 @patch("handler.dynamodb")
 def test_response_fields(mock_ddb):
-    """レスポンスに必要なフィールドが含まれる"""
+    """レスポンスに必要なフィールドが含まれる（avg/max/min）"""
     mock_table = MagicMock()
     mock_ddb.Table.return_value = mock_table
     mock_table.query.return_value = {
@@ -141,8 +141,14 @@ def test_response_fields(mock_ddb):
                 "user_id": "12345678-1234-1234-1234-123456789abc",
                 "date": "2026-04-12",
                 "avg_fatigue": "60.5",
+                "max_fatigue": "80.0",
+                "min_fatigue": "40.0",
                 "avg_mood": "70.0",
+                "max_mood": "90.0",
+                "min_mood": "50.0",
                 "avg_motivation": "50.0",
+                "max_motivation": "70.0",
+                "min_motivation": "30.0",
                 "record_count": "2",
             }
         ]
@@ -155,6 +161,12 @@ def test_response_fields(mock_ddb):
     s = body["summaries"][0]
     assert "date" in s
     assert "avg_fatigue" in s
+    assert "max_fatigue" in s
+    assert "min_fatigue" in s
     assert "avg_mood" in s
+    assert "max_mood" in s
+    assert "min_mood" in s
     assert "avg_motivation" in s
+    assert "max_motivation" in s
+    assert "min_motivation" in s
     assert "record_count" in s
