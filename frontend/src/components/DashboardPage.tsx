@@ -18,6 +18,7 @@ import {
 } from "recharts";
 import { getEnvData, getLatest } from "../api";
 import { CorrelationHeatmap } from "./CorrelationHeatmap";
+import WeeklySummaryCard from "./WeeklySummaryCard";
 import { useAuth } from "../hooks/useAuth";
 import type { EnvDataRecord, LatestRecord } from "../types";
 import {
@@ -36,7 +37,7 @@ import {
   computeIntradayData,
 } from "../utils/dashboardUtils";
 import type { MetricKey } from "../utils/dashboardUtils";
-type Tab = "trend" | "intraday" | "events" | "env" | "correlation";
+type Tab = "summary" | "trend" | "intraday" | "events" | "env" | "correlation";
 type EventsView = "timeline" | "trend";
 type TrendAggMode = "daily" | "weekday" | "timeband";
 
@@ -163,7 +164,8 @@ export default function DashboardPage({ onBack }: Props) {
   const [envRecords, setEnvRecords] = useState<EnvDataRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
-  const [tab, setTab] = useState<Tab>("trend");
+  const [tab, setTab] = useState<Tab>("summary");
+  const [summaryDays, setSummaryDays] = useState(7);
   const [eventsView, setEventsView] = useState<EventsView>("timeline");
   const [trendDays, setTrendDays] = useState(30);
   const [trendAggMode, setTrendAggMode] = useState<TrendAggMode>("daily");
@@ -640,6 +642,7 @@ export default function DashboardPage({ onBack }: Props) {
         <ul className="nav nav-tabs mb-4">
           {(
             [
+              { key: "summary", label: "週次サマリー" },
               { key: "trend", label: "長期トレンド" },
               { key: "intraday", label: "日内変動" },
               { key: "events", label: "イベント" },
@@ -660,6 +663,24 @@ export default function DashboardPage({ onBack }: Props) {
 
         {loading && <p className="text-muted">読み込み中…</p>}
         {fetchError && <div className="alert alert-danger">{fetchError}</div>}
+
+        {/* ── 週次サマリー ── */}
+        {tab === "summary" && token && (
+          <div>
+            <div className="d-flex gap-2 mb-3">
+              {[7, 14, 30].map((d) => (
+                <button
+                  key={d}
+                  className={`btn btn-sm ${summaryDays === d ? "btn-success" : "btn-outline-secondary"}`}
+                  onClick={() => setSummaryDays(d)}
+                >
+                  {d}日
+                </button>
+              ))}
+            </div>
+            <WeeklySummaryCard token={token} days={summaryDays} />
+          </div>
+        )}
 
         {/* ── 長期トレンド ── */}
         {!loading && tab === "trend" && (

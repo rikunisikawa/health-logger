@@ -26,8 +26,14 @@ def lambda_handler(event, context):
         SELECT
             user_id,
             CAST(AVG(fatigue_score) AS VARCHAR) AS avg_fatigue,
+            CAST(MAX(fatigue_score) AS VARCHAR) AS max_fatigue,
+            CAST(MIN(fatigue_score) AS VARCHAR) AS min_fatigue,
             CAST(AVG(mood_score) AS VARCHAR) AS avg_mood,
+            CAST(MAX(mood_score) AS VARCHAR) AS max_mood,
+            CAST(MIN(mood_score) AS VARCHAR) AS min_mood,
             CAST(AVG(motivation_score) AS VARCHAR) AS avg_motivation,
+            CAST(MAX(motivation_score) AS VARCHAR) AS max_motivation,
+            CAST(MIN(motivation_score) AS VARCHAR) AS min_motivation,
             CAST(COUNT(*) AS VARCHAR) AS record_count
         FROM health_records
         WHERE dt = '{yesterday}'
@@ -73,8 +79,14 @@ def lambda_handler(event, context):
             "user_id": item["user_id"],
             "date": yesterday,
             "avg_fatigue": item.get("avg_fatigue", ""),
+            "max_fatigue": item.get("max_fatigue", ""),
+            "min_fatigue": item.get("min_fatigue", ""),
             "avg_mood": item.get("avg_mood", ""),
+            "max_mood": item.get("max_mood", ""),
+            "min_mood": item.get("min_mood", ""),
             "avg_motivation": item.get("avg_motivation", ""),
+            "max_motivation": item.get("max_motivation", ""),
+            "min_motivation": item.get("min_motivation", ""),
             "record_count": item.get("record_count", "0"),
         })
         saved_count += 1
