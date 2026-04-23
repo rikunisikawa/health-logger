@@ -252,6 +252,10 @@ while true; do
       gh issue edit "$ISSUE_NUMBER" --add-label "$LABEL_DONE" 2>/dev/null || true
       log "ラベル付与: $LABEL_DONE"
       PROCESSED=$((PROCESSED + 1))
+      # PR マージ待ちのまま次の Issue に進むとコンフリクトが起きるため、
+      # GitHub API の反映遅延に依存せず即座に終了する
+      log "PR のマージを待ってから次の実装を開始します。（処理済み: ${PROCESSED}件）"
+      break
     else
       log_error "実装失敗: Issue #$ISSUE_NUMBER (exit 0 だが PR が見つかりません)"
       gh issue edit "$ISSUE_NUMBER" --add-label "$LABEL_BLOCKED" 2>/dev/null || true
