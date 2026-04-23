@@ -51,6 +51,23 @@ export function getLatest(
   return apiFetch(`/records/latest?limit=${limit}`, token);
 }
 
+export function getRecords(
+  token: string,
+  opts: {
+    dateFrom?: string;
+    dateTo?: string;
+    recordType?: "daily" | "event" | "status";
+    limit?: number;
+  } = {},
+): Promise<{ records: LatestRecord[] }> {
+  const params = new URLSearchParams();
+  if (opts.limit != null) params.set("limit", String(opts.limit));
+  if (opts.dateFrom) params.set("date_from", opts.dateFrom);
+  if (opts.dateTo) params.set("date_to", opts.dateTo);
+  if (opts.recordType) params.set("record_type", opts.recordType);
+  return apiFetch(`/records/latest?${params.toString()}`, token);
+}
+
 export function deleteRecord(
   id: string,
   token: string,

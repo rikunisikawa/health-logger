@@ -6,6 +6,7 @@ import AuthGuard from "./components/AuthGuard";
 import DashboardPage from "./components/DashboardPage";
 import HealthForm from "./components/HealthForm";
 import type { ToastVariant } from "./components/HealthForm";
+import HistoryBrowser from "./components/HistoryBrowser";
 import ItemConfigScreen from "./components/ItemConfigScreen";
 import RecordHistory from "./components/RecordHistory";
 import { exportRecords, getLatest } from "./api";
@@ -25,6 +26,7 @@ function AppContent() {
   const [showSettings, setShowSettings] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [page, setPage] = useState(0);
+  const [historyTab, setHistoryTab] = useState<"recent" | "search">("recent");
   const [records, setRecords] = useState<LatestRecord[]>([]);
   const [toast, setToast] = useState<{
     show: boolean;
@@ -220,10 +222,28 @@ function AppContent() {
             }}
           >
             <div className="container py-3" style={{ maxWidth: "540px" }}>
-              <RecordHistory
-                records={records}
-                onDeleted={handleRecordDeleted}
-              />
+              <div className="btn-group w-100 mb-3" role="group">
+                <button
+                  className={`btn btn-sm ${historyTab === "recent" ? "btn-success" : "btn-outline-secondary"}`}
+                  onClick={() => setHistoryTab("recent")}
+                >
+                  最近の記録
+                </button>
+                <button
+                  className={`btn btn-sm ${historyTab === "search" ? "btn-success" : "btn-outline-secondary"}`}
+                  onClick={() => setHistoryTab("search")}
+                >
+                  過去ログ検索
+                </button>
+              </div>
+              {historyTab === "recent" ? (
+                <RecordHistory
+                  records={records}
+                  onDeleted={handleRecordDeleted}
+                />
+              ) : (
+                <HistoryBrowser />
+              )}
             </div>
           </div>
 
