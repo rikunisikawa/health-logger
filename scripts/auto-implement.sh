@@ -240,10 +240,27 @@ while true; do
   gh issue edit "$ISSUE_NUMBER" --remove-label "$LABEL_IN_PROGRESS" 2>/dev/null || true
 
   if [[ $CLAUDE_EXIT -eq 0 ]]; then
-    log "実装成功: Issue #$ISSUE_NUMBER"
-    gh issue edit "$ISSUE_NUMBER" --add-label "$LABEL_DONE" 2>/dev/null || true
-    log "ラベル付与: $LABEL_DONE"
-    PROCESSED=$((PROCESSED + 1))
+    # exit 0 だけでなく PR が実際に作成されたかを確認する
+    PR_COUNT=$(gh pr list --state open --search "in:title #${ISSUE_NUMBER}" --json number --jq 'length' 2>/dev/null || echo "0")
+    # ブランチ名パターンでも検索（feature/148-xxx 形式）
+    if [[ "$PR_COUNT" -eq 0 ]]; then
+      PR_COUNT=$(gh pr list --state open --json number,headRefName --jq "[.[] | select(.headRefName | test(\"${ISSUE_NUMBER}\"))] | length" 2>/dev/null || echo "0")
+    fi
+
+    if [[ "$PR_COUNT" -gt 0 ]]; then
+      log "実装成功: Issue #$ISSUE_NUMBER (PR確認済み)"
+      gh issue edit "$ISSUE_NUMBER" --add-label "$LABEL_DONE" 2>/dev/null || true
+      log "ラベル付与: $LABEL_DONE"
+      PROCESSED=$((PROCESSED + 1))
+    else
+      log_error "実装失敗: Issue #$ISSUE_NUMBER (exit 0 だが PR が見つかりません)"
+      gh issue edit "$ISSUE_NUMBER" --add-label "$LABEL_BLOCKED" 2>/dev/null || true
+      log "ラベル付与: $LABEL_BLOCKED（次の Issue に進みます）"
+
+      gh issue comment "$ISSUE_NUMBER" \
+        --body "⚠️ **自動実装が失敗しました** ($(date '+%Y-%m-%d %H:%M'))\n\nClaude は exit 0 で終了しましたが、対応する PR が作成されていません。ログは \`/tmp/auto-implement.log\` を確認してください。\n\n手動での実装が必要です。" \
+        2>/dev/null || true
+    fi
   else
     log_error "実装失敗: Issue #$ISSUE_NUMBER (exit code: $CLAUDE_EXIT)"
     gh issue edit "$ISSUE_NUMBER" --add-label "$LABEL_BLOCKED" 2>/dev/null || true
