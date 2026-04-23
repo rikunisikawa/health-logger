@@ -20,8 +20,10 @@ GitHub Issue を実装キューとして、cron から Claude を呼び出して
       ↓
 ⑤ claude --print で実装を依頼（ブランチ作成 → TDD → コミット → PR 作成まで）
       ↓
-⑥ 成功 → "auto-implement: done" ラベル
-   失敗 → "auto-implement: blocked" ラベル + Issue にコメント
+⑥ Claude が exit 0 → PR 存在確認（タイトル / ブランチ名）
+   PR あり → "auto-implement: done" ラベル
+   PR なし → "auto-implement: blocked" ラベル + Issue にコメント
+   Claude が exit 非0 → "auto-implement: blocked" ラベル + Issue にコメント
       ↓
 ⑦ 人間が PR をレビュー → マージ（Issue は自動クローズ）
       ↓
@@ -45,7 +47,7 @@ GitHub Issue を実装キューとして、cron から Claude を呼び出して
 |--------|------|--------|
 | `implementation-ready` | 実装可能な状態（要件明確）| 人間 |
 | `auto-implement: in-progress` | 現在 Claude が実装中 | スクリプト自動 |
-| `auto-implement: done` | Claude が実装完了（PR 作成済み）| スクリプト自動 |
+| `auto-implement: done` | Claude が実装完了 **かつ PR 存在確認済み** | スクリプト自動 |
 | `auto-implement: blocked` | 自動実装失敗。手動対応が必要 | スクリプト自動 |
 
 ### Issue の書き方（推奨）
@@ -184,6 +186,19 @@ gh api "repos/rikunisikawa/health-logger/issues?state=open&milestone=1&per_page=
 gh issue edit <ISSUE_NUMBER> --remove-label "auto-implement: in-progress"
 ```
 
+### `done` ラベルが付いているのに PR が存在しない
+
+`claude` が exit 0 で終了したが PR が作成されなかった場合に発生していた（レート制限での早期終了など）。
+現在のスクリプトは exit 0 後に PR 存在確認を行うため、**この状況は発生しなくなっている**。
+
+万一 `done` ラベルのまま Issue がオープンになっている場合:
+
+```bash
+# done ラベルを削除して implementation-ready に戻す
+gh issue edit <ISSUE_NUMBER> --remove-label "auto-implement: done"
+# → 次回 cron で再選択される
+```
+
 ### blocked になった Issue を再試行
 
 ```bash
@@ -213,6 +228,7 @@ gh pr list --search "Closes #<ISSUE_NUMBER>"
 | PR ベース | Issue を直接クローズせず、PR マージで自動クローズ | 人間のレビューを必須にする |
 | マイルストーン順 | 実装順序はマイルストーン番号で制御 | 依存関係を管理しやすくする |
 | ラベルで状態管理 | in-progress / done / blocked でトラッキング | GitHub 上で状態が一目でわかる |
+| PR 存在確認 | exit 0 後に PR の存在を検証してから done ラベルを付与 | exit 0 でも PR 未作成のケース（レート制限での早期終了など）を防ぐ |
 | `--permission-mode bypassPermissions` | Claude がファイル編集・git・gh を自由に使える | 実装作業に必要な全操作を許可 |
 
 ---
