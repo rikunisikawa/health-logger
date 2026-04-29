@@ -218,3 +218,29 @@ Web Push 通知の購読情報を保存するテーブル。
 **購読の自動削除**:
 `push_notify` Lambda がプッシュ送信に失敗し、ブラウザから 404 または 410 が返った場合、
 その購読情報を自動的に DynamoDB から削除する（期限切れ・手動解除済みの端末をクリーンアップ）。
+
+---
+
+## 7. DynamoDB — daily_summaries
+
+日次バッチ集計結果のキャッシュテーブル。`aggregate_daily` Lambda が毎日 AM 2:00 JST に書き込む。
+`GET /summary` エンドポイントはこのテーブルを参照し、Athena への直接クエリを回避する（< 100ms）。
+
+**テーブル名**: `health-logger-prod-daily-summaries`
+
+| 属性 | 型 | キー種別 | 説明 |
+|------|-----|---------|------|
+| `user_id` | String | パーティションキー | Cognito の `sub` |
+| `date` | String | ソートキー | 集計対象日（`YYYY-MM-DD`） |
+| `avg_fatigue` | String | — | 疲労感スコアの平均 |
+| `avg_mood` | String | — | 気分スコアの平均 |
+| `avg_motivation` | String | — | やる気スコアの平均 |
+| `record_count` | String | — | 集計対象レコード数 |
+
+**集計ロジック**:
+- 対象: `record_type = 'daily'` のレコードのみ
+- パーティション列 `dt` で絞り込み（パーティションプルーニング適用）
+- `aggregate_daily` Lambda が Athena で `AVG()` / `COUNT()` → DynamoDB に `PutItem`
+
+**更新タイミング**:
+EventBridge Scheduler が毎日 17:00 UTC（AM 2:00 JST）に `aggregate_daily` Lambda を呼び出す。

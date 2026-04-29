@@ -53,9 +53,11 @@ health-logger プロジェクトにおける全エージェントのコーディ
 | AWS インフラ変更・Terraform | `devops` |
 | Athena/Glue/Firehose/S3 Tables | `data_engineering` |
 | コードレビュー・テスト戦略 | `testing` |
+| セキュリティ診断・個人情報保護・プライバシー評価 | `security` |
 | Issue/PR/ブランチ/マージ | `project_management` |
 | アーキテクチャ設計・技術選定 | `architecture` |
 | データ分析・Athena クエリ調査 | `analysis` |
+| 機能優先度・ロードマップ・KPI・ユーザーストーリー | `product_manager` |
 | ドキュメント作成・更新 | `documentation` |
 | UI/UX 設計・画面要件・文言設計 | `designer` |
 | 開発サイクルの受け入れ条件チェック・完了判定 | `reviewer` |

@@ -70,6 +70,7 @@ $BASE plan -var='lambda_s3_keys={"create_record":"placeholder","get_latest":"pla
 - AWS provider バージョン `>= 5.75` 必須（`aws_s3tables_*` リソースのため）
 - センシティブな変数（`github_access_token` など）は `sensitive = true` を付与
 - `terraform.tfvars` にシークレット値を直接書かないこと
+- **IAM ポリシー変更時は PR 作成前に `aws iam simulate-principal-policy` で権限を確認する**（詳細は `.claude/rules/terraform/workflow.md` 参照）
 
 ---
 
@@ -88,3 +89,110 @@ $BASE plan -var='lambda_s3_keys={"create_record":"placeholder","get_latest":"pla
 - `terraform.tfvars` にシークレット値（PAT など）を直接コミットしない
 - `lambda_s3_keys` のプレースホルダ値でデプロイしない（Lambda が起動しなくなる）
 - `cors_allow_origins = ["*"]` のまま本番運用しない（Amplify URL に制限すること）
+
+## 開発環境レビューの定期実行
+
+Claude Code の設定（settings.json / hooks / MCP / agents）を定期的にレビューし、改善案を自動生成する仕組み。  
+**Claude.ai Pro サブスクリプションの範囲内で動作**（API 別途課金不要）。
+
+### 実行方法
+
+#### A. インタラクティブ実行（Claude Code セッション内）
+
+```
+/dev-env-review
+```
+
+#### B. 非インタラクティブ実行（CLI から直接）
+
+```bash
+bash scripts/run-dev-env-review.sh              # デフォルト（sonnet）
+bash scripts/run-dev-env-review.sh --model haiku  # 高速・低コスト版
+bash scripts/run-dev-env-review.sh --dry-run      # 動作確認のみ
+```
+
+### 定期実行セットアップ（Windows / WSL）
+
+詳細は `scripts/setup-schedule.md` を参照。
+
+**WSL の cron を使う場合（推奨）:**
+
+```bash
+# cron を起動
+sudo service cron start
+
+# crontab を編集（毎月1日 AM 9:00）
+crontab -e
+# 以下を追記:
+# 0 9 1 * * bash ~/dev/health-logger/health-logger/scripts/run-dev-env-review.sh --model haiku >> /tmp/dev-env-review.log 2>&1
+```
+
+**Windows タスクスケジューラを使う場合:**
+
+```powershell
+# PowerShell で登録（scripts/setup-schedule.md に詳細手順あり）
+$action = New-ScheduledTaskAction -Execute "wsl.exe" `
+  -Argument "-e bash -c `"cd ~/dev/health-logger/health-logger && bash scripts/run-dev-env-review.sh --model haiku`""
+$trigger = New-ScheduledTaskTrigger -Weekly -WeeksInterval 4 -DaysOfWeek Monday -At "09:00"
+Register-ScheduledTask -TaskName "health-logger: Claude Code Dev Env Review" -Action $action -Trigger $trigger
+```
+
+### 成果物
+
+| ファイル | 内容 |
+|---------|------|
+| `docs/claude-code-dev-env-review.md` | 改善レポート（自動上書き） |
+
+### 関連ファイル
+
+| ファイル | 役割 |
+|---------|------|
+| `.claude/skills/dev-env-review/SKILL.md` | レビュー知識ベース・チェックリスト |
+| `.claude/commands/dev-env-review.md` | `/dev-env-review` スラッシュコマンド定義 |
+| `.claude/prompts/dev-env-review.md` | 非インタラクティブ実行用プロンプト |
+| `scripts/run-dev-env-review.sh` | 実行スクリプト（cron/launchd から呼び出す） |
+| `scripts/setup-schedule.md` | Windows/WSL 定期実行セットアップ手順 |
+
+---
+
+## AI PM ガバナンス原則
+
+### 人間が最終承認者である
+
+AI エージェントは **提案・分析・草案作成のみ** を行う。
+以下は必ずユーザーの明示的な承認が必要:
+
+- スプリント計画の確定・Issue へのマイルストーン割り当て
+- Issue/PR の新規作成・クローズ
+- PR のマージ
+- アーキテクチャ変更の意思決定
+- 外部公開情報（リリースノート）の確定
+
+### AI が自律的に行ってはいけないこと（追加）
+
+- 仕様変更（CLAUDE.md・settings.json の内容変更）
+- settings.json の deny リストを緩める変更
+- ユーザー未承認の Issue/PR 作成
+- main ブランチへの直接コミット
+- GitHub MCP 経由の破壊的操作（Issue クローズ・PR マージ）
+
+### AI PM エージェント階層
+
+```
+pm-agent（戦略・判断）
+  ├── deep-research-agent : 情報収集・データ分析
+  ├── architect-agent     : 技術設計の起案
+  ├── engineer-agent      : 実装の進捗管理
+  ├── qa-agent            : 品質確認の統括
+  └── integration-agent   : GitHub MCP 操作の代行
+```
+
+既存エージェント（orchestrator/frontend/lambda 等）は引き続き有効。
+新エージェントは既存を「置き換える」のではなく「上位から調整する」。
+
+### GitHub MCP 利用ルール
+
+- MCP 経由の書き込み操作は事前確認ステップを必ず設ける
+- `GITHUB_PERSONAL_ACCESS_TOKEN` はコードにハードコードしない（環境変数経由）
+- MCP が未接続でも `gh CLI` でフォールバック可能な設計にする
+- GitHub を Single Source of Truth とし、ローカルの状態より GitHub の状態を優先する

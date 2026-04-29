@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main  # prod only
+  workflow_dispatch:  # 手動実行用
 
 permissions:
   id-token: write
@@ -23,7 +24,7 @@ jobs:
       terraform: ${{ steps.filter.outputs.terraform }}
       migrations: ${{ steps.filter.outputs.migrations }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: dorny/paths-filter@v3
         id: filter
         with:
@@ -40,27 +41,33 @@ jobs:
     name: Build Lambda ZIPs
     runs-on: ubuntu-latest
     needs: detect-changes
-    if: needs.detect-changes.outputs.lambda == 'true' || needs.detect-changes.outputs.terraform == 'true' || needs.detect-changes.outputs.migrations == 'true'
+    if: github.event_name == 'workflow_dispatch' || needs.detect-changes.outputs.lambda == 'true' || needs.detect-changes.outputs.terraform == 'true' || needs.detect-changes.outputs.migrations == 'true'
     outputs:
-      create_record_key:    ${{ steps.upload.outputs.create_record_key }}
-      get_latest_key:       ${{ steps.upload.outputs.get_latest_key }}
-      push_subscribe_key:   ${{ steps.upload.outputs.push_subscribe_key }}
-      push_notify_key:      ${{ steps.upload.outputs.push_notify_key }}
-      get_item_config_key:  ${{ steps.upload.outputs.get_item_config_key }}
-      save_item_config_key: ${{ steps.upload.outputs.save_item_config_key }}
-      delete_record_key:    ${{ steps.upload.outputs.delete_record_key }}
-      get_env_data_key:          ${{ steps.upload.outputs.get_env_data_key }}
-      get_env_data_latest_key:   ${{ steps.upload.outputs.get_env_data_latest_key }}
+      create_record_key:       ${{ steps.upload.outputs.create_record_key }}
+      get_latest_key:          ${{ steps.upload.outputs.get_latest_key }}
+      push_subscribe_key:      ${{ steps.upload.outputs.push_subscribe_key }}
+      push_notify_key:         ${{ steps.upload.outputs.push_notify_key }}
+      weekly_push_notify_key:  ${{ steps.upload.outputs.weekly_push_notify_key }}
+      get_item_config_key:     ${{ steps.upload.outputs.get_item_config_key }}
+      save_item_config_key:    ${{ steps.upload.outputs.save_item_config_key }}
+      delete_record_key:       ${{ steps.upload.outputs.delete_record_key }}
+      get_env_data_key:        ${{ steps.upload.outputs.get_env_data_key }}
+      get_env_data_latest_key: ${{ steps.upload.outputs.get_env_data_latest_key }}
+      get_summary_key:         ${{ steps.upload.outputs.get_summary_key }}
+      aggregate_daily_key:     ${{ steps.upload.outputs.aggregate_daily_key }}
+      export_records_key:      ${{ steps.upload.outputs.export_records_key }}
+      get_correlation_key:          ${{ steps.upload.outputs.get_correlation_key }}
+      get_next_day_effects_key:     ${{ steps.upload.outputs.get_next_day_effects_key }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: actions/setup-python@v5
         with:
           python-version: '3.13'
 
       - name: Configure AWS credentials (OIDC)
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN_PROD }}
           aws-region: ${{ env.AWS_REGION }}
@@ -88,6 +95,12 @@ jobs:
           cd lambda/push_notify
           pip install -r requirements.txt -t . --quiet
           zip -r ../../push_notify.zip . -x "*.pyc" "__pycache__/*"
+
+      - name: Package weekly_push_notify Lambda
+        run: |
+          cd lambda/weekly_push_notify
+          pip install -r requirements.txt -t . --quiet
+          zip -r ../../weekly_push_notify.zip . -x "test_*" "conftest.py" "*.pyc" "__pycache__/*"
 
       - name: Package get_item_config Lambda
         run: |
@@ -119,6 +132,36 @@ jobs:
           pip install -r requirements.txt -t . --quiet
           zip -r ../../get_env_data_latest.zip . -x "test_*" "*.pyc" "__pycache__/*"
 
+      - name: Package get_summary Lambda
+        run: |
+          cd lambda/get_summary
+          pip install -r requirements.txt -t . --quiet
+          zip -r ../../get_summary.zip . -x "test_*" "conftest.py" "*.pyc" "__pycache__/*"
+
+      - name: Package aggregate_daily Lambda
+        run: |
+          cd lambda/aggregate_daily
+          pip install -r requirements.txt -t . --quiet
+          zip -r ../../aggregate_daily.zip . -x "test_*" "*.pyc" "__pycache__/*"
+
+      - name: Package export_records Lambda
+        run: |
+          cd lambda/export_records
+          pip install -r requirements.txt -t . --quiet
+          zip -r ../../export_records.zip . -x "test_*" "conftest.py" "*.pyc" "__pycache__/*"
+
+      - name: Package get_correlation Lambda
+        run: |
+          cd lambda/get_correlation
+          pip install -r requirements.txt -t . --quiet
+          zip -r ../../get_correlation.zip . -x "test_*" "conftest.py" "*.pyc" "__pycache__/*"
+
+      - name: Package get_next_day_effects Lambda
+        run: |
+          cd lambda/get_next_day_effects
+          pip install -r requirements.txt -t . --quiet
+          zip -r ../../get_next_day_effects.zip . -x "test_*" "conftest.py" "*.pyc" "__pycache__/*"
+
       - name: Upload ZIPs to S3 artifacts bucket
         id: upload
         run: |
@@ -128,53 +171,71 @@ jobs:
           LATEST_KEY="get_latest/${SHA}.zip"
           PUSH_SUB_KEY="push_subscribe/${SHA}.zip"
           PUSH_NOTIFY_KEY="push_notify/${SHA}.zip"
+          WEEKLY_PUSH_KEY="weekly_push_notify/${SHA}.zip"
           GET_ITEM_KEY="get_item_config/${SHA}.zip"
           SAVE_ITEM_KEY="save_item_config/${SHA}.zip"
           DELETE_KEY="delete_record/${SHA}.zip"
           GET_ENV_KEY="get_env_data/${SHA}.zip"
           GET_ENV_LATEST_KEY="get_env_data_latest/${SHA}.zip"
+          GET_SUMMARY_KEY="get_summary/${SHA}.zip"
+          AGGREGATE_DAILY_KEY="aggregate_daily/${SHA}.zip"
+          EXPORT_KEY="export_records/${SHA}.zip"
+          GET_CORRELATION_KEY="get_correlation/${SHA}.zip"
+          GET_NEXT_DAY_KEY="get_next_day_effects/${SHA}.zip"
 
           aws s3 cp create_record.zip         "s3://${BUCKET}/${CREATE_KEY}"
           aws s3 cp get_latest.zip            "s3://${BUCKET}/${LATEST_KEY}"
           aws s3 cp push_subscribe.zip        "s3://${BUCKET}/${PUSH_SUB_KEY}"
           aws s3 cp push_notify.zip           "s3://${BUCKET}/${PUSH_NOTIFY_KEY}"
+          aws s3 cp weekly_push_notify.zip    "s3://${BUCKET}/${WEEKLY_PUSH_KEY}"
           aws s3 cp get_item_config.zip       "s3://${BUCKET}/${GET_ITEM_KEY}"
           aws s3 cp save_item_config.zip      "s3://${BUCKET}/${SAVE_ITEM_KEY}"
           aws s3 cp delete_record.zip         "s3://${BUCKET}/${DELETE_KEY}"
           aws s3 cp get_env_data.zip          "s3://${BUCKET}/${GET_ENV_KEY}"
           aws s3 cp get_env_data_latest.zip   "s3://${BUCKET}/${GET_ENV_LATEST_KEY}"
+          aws s3 cp get_summary.zip           "s3://${BUCKET}/${GET_SUMMARY_KEY}"
+          aws s3 cp aggregate_daily.zip       "s3://${BUCKET}/${AGGREGATE_DAILY_KEY}"
+          aws s3 cp export_records.zip        "s3://${BUCKET}/${EXPORT_KEY}"
+          aws s3 cp get_correlation.zip       "s3://${BUCKET}/${GET_CORRELATION_KEY}"
+          aws s3 cp get_next_day_effects.zip  "s3://${BUCKET}/${GET_NEXT_DAY_KEY}"
 
-          echo "create_record_key=${CREATE_KEY}"           >> $GITHUB_OUTPUT
-          echo "get_latest_key=${LATEST_KEY}"               >> $GITHUB_OUTPUT
-          echo "push_subscribe_key=${PUSH_SUB_KEY}"         >> $GITHUB_OUTPUT
-          echo "push_notify_key=${PUSH_NOTIFY_KEY}"         >> $GITHUB_OUTPUT
-          echo "get_item_config_key=${GET_ITEM_KEY}"        >> $GITHUB_OUTPUT
-          echo "save_item_config_key=${SAVE_ITEM_KEY}"      >> $GITHUB_OUTPUT
-          echo "delete_record_key=${DELETE_KEY}"            >> $GITHUB_OUTPUT
-          echo "get_env_data_key=${GET_ENV_KEY}"            >> $GITHUB_OUTPUT
+          echo "create_record_key=${CREATE_KEY}"             >> $GITHUB_OUTPUT
+          echo "get_latest_key=${LATEST_KEY}"                >> $GITHUB_OUTPUT
+          echo "push_subscribe_key=${PUSH_SUB_KEY}"          >> $GITHUB_OUTPUT
+          echo "push_notify_key=${PUSH_NOTIFY_KEY}"          >> $GITHUB_OUTPUT
+          echo "weekly_push_notify_key=${WEEKLY_PUSH_KEY}"   >> $GITHUB_OUTPUT
+          echo "get_item_config_key=${GET_ITEM_KEY}"         >> $GITHUB_OUTPUT
+          echo "save_item_config_key=${SAVE_ITEM_KEY}"       >> $GITHUB_OUTPUT
+          echo "delete_record_key=${DELETE_KEY}"             >> $GITHUB_OUTPUT
+          echo "get_env_data_key=${GET_ENV_KEY}"             >> $GITHUB_OUTPUT
           echo "get_env_data_latest_key=${GET_ENV_LATEST_KEY}" >> $GITHUB_OUTPUT
+          echo "get_summary_key=${GET_SUMMARY_KEY}"          >> $GITHUB_OUTPUT
+          echo "aggregate_daily_key=${AGGREGATE_DAILY_KEY}"  >> $GITHUB_OUTPUT
+          echo "export_records_key=${EXPORT_KEY}"            >> $GITHUB_OUTPUT
+          echo "get_correlation_key=${GET_CORRELATION_KEY}"      >> $GITHUB_OUTPUT
+          echo "get_next_day_effects_key=${GET_NEXT_DAY_KEY}"  >> $GITHUB_OUTPUT
 
   # ── 2. Terraform apply (infrastructure + Lambda config) ───────────────────
   terraform-apply:
     name: Terraform Apply
     runs-on: ubuntu-latest
     needs: [detect-changes, build-lambda]
-    if: needs.detect-changes.outputs.lambda == 'true' || needs.detect-changes.outputs.terraform == 'true' || needs.detect-changes.outputs.migrations == 'true'
+    if: github.event_name == 'workflow_dispatch' || needs.detect-changes.outputs.lambda == 'true' || needs.detect-changes.outputs.terraform == 'true' || needs.detect-changes.outputs.migrations == 'true'
     environment: prod
     defaults:
       run:
         working-directory: terraform/envs/prod
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Configure AWS credentials (OIDC)
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN_PROD }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - uses: hashicorp/setup-terraform@v3
+      - uses: hashicorp/setup-terraform@v4
         with:
           terraform_version: ${{ env.TF_VERSION }}
 
@@ -184,7 +245,7 @@ jobs:
       - name: Terraform Apply
         run: |
           terraform apply -auto-approve \
-            -var='lambda_s3_keys={"create_record":"${{ needs.build-lambda.outputs.create_record_key }}","get_latest":"${{ needs.build-lambda.outputs.get_latest_key }}","push_subscribe":"${{ needs.build-lambda.outputs.push_subscribe_key }}","push_notify":"${{ needs.build-lambda.outputs.push_notify_key }}","get_item_config":"${{ needs.build-lambda.outputs.get_item_config_key }}","save_item_config":"${{ needs.build-lambda.outputs.save_item_config_key }}","delete_record":"${{ needs.build-lambda.outputs.delete_record_key }}","get_env_data":"${{ needs.build-lambda.outputs.get_env_data_key }}","get_env_data_latest":"${{ needs.build-lambda.outputs.get_env_data_latest_key }}"}'
+            -var='lambda_s3_keys={"create_record":"${{ needs.build-lambda.outputs.create_record_key }}","get_latest":"${{ needs.build-lambda.outputs.get_latest_key }}","push_subscribe":"${{ needs.build-lambda.outputs.push_subscribe_key }}","push_notify":"${{ needs.build-lambda.outputs.push_notify_key }}","weekly_push_notify":"${{ needs.build-lambda.outputs.weekly_push_notify_key }}","get_item_config":"${{ needs.build-lambda.outputs.get_item_config_key }}","save_item_config":"${{ needs.build-lambda.outputs.save_item_config_key }}","delete_record":"${{ needs.build-lambda.outputs.delete_record_key }}","get_env_data":"${{ needs.build-lambda.outputs.get_env_data_key }}","get_env_data_latest":"${{ needs.build-lambda.outputs.get_env_data_latest_key }}","get_summary":"${{ needs.build-lambda.outputs.get_summary_key }}","aggregate_daily":"${{ needs.build-lambda.outputs.aggregate_daily_key }}","export_records":"${{ needs.build-lambda.outputs.export_records_key }}","get_correlation":"${{ needs.build-lambda.outputs.get_correlation_key }}","get_next_day_effects":"${{ needs.build-lambda.outputs.get_next_day_effects_key }}"}'
         env:
           TF_VAR_vapid_private_key: ${{ secrets.VAPID_PRIVATE_KEY_PROD }}
 
@@ -202,8 +263,14 @@ jobs:
         run: |
           echo "### Deployed to prod" >> $GITHUB_STEP_SUMMARY
           echo "- Commit: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- Lambda create_record:  \`${{ needs.build-lambda.outputs.create_record_key }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- Lambda get_latest:     \`${{ needs.build-lambda.outputs.get_latest_key }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- Lambda push_subscribe: \`${{ needs.build-lambda.outputs.push_subscribe_key }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- Lambda push_notify:    \`${{ needs.build-lambda.outputs.push_notify_key }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Lambda create_record:       \`${{ needs.build-lambda.outputs.create_record_key }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Lambda get_latest:          \`${{ needs.build-lambda.outputs.get_latest_key }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Lambda push_subscribe:      \`${{ needs.build-lambda.outputs.push_subscribe_key }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Lambda push_notify:         \`${{ needs.build-lambda.outputs.push_notify_key }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Lambda weekly_push_notify:  \`${{ needs.build-lambda.outputs.weekly_push_notify_key }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Lambda get_summary:         \`${{ needs.build-lambda.outputs.get_summary_key }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Lambda aggregate_daily:     \`${{ needs.build-lambda.outputs.aggregate_daily_key }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Lambda export_records:      \`${{ needs.build-lambda.outputs.export_records_key }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Lambda get_correlation:         \`${{ needs.build-lambda.outputs.get_correlation_key }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Lambda get_next_day_effects:    \`${{ needs.build-lambda.outputs.get_next_day_effects_key }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- Amplify: auto-build triggered by GitHub push" >> $GITHUB_STEP_SUMMARY

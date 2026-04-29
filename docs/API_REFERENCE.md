@@ -58,6 +58,7 @@ Content-Type: application/json
 | POST | /records | 体調記録を作成 |
 | GET | /records/latest | 体調記録を取得 |
 | DELETE | /records/{id} | 体調記録を削除 |
+| GET | /summary | 日次集計サマリーを取得（DynamoDB キャッシュ） |
 | GET | /item-config | カスタム項目設定を取得 |
 | PUT | /item-config | カスタム項目設定を保存 |
 | POST | /push/subscribe | プッシュ通知を購読 |
@@ -260,6 +261,62 @@ Authorization: Bearer <token>
 {
   "error": "Delete failed",
   "reason": "..."
+}
+```
+
+---
+
+## GET /summary
+
+日次集計サマリーを取得する。DynamoDB キャッシュから取得するため応答時間は < 100ms。
+`aggregate_daily` Lambda が毎日 AM 2:00 JST に前日分を集計して DynamoDB に保存する。
+
+### リクエスト
+
+```
+GET /summary?days=7
+Authorization: Bearer <token>
+```
+
+**クエリパラメータ**
+
+| パラメータ | 型 | 必須 | 制約 | 説明 |
+|-----------|-----|------|------|------|
+| `days` | integer | 任意 | 1 〜 90（デフォルト: 7） | 取得する日数 |
+
+### レスポンス
+
+**成功（200）**
+
+```json
+{
+  "summaries": [
+    {
+      "date": "2026-04-12",
+      "avg_fatigue": "60.5",
+      "avg_mood": "70.0",
+      "avg_motivation": "50.0",
+      "record_count": "2"
+    },
+    {
+      "date": "2026-04-11",
+      "avg_fatigue": "55.0",
+      "avg_mood": "65.0",
+      "avg_motivation": "45.0",
+      "record_count": "1"
+    }
+  ]
+}
+```
+
+> 注意: 集計が未実行の日付はレスポンスに含まれない（`aggregate_daily` が AM 2:00 JST に実行）。
+> すべての数値は文字列として返される。フロントエンド側で `parseFloat()` が必要。
+
+**バリデーションエラー（400）**
+
+```json
+{
+  "error": "days must be between 1 and 90"
 }
 ```
 

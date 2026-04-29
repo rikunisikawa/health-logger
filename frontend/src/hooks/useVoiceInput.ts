@@ -45,6 +45,7 @@ export interface UseVoiceInputReturn {
   stopRecording: () => void
   error: string | null
   reset: () => void
+  clearTranscript: () => void
 }
 
 export function useVoiceInput(): UseVoiceInputReturn {
@@ -140,5 +141,7 @@ export function useVoiceInput(): UseVoiceInputReturn {
     setError(null)
   }, [])
 
-  return { isSupported, state, transcript, startRecording, stopRecording, error, reset }
+  const clearTranscript = useCallback(() => setTranscript(''), [])
+
+  return { isSupported, state, transcript, startRecording, stopRecording, error, reset, clearTranscript }
 }

@@ -67,6 +67,11 @@
             "type": "command",
             "command": "python3 /home/riku_nishikawa/dev/health-logger/health-logger/.claude/hooks/block-forbidden-dirs.py",
             "description": "app/ と terraform/envs/dev/ への書き込みをブロック"
+          },
+          {
+            "type": "command",
+            "command": "python3 /home/riku_nishikawa/dev/health-logger/health-logger/.claude/hooks/warn-critical-file-edit.py",
+            "description": "CLAUDE.md/settings.json/hooks 変更時に警告"
           }
         ]
       },
@@ -89,6 +94,33 @@
             "type": "command",
             "command": "python3 /home/riku_nishikawa/dev/health-logger/health-logger/.claude/hooks/run-tests-after-edit.py",
             "description": "lambda/ 実装 .py 変更後に pytest を自動実行"
+          },
+          {
+            "type": "command",
+            "command": "python3 /home/riku_nishikawa/dev/health-logger/health-logger/.claude/hooks/format-lint-on-edit.py",
+            "description": "Python(ruff) / TypeScript(eslint+prettier) の自動フォーマット"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 /home/riku_nishikawa/dev/health-logger/health-logger/.claude/hooks/load-context-on-start.py",
+            "description": "セッション開始時にスプリント状態・open Issue をコンテキストロード（初回のみ）"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 /home/riku_nishikawa/dev/health-logger/health-logger/.claude/hooks/log-prompt.py",
+            "description": "プロンプトごとのログを .claude/logs/YYYY-MM-DD/HHMMSS.md に保存する"
           }
         ]
       }

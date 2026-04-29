@@ -6,18 +6,11 @@ on:
     paths:
       - "terraform/**"
       - "migrations/athena/**"
-  push:
-    branches: [main]
-    paths:
-      - "terraform/**"
-      - "migrations/athena/**"
 
-# 同一ブランチでの並行実行を防ぎ state lock 競合を回避する
-# cancel-in-progress: PR は新しい push で古いランをキャンセル
-# main への push は直列化（キャンセルしない）
+# PR で同一ブランチへの新しい push が来たら古いランをキャンセルする
 concurrency:
   group: terraform-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  cancel-in-progress: true
 
 env:
   TF_VERSION: "1.12.0"
@@ -36,15 +29,15 @@ jobs:
         working-directory: terraform/envs/prod
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Configure AWS credentials (OIDC)
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN_PROD }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - uses: hashicorp/setup-terraform@v3
+      - uses: hashicorp/setup-terraform@v4
         with:
           terraform_version: ${{ env.TF_VERSION }}
 
@@ -61,14 +54,14 @@ jobs:
         id: plan
         run: |
           terraform plan \
-            -var='lambda_s3_keys={"create_record":"placeholder","get_latest":"placeholder","push_subscribe":"placeholder","push_notify":"placeholder","get_item_config":"placeholder","save_item_config":"placeholder","delete_record":"placeholder","get_env_data":"placeholder","get_env_data_latest":"placeholder"}' \
+            -var='lambda_s3_keys={"create_record":"placeholder","get_latest":"placeholder","push_subscribe":"placeholder","push_notify":"placeholder","weekly_push_notify":"placeholder","get_item_config":"placeholder","save_item_config":"placeholder","delete_record":"placeholder","get_env_data":"placeholder","get_env_data_latest":"placeholder","get_summary":"placeholder","aggregate_daily":"placeholder","export_records":"placeholder","get_correlation":"placeholder","get_next_day_effects":"placeholder"}' \
             -no-color -out=tfplan
         env:
           TF_VAR_vapid_private_key: ${{ secrets.VAPID_PRIVATE_KEY_PROD }}
 
       - name: Comment PR with plan
         if: github.event_name == 'pull_request'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const { data: comments } = await github.rest.issues.listComments({
@@ -95,17 +88,3 @@ jobs:
               });
             }
 
-      - name: Terraform Apply (main branch only)
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: terraform apply -auto-approve tfplan
-
-      - name: Run Athena schema migrations (main branch only)
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        working-directory: ${{ github.workspace }}
-        run: |
-          pip install boto3 --quiet
-          python3 scripts/athena-migrate.py
-        env:
-          ATHENA_DATABASE: health_logger_prod_health_logs
-          ATHENA_OUTPUT_BUCKET: health-logger-prod-health-export
-          MIGRATION_TRACKING_TABLE: health-logger-prod-athena-migrations
