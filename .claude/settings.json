@@ -113,6 +113,17 @@
           }
         ]
       }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 /home/riku_nishikawa/dev/health-logger/health-logger/.claude/hooks/log-prompt.py",
+            "description": "プロンプトごとのログを .claude/logs/YYYY-MM-DD/HHMMSS.md に保存する"
+          }
+        ]
+      }
     ]
   }
 }
