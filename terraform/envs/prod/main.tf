@@ -407,6 +407,7 @@ module "env_data_ingest" {
 # ── Outputs ────────────────────────────────────────────────────────────────────
 output "api_endpoint" { value = module.apigw.endpoint_url }
 output "amplify_app_url" { value = module.amplify.app_url }
+output "amplify_develop_url" { value = module.amplify.develop_url }
 output "cognito_user_pool_id" { value = module.cognito.user_pool_id }
 output "cognito_client_id" { value = module.cognito.client_id }
 output "github_actions_role" { value = aws_iam_role.github_actions.arn }
