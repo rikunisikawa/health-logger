@@ -24,7 +24,7 @@ jobs:
       terraform: ${{ steps.filter.outputs.terraform }}
       migrations: ${{ steps.filter.outputs.migrations }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: dorny/paths-filter@v3
         id: filter
         with:
@@ -59,7 +59,7 @@ jobs:
       get_correlation_key:     ${{ steps.upload.outputs.get_correlation_key }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: actions/setup-python@v5
         with:
@@ -217,7 +217,7 @@ jobs:
         working-directory: terraform/envs/prod
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
