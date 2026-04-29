@@ -101,8 +101,10 @@ module "apigw" {
   get_summary_function_name             = module.lambda.get_summary_function_name
   export_records_lambda_invoke_arn      = module.lambda.export_records_invoke_arn
   export_records_function_name          = module.lambda.export_records_function_name
-  get_correlation_lambda_invoke_arn     = module.lambda.get_correlation_invoke_arn
-  get_correlation_function_name         = module.lambda.get_correlation_function_name
+  get_correlation_lambda_invoke_arn        = module.lambda.get_correlation_invoke_arn
+  get_correlation_function_name            = module.lambda.get_correlation_function_name
+  get_next_day_effects_lambda_invoke_arn   = module.lambda.get_next_day_effects_invoke_arn
+  get_next_day_effects_function_name       = module.lambda.get_next_day_effects_function_name
 }
 
 # ── Amplify (React frontend hosting) ─────────────────────────────────────────
@@ -405,6 +407,7 @@ module "env_data_ingest" {
 # ── Outputs ────────────────────────────────────────────────────────────────────
 output "api_endpoint" { value = module.apigw.endpoint_url }
 output "amplify_app_url" { value = module.amplify.app_url }
+output "amplify_develop_url" { value = module.amplify.develop_url }
 output "cognito_user_pool_id" { value = module.cognito.user_pool_id }
 output "cognito_client_id" { value = module.cognito.client_id }
 output "github_actions_role" { value = aws_iam_role.github_actions.arn }

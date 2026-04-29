@@ -81,3 +81,12 @@ resource "aws_amplify_branch" "main" {
   framework         = "React"
   stage             = "PRODUCTION"
 }
+
+resource "aws_amplify_branch" "develop" {
+  app_id      = aws_amplify_app.main.id
+  branch_name = "develop"
+
+  enable_auto_build = true
+  framework         = "React"
+  stage             = "DEVELOPMENT"
+}
