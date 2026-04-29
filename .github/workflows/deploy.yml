@@ -56,7 +56,8 @@ jobs:
       get_summary_key:         ${{ steps.upload.outputs.get_summary_key }}
       aggregate_daily_key:     ${{ steps.upload.outputs.aggregate_daily_key }}
       export_records_key:      ${{ steps.upload.outputs.export_records_key }}
-      get_correlation_key:     ${{ steps.upload.outputs.get_correlation_key }}
+      get_correlation_key:          ${{ steps.upload.outputs.get_correlation_key }}
+      get_next_day_effects_key:     ${{ steps.upload.outputs.get_next_day_effects_key }}
 
     steps:
       - uses: actions/checkout@v6
@@ -155,6 +156,12 @@ jobs:
           pip install -r requirements.txt -t . --quiet
           zip -r ../../get_correlation.zip . -x "test_*" "conftest.py" "*.pyc" "__pycache__/*"
 
+      - name: Package get_next_day_effects Lambda
+        run: |
+          cd lambda/get_next_day_effects
+          pip install -r requirements.txt -t . --quiet
+          zip -r ../../get_next_day_effects.zip . -x "test_*" "conftest.py" "*.pyc" "__pycache__/*"
+
       - name: Upload ZIPs to S3 artifacts bucket
         id: upload
         run: |
@@ -174,6 +181,7 @@ jobs:
           AGGREGATE_DAILY_KEY="aggregate_daily/${SHA}.zip"
           EXPORT_KEY="export_records/${SHA}.zip"
           GET_CORRELATION_KEY="get_correlation/${SHA}.zip"
+          GET_NEXT_DAY_KEY="get_next_day_effects/${SHA}.zip"
 
           aws s3 cp create_record.zip         "s3://${BUCKET}/${CREATE_KEY}"
           aws s3 cp get_latest.zip            "s3://${BUCKET}/${LATEST_KEY}"
@@ -189,6 +197,7 @@ jobs:
           aws s3 cp aggregate_daily.zip       "s3://${BUCKET}/${AGGREGATE_DAILY_KEY}"
           aws s3 cp export_records.zip        "s3://${BUCKET}/${EXPORT_KEY}"
           aws s3 cp get_correlation.zip       "s3://${BUCKET}/${GET_CORRELATION_KEY}"
+          aws s3 cp get_next_day_effects.zip  "s3://${BUCKET}/${GET_NEXT_DAY_KEY}"
 
           echo "create_record_key=${CREATE_KEY}"             >> $GITHUB_OUTPUT
           echo "get_latest_key=${LATEST_KEY}"                >> $GITHUB_OUTPUT
@@ -203,7 +212,8 @@ jobs:
           echo "get_summary_key=${GET_SUMMARY_KEY}"          >> $GITHUB_OUTPUT
           echo "aggregate_daily_key=${AGGREGATE_DAILY_KEY}"  >> $GITHUB_OUTPUT
           echo "export_records_key=${EXPORT_KEY}"            >> $GITHUB_OUTPUT
-          echo "get_correlation_key=${GET_CORRELATION_KEY}"  >> $GITHUB_OUTPUT
+          echo "get_correlation_key=${GET_CORRELATION_KEY}"      >> $GITHUB_OUTPUT
+          echo "get_next_day_effects_key=${GET_NEXT_DAY_KEY}"  >> $GITHUB_OUTPUT
 
   # ── 2. Terraform apply (infrastructure + Lambda config) ───────────────────
   terraform-apply:
@@ -235,7 +245,7 @@ jobs:
       - name: Terraform Apply
         run: |
           terraform apply -auto-approve \
-            -var='lambda_s3_keys={"create_record":"${{ needs.build-lambda.outputs.create_record_key }}","get_latest":"${{ needs.build-lambda.outputs.get_latest_key }}","push_subscribe":"${{ needs.build-lambda.outputs.push_subscribe_key }}","push_notify":"${{ needs.build-lambda.outputs.push_notify_key }}","weekly_push_notify":"${{ needs.build-lambda.outputs.weekly_push_notify_key }}","get_item_config":"${{ needs.build-lambda.outputs.get_item_config_key }}","save_item_config":"${{ needs.build-lambda.outputs.save_item_config_key }}","delete_record":"${{ needs.build-lambda.outputs.delete_record_key }}","get_env_data":"${{ needs.build-lambda.outputs.get_env_data_key }}","get_env_data_latest":"${{ needs.build-lambda.outputs.get_env_data_latest_key }}","get_summary":"${{ needs.build-lambda.outputs.get_summary_key }}","aggregate_daily":"${{ needs.build-lambda.outputs.aggregate_daily_key }}","export_records":"${{ needs.build-lambda.outputs.export_records_key }}","get_correlation":"${{ needs.build-lambda.outputs.get_correlation_key }}"}'
+            -var='lambda_s3_keys={"create_record":"${{ needs.build-lambda.outputs.create_record_key }}","get_latest":"${{ needs.build-lambda.outputs.get_latest_key }}","push_subscribe":"${{ needs.build-lambda.outputs.push_subscribe_key }}","push_notify":"${{ needs.build-lambda.outputs.push_notify_key }}","weekly_push_notify":"${{ needs.build-lambda.outputs.weekly_push_notify_key }}","get_item_config":"${{ needs.build-lambda.outputs.get_item_config_key }}","save_item_config":"${{ needs.build-lambda.outputs.save_item_config_key }}","delete_record":"${{ needs.build-lambda.outputs.delete_record_key }}","get_env_data":"${{ needs.build-lambda.outputs.get_env_data_key }}","get_env_data_latest":"${{ needs.build-lambda.outputs.get_env_data_latest_key }}","get_summary":"${{ needs.build-lambda.outputs.get_summary_key }}","aggregate_daily":"${{ needs.build-lambda.outputs.aggregate_daily_key }}","export_records":"${{ needs.build-lambda.outputs.export_records_key }}","get_correlation":"${{ needs.build-lambda.outputs.get_correlation_key }}","get_next_day_effects":"${{ needs.build-lambda.outputs.get_next_day_effects_key }}"}'
         env:
           TF_VAR_vapid_private_key: ${{ secrets.VAPID_PRIVATE_KEY_PROD }}
 
@@ -261,5 +271,6 @@ jobs:
           echo "- Lambda get_summary:         \`${{ needs.build-lambda.outputs.get_summary_key }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- Lambda aggregate_daily:     \`${{ needs.build-lambda.outputs.aggregate_daily_key }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- Lambda export_records:      \`${{ needs.build-lambda.outputs.export_records_key }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- Lambda get_correlation:     \`${{ needs.build-lambda.outputs.get_correlation_key }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Lambda get_correlation:         \`${{ needs.build-lambda.outputs.get_correlation_key }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Lambda get_next_day_effects:    \`${{ needs.build-lambda.outputs.get_next_day_effects_key }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- Amplify: auto-build triggered by GitHub push" >> $GITHUB_STEP_SUMMARY

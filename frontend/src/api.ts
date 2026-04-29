@@ -135,3 +135,10 @@ export function getCorrelation(
 ): Promise<import("./types").CorrelationResponse> {
   return apiFetch(`/correlation?days=${days}`, token);
 }
+
+export function getNextDayEffects(
+  token: string,
+  days = 90,
+): Promise<import("./types").NextDayEffectsResponse> {
+  return apiFetch(`/next-day-effects?days=${days}`, token);
+}

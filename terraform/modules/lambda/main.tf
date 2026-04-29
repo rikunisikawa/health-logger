@@ -377,6 +377,30 @@ resource "aws_lambda_function" "get_correlation" {
   depends_on = [aws_s3_bucket.artifacts]
 }
 
+resource "aws_lambda_function" "get_next_day_effects" {
+  function_name = "${local.name}-get-next-day-effects"
+  role          = aws_iam_role.lambda.arn
+  runtime       = "python3.13"
+  handler       = "handler.lambda_handler"
+
+  s3_bucket = aws_s3_bucket.artifacts.id
+  s3_key    = var.lambda_s3_keys["get_next_day_effects"]
+
+  timeout     = 60
+  memory_size = 256
+
+  tracing_config { mode = "Active" }
+
+  environment {
+    variables = {
+      ATHENA_DATABASE      = var.athena_database
+      ATHENA_OUTPUT_BUCKET = var.s3_results_bucket_name
+    }
+  }
+
+  depends_on = [aws_s3_bucket.artifacts]
+}
+
 resource "aws_lambda_function" "get_env_data_latest" {
   function_name = "${local.name}-get-env-data-latest"
   role          = aws_iam_role.lambda.arn

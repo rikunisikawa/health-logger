@@ -92,3 +92,22 @@ export interface CorrelationResponse {
   matrix: Record<string, Record<string, number | null>>;
   sample_counts: Record<string, number>;
 }
+
+export type NextDayEventType = "exercise" | "alcohol" | "caffeine";
+
+export interface NextDayGroup {
+  avg_fatigue: number;
+  avg_mood: number;
+  avg_motivation: number;
+  n: number;
+}
+
+export interface NextDayInsight {
+  event: NextDayEventType;
+  with_event: NextDayGroup;
+  without_event: NextDayGroup;
+}
+
+export interface NextDayEffectsResponse {
+  insights: NextDayInsight[];
+}

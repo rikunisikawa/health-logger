@@ -18,6 +18,7 @@ import {
 } from "recharts";
 import { getEnvData, getLatest } from "../api";
 import { CorrelationHeatmap } from "./CorrelationHeatmap";
+import { InsightCards } from "./InsightCards";
 import WeeklySummaryCard from "./WeeklySummaryCard";
 import { useAuth } from "../hooks/useAuth";
 import type { EnvDataRecord, LatestRecord } from "../types";
@@ -1473,6 +1474,10 @@ export default function DashboardPage({ onBack }: Props) {
                 </ComposedChart>
               </ResponsiveContainer>
             )}
+
+            {/* 翌日効果インサイト */}
+            <h6 className="text-muted mb-3">翌日への影響インサイト</h6>
+            {token && <InsightCards token={token} />}
 
             {/* 全項目間ヒートマップ */}
             <hr className="my-4" />
