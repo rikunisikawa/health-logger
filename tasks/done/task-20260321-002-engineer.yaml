@@ -1,0 +1,46 @@
+constraints:
+- '型エラーを出さない (strict: true)'
+- 既存の HealthForm のスライダー・フラグ・送信ボタンは変更しない
+- 新しい外部ライブラリを追加しない
+- 'テスト: npx tsc --noEmit で型チェックが通ること'
+created_at: '2026-03-21'
+definition_of_done:
+- '[ ] HealthForm に経過表示インジケーターが追加されている'
+- '[ ] 3つの表示パターン（当日・昨日・X日前）が実装されている'
+- '[ ] TypeScript の型エラーがない'
+- '[ ] App.tsx から正しく props が渡されている（変更が必要な場合）'
+dependencies:
+- task-20260321-001
+goal: docs/design/last-record-indicator.md の設計書に基づき、HealthForm に経過表示インジケーターを実装する
+inputs:
+- path: docs/design/last-record-indicator.md
+  type: file
+- path: frontend/src/components/HealthForm.tsx
+  type: file
+- path: frontend/src/types.ts
+  type: file
+- path: frontend/src/App.tsx
+  type: file
+- content: '設計書に従い HealthForm.tsx に経過表示インジケーターを追加する。
+
+    - LatestRecord 型の recorded_at フィールドを使って経過日数を計算する
+
+    - 新しい props を追加する場合は App.tsx も更新する
+
+    - MUI コンポーネント（Chip / Typography 等）を使うとよい
+
+    - strict TypeScript を維持すること
+
+    '
+  type: description
+notes: ''
+outputs:
+- path: frontend/src/components/HealthForm.tsx
+  type: file
+priority: medium
+retry_count: 0
+role: engineer
+status: done
+task_id: task-20260321-002
+title: 最終記録経過表示コンポーネントの実装
+updated_at: '2026-03-21'

@@ -1,0 +1,57 @@
+{
+  "title": "開発サイクルレポート: 20260321-193118",
+  "cycle_id": "20260321-193118",
+  "summary": "3件のタスクを完了しました: 最終記録経過表示コンポーネントの画面設計、最終記録経過表示コンポーネントの実装、最終記録経過表示のレビュー",
+  "slides": [
+    {
+      "slide_number": 1,
+      "title": "開発サイクルレポート",
+      "bullets": [
+        "サイクルID: 20260321-193118",
+        "完了タスク数: 3件",
+        "生成日時: 2026-03-21 19:31"
+      ],
+      "narration": "今回の開発サイクルで完了した3件のタスクについて報告します。"
+    },
+    {
+      "slide_number": 2,
+      "title": "背景・課題",
+      "bullets": [
+        "HealthForm 上部に「最終記録からの経過」を示すインジケーターの画面設計書を作成する",
+        "docs/design/last-record-indicator.md の設計書に基づき、HealthForm に経過表示インジケーターを実装する",
+        "実装された経過表示インジケーターが設計・受け入れ条件を満たしているか確認する"
+      ],
+      "narration": "今回取り組んだ課題と目標です。"
+    },
+    {
+      "slide_number": 3,
+      "title": "実装内容",
+      "bullets": [
+        "【designer】最終記録経過表示コンポーネントの画面設計",
+        "【engineer】最終記録経過表示コンポーネントの実装",
+        "【reviewer】最終記録経過表示のレビュー"
+      ],
+      "narration": "各ロールが担当した実装内容の一覧です。"
+    },
+    {
+      "slide_number": 4,
+      "title": "成果物",
+      "bullets": [
+        "docs/design/last-record-indicator.md",
+        "frontend/src/components/HealthForm.tsx",
+        "docs/qa/task-20260321-002-review.md"
+      ],
+      "narration": "今回のサイクルで生成されたファイルの一覧です。"
+    },
+    {
+      "slide_number": 5,
+      "title": "今後の課題・拡張案",
+      "bullets": [
+        "Phase 2: pptx デザイン改善・レビュー承認フローの強化",
+        "Phase 3: GitHub Actions への移植",
+        "動画ナレーション原稿の自動生成"
+      ],
+      "narration": "今後の改善ポイントと拡張計画です。"
+    }
+  ]
+}

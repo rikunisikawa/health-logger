@@ -208,7 +208,15 @@ function AppContent() {
               eventItems={eventItems}
               statusItems={statusItems}
               latestDailyRecord={latestDailyRecord}
+              records={records}
               onToast={showToast}
+              onRecordsSubmitted={async () => {
+                if (!token) return
+                try {
+                  const res = await getLatest(token, 10)
+                  setRecords(res.records)
+                } catch {}
+              }}
             />
           </div>
 
