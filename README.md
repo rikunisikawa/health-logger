@@ -226,6 +226,3 @@ terraform init && terraform apply
 - オフライン時の POST は IndexedDB キューに保存（`useOfflineQueue` hook）
 - オンライン復帰時に自動送信
 
-## License
-
-MIT
